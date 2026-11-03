@@ -1,0 +1,228 @@
+# AETHER-TRADE — Final Pre-Launch Audit
+
+**Audit date:** November 2, 2026 (UTC). **Overall status: BLOCKED for production launch.**
+
+The existing website is usable as a review preview and the administration experience works as a clearly disclosed local demo. It is not a production CMS, authenticated administration system or operational inquiry channel. No app code, dependency, SQL, account, domain, hosting or production setting was changed during this audit. Only this report, audit tracking and the audit-only approval constraint were recorded. Browser tests used fresh isolated contexts with illustrative data; they did not change the user's existing workspace.
+
+## Status definitions
+
+- **READY:** verified for the explicitly stated scope, not a blanket launch certification.
+- **NEEDS FIX:** an evidenced defect or required hardening.
+- **DEMO ONLY:** working local/simulated behavior, not live functionality.
+- **NEEDS ACCOUNT CONNECTION:** implementation/verification depends on an authorized service connection.
+- **BLOCKED:** an acceptance gate cannot currently be passed.
+- **NOT APPLICABLE:** outside the current launch scope or absent as an operational feature.
+
+## A. Completed and verified items
+
+| Status | Item | Verification and scope |
+|---|---|---|
+| READY | Existing automated tests | Fresh `bunx vitest run src/test/workspace-model.test.ts src/test/app-routing.test.tsx`: **2 files, 17 tests passed**, November 2 at 22:32 UTC. These are model rules and a homepage route-match smoke test, not database or deployment tests. |
+| READY | Recorded build status | Latest available `/tmp/observability/build-errors.log`: **build OK, 2026-11-02T22:32:16Z**. No manual build/typecheck was run. This does not establish production artifacts or hosted execution. |
+| READY | Route rendering and layout smoke check | **88 checks:** 21 public/utility URLs and 23 admin views at both 1280×1800 and 390×844. All registered tested routes returned 200; no document-wide horizontal overflow and no uncaught page errors. `/admin/insights` also checked at the user's 889×576 size with no overflow. Admin tables intentionally scroll within their containers. |
+| READY | Internal navigation | **26 distinct discovered internal hrefs** checked; none resolved to the not-found page. Mobile public menu opened, navigated to Platform and closed; admin mobile navigation reached FAQs. |
+| READY | Images | Both `src/assets/hero-global-trade.jpg` and `src/assets/globe-network.jpg` rendered with natural width 1920. An initial unscrolled lazy-image check flagged the globe; loading/scroll verification ruled out a broken image. Sizes: 143,347 and 232,811 bytes, respectively. |
+| READY | Deep-link and 404 behavior in preview | `/audit-nonexistent` and `/admin/not-a-module` returned **HTTP 404**, with a usable home action. This is preview evidence, not deployed-host evidence. |
+| READY | Leaf metadata presence | All 21 tested public/utility URLs have title, description, OG title/description, OG type and Twitter card declarations. See individual files under `src/routes/` and `src/components/site/blocks.tsx:62–73`. Current rendered OG titles can inherit root defaults; route-specific social presentation still needs review. |
+| READY | Theme persistence | Dark-theme selection survived reload; screenshots inspected. Existing Geist typography and theme system preserved. |
+| READY | Careers and confirmation safeguards | Careers remains unpublished/noindex; thank-you/auth/reset routes are noindex. A fabricated inquiry reference displayed **“No saved inquiry confirmed.”** (`src/routes/thank-you.tsx:27–35`). |
+| DEMO ONLY | Contact and Request a Demo | Required fields, invalid email, consent and short demo requirements produced validation errors. Both valid forms reached **“Your demo inquiry is saved in this browser.”** No delivery or database write claimed. |
+| DEMO ONLY | Duplicate protection | Two immediate submit events produced **one local inquiry**. This verifies the component's in-flight lock, not durable server idempotency across devices, reloads or distinct requests. |
+| DEMO ONLY | Catalogue context | Invoice Reconciliation filter and “Request This Solution” reached `/request-demo?automation=invoice-packing-list-reconciliation`; corresponding selection read back correctly. |
+| DEMO ONLY | Inquiry management | Illustrative submission appeared in admin; status changed to Qualified and read back after reload; an internal note was saved. Viewer simulation displayed an access-restricted message. Neither behavior is server authorization. |
+| DEMO ONLY | CMS and revisions | Created and edited an illustrative Insights record, reloaded it, restored its previous body as Draft and inspected the preview. Added a Home page section and read it back after reload. Public pages stayed unchanged. |
+| DEMO ONLY | SEO editor | Non-HTTPS canonical rejected; illustrative title/HTTPS canonical saved locally and read back. These edits do not alter actual public page heads. |
+| DEMO ONLY | Media library | Non-image and greater-than-2-MB selections rejected; PNG uploaded, alt text edited and read back after reload. Bytes remain in browser storage, not a cloud bucket. |
+| DEMO ONLY | Storage failure | Simulated unavailable localStorage: form stayed at `/contact` and reported **“Browser storage is unavailable. Your change was not saved.”** No success navigation. |
+| DEMO ONLY | Authentication previews | Sign-in, recovery and password reset displayed explicit messages that no session, email or password change occurred. Used illustrative input only. |
+
+### Route inventory
+
+**Public/content:** `/`, `/about`, `/platform`, `/how-it-works`, `/solutions`, `/industries`, `/services`, `/automations`, `/custom-solutions`, `/insights`, `/partnerships`, `/careers`, `/faqs`, `/contact`, `/request-demo`, `/privacy-policy`, `/terms`, `/cookie-policy`, `/thank-you`.
+
+**Utility:** `/auth`, `/reset-password`.
+
+**Admin views:** Overview (`/admin`), Pages & sections, Platform, Automations, Services, Solutions, Industries, Insights, FAQs, Media library, Navigation & footer, SEO, Branding & contact, Website settings, Inquiries, Partnerships, Careers, Subscribers, Users & roles, Revisions, Audit log, Analytics, Connection readiness (`/admin/<module>`). All **23** rendered; rendering does not prove every operation in every module.
+
+### Verification limits
+
+Browser evidence is stored temporarily at `/tmp/browser/prelaunch-audit/`: `pages-results.json`, `flows-results.json`, `additional-results.json` and screenshots. Initial scripts needed timing/label corrections; conclusions use successful final checks, not failed test-harness steps. Representative screenshots of confirmation, revision restore, media read-back, desktop/mobile layouts and settled navigation were visually inspected.
+
+No exhaustive keyboard/screen-reader or contrast audit, production performance measurement, 500-fault injection, CSV download/readback, destructive reset/delete execution or every editor-field permutation was performed in this audit. No coverage percentage is claimed.
+
+## B. Missing items
+
+| Status | Missing item | Evidence / next requirement |
+|---|---|---|
+| NEEDS FIX | Complete About and Custom Solutions pages | Both remain indexable “next milestone” stubs: `src/routes/about.tsx:27–31`, `src/routes/custom-solutions.tsx:27–31`. |
+| DEMO ONLY | Complete article publishing | Insights lists three forthcoming articles, without article links/routes (`src/routes/insights.tsx:22–29`; `src/content/site-content.ts:173–176`). Missing details are not current broken links. CMS publishing does not update the public site. |
+| NEEDS FIX | Structured fields on newly created records | Browser confirmed new Insights record has no extra structured fields. `makeRecord` always initializes `fields: {}` (`src/lib/workspace-model.ts:78–82`); editor only renders existing keys (`src/components/admin/admin-workspace.tsx:97`). Seeded article records have author/tags but new articles cannot enter them. Other new module-specific records have the same template gap. |
+| NEEDS ACCOUNT CONNECTION | Live CMS/database/Auth/Storage | No generated connected client, verified sessions, live migrations, public CMS reads or signed file links. SQL candidates are preparation only. |
+| NEEDS ACCOUNT CONNECTION | Real inquiry channel and notifications | Server function deliberately returns `persisted:false, notified:false` (`src/lib/inquiry.functions.ts:4–8`). Connecting an account alone will not implement delivery; adapters and end-to-end testing still required. |
+| BLOCKED | Sitemap and production canonical URLs | `/sitemap.xml` returned 404; no public origin exists. Do not substitute a preview URL. Defer sitemap creation and canonical/social-image URLs until the production origin is known and setup approved. |
+| DEMO ONLY | SEO/settings, scheduled publication and analytics | Local settings never alter public website behavior; no scheduler or measured visitor data. Analytics/Subscribers accurately show unconnected empty states. |
+| NEEDS FIX | Approved legal policies and usable privacy channel | Privacy/Terms are interim summaries, Cookie Policy is a legal-review draft; legal forms do not currently deliver. |
+| BLOCKED | Backups and restore acceptance | Local JSON export is not a database/file backup. No production backup, recovery objective or restore drill has been verified. |
+| NOT APPLICABLE | Excluded launch features | Customer portal, shipment console, public confidential document uploads and live regulatory tracking remain excluded. No need to add them to pass this scope. |
+
+## C. Broken or failing items
+
+| Status | Priority | Finding and evidence |
+|---|---|---|
+| NEEDS FIX | High | **Homepage status omissions:** unfinished case/document/reconciliation/human-review capabilities have `status:null` and hide badges (`src/routes/index.tsx:115–145,386–390`), although underlying platform content is In Development/Planned (`src/content/site-content.ts:15–38`). Present-tense capability copy must reflect actual rules-based prototype maturity. |
+| NEEDS FIX | High | **Cookie/storage disclosure is incomplete:** only theme storage is described (`src/routes/cookie-policy.tsx:16–19`); the workspace also stores inquiry names, emails, companies, messages, media and history (`src/components/admin/workspace-provider.tsx:4,16–23,30`). Privacy's “solely to respond” summary does not accurately explain local testing. |
+| NEEDS FIX | Medium | **Nine broken accessible section references:** browser confirmed `challenges-title`, `approach-title`, `workflow-title`, `capabilities-title`, `solutions-title`, `catalogue-title`, `services-title`, `trust-title`, `faq-title` do not identify existing elements. `SectionHeader` emits no ID (`src/components/site/section.tsx:5–29`). |
+| NEEDS FIX | Medium | **Incomplete validation accessibility:** message/requirements/consent lack consistent error associations; no invalid-field focus or announced summary (`src/components/site/inquiry-form.tsx:25–26,47–50`). Error text nested in labels also changes accessible field names after validation. |
+| NEEDS FIX | Medium | **Honeypot rejection is silent:** source schema rejects a populated `website`; a confirmed browser input retained `/contact` without a save, but displayed no rejection message because `errors.website` is never rendered (`src/components/site/inquiry-form.tsx:25–26,49`). This is a feedback gap, not proof of a server-validation bypass. The model test passes. |
+| NEEDS FIX | Medium | **Outdated Cloudflare guidance:** connection screen says user-owned hosting is categorically unsupported (`src/components/admin/admin-workspace.tsx:138`); earlier reports repeat it (`docs/disconnected-build-report.md:36`). Current official documentation supports self-hosting. Correct guidance after approval: technically feasible, externally managed, not deployed or verified here. |
+| NEEDS FIX | Low | **Error-page metadata and keyboard shortcut path:** not-found UI returns real 404 in preview, but inherits marketing metadata; shared shell lacks a skip-to-main link/target (`src/routes/__root.tsx:30–49,90–121,147–153`). |
+| NEEDS FIX | Low | **Roadmap drift:** older entries still describe forms as unwired and obsolete role names despite the disconnected build (`roadmap.md`, Milestones 2/4). Reconcile legacy milestones after approval; do not mislabel local demo milestones as live completion. |
+
+No broken discovered internal links or confirmed broken images were found. Sitemap absence is recorded separately. Some homepage audiences link to a generic Solutions page without corresponding audience sections; legal pages use generic demo CTAs. These are lower-priority content/UX alignment issues, not failed route resolution.
+
+## D. Security risks
+
+### Scanner results — do not interpret as security certification
+
+- **READY, narrow scan scope:** basic security tool reported no issues, but database checks did not apply because no database is configured.
+- **READY, narrow scan scope:** deep security scan completed at **2026-11-02T22:33:38Z**, returned no persisted findings and was current. No checks-off flag was returned.
+- **NEEDS FIX:** separate lockfile dependency scan checked **54 production packages** and returned **12 advisory rows**, including repeated transitive paths. These are distinct from the empty persisted security results. Reachability/exploitability was not established; do not call the project “clean.”
+
+| Status | Scanner severity | Dependency/advisory | Reported affected direct dependency | Fixed transitive version |
+|---|---|---|---|---|
+| NEEDS FIX | High | source-map-js event-loop denial of service | `@tailwindcss/vite` 4.3.3 | source-map-js 1.2.2 |
+| NEEDS FIX | High | js-yaml quadratic `!!omap` CPU use and empty-merge CPU limits | `@tanstack/react-start` 1.168.60 | js-yaml 4.3.1 / 4.3.2 |
+| NEEDS FIX | High | Zod oversized constrained-collection memory exhaustion | zod 3.25.76; Start 1.168.60; router-plugin 1.168.42 | zod 4.6.6 |
+| NEEDS FIX | Moderate | Seroval typed-array constructor code injection and RegExp serialization injection | react-router 1.170.41; Start 1.168.60; router-plugin 1.168.42 | seroval 1.6.11 / 1.6.10 |
+
+**Recommended dependency work:** verify advisories and actual dependency paths, update compatible direct packages, rerun scans and tests. Do not blindly change Zod across major versions: current schema uses Zod 3 APIs. Build-tool vulnerabilities and remotely exposed runtime vulnerabilities have different threat models. No upgrades made.
+
+### Source and prepared-SQL findings
+
+All **14 proposed tables**, both SQL files and storage policies were reviewed. Findings describe candidate policy behavior, not an exploited live database.
+
+| Status | Risk | Evidence / recommendation |
+|---|---|---|
+| DEMO ONLY | Public admin and self-selected roles | `/admin` has no auth guard (`src/routes/admin.tsx:1–2`); provider defaults to Super Admin and exposes local mutations (`workspace-provider.tsx:14,26–35`). Expected for demo, unacceptable as production authorization. |
+| DEMO ONLY | Unencrypted browser inquiry/media persistence | Whole workspace is saved to localStorage with no per-user isolation/expiry. Use illustrative data only; replace for real use and define retention/deletion. |
+| READY | No private credential value found in inspected app/config source | `.env.example` contains empty values only; no client-side privileged integration was found. This is not verification of secret-manager contents, repository history or external configuration; those were not dumped. |
+| READY | Roles separate from editable profiles | `docs/database/001-foundation.sql:8–46`: separate role tables, fixed search path, restricted permission-check execution; no self-assignment write policy found. Source-level only. |
+| NEEDS FIX | Draft permission can publish arbitrary media metadata | `001-foundation.sql:152–163`: Content Editors can set `is_public` and manage others' media metadata without an independent publish check. Separate approval and ownership rules. |
+| NEEDS FIX | Broad private-media reads | Both internal/website buckets allow any draft-capable user to read objects (`001-foundation.sql:179–182`). Define and enforce intended internal resource/owner access; “private bucket” is not per-user privacy. |
+| NEEDS FIX | Upload byte validation can be bypassed | Object write policies check bucket/role/path, not byte size, signatures or MIME (`001-foundation.sql:180–181`). Metadata checks do not validate storage bytes. Configure buckets and verified upload finalization. Local image decode is not server upload security. |
+| NEEDS FIX | Original inquiry/consent evidence is editable | Inquiry permission grants table-wide updates (`001-foundation.sql:85–102`); managers can change reference, request key, original submission/consent timestamps, not only workflow status. Restrict mutable columns and audit changes. |
+| NEEDS FIX | Public content selects entire rows | `001-foundation.sql:51–67` exposes eligible published rows including arbitrary `fields` and creator metadata. Use a deliberate public-safe projection/content boundary. No secret-containing seed row was demonstrated. |
+| NEEDS FIX | Effective grants and function ACL hardening | Explicit grants exist, but inherited/existing/default grants are not revoked. Three SECURITY DEFINER trigger functions lack consistent execution revocations (`001-foundation.sql:47–49,121–127,144–151`). Not itself a demonstrated escalation exploit; check effective ACLs and harden before application. |
+| NEEDS FIX | Raw error reporting lacks redaction | `src/lib/error-capture.ts:18–31,40–44,55–62`; `src/lib/lovable-error-reporting.ts:27–50`. Redact sensitive causes/context before telemetry. No actual leaked secret/PII was demonstrated. |
+| NEEDS FIX | Abuse protection incomplete | Shared server schema validates fields/consent/honeypot (`src/lib/inquiry.functions.ts:6–8`); CSRF middleware exists (`src/start.ts:20–28`). No application rate limiter or pre-validation body-size gate verified. Infrastructure protections are unknown. |
+| NEEDS FIX | Local corruption/scaling risk | Stored JSON validates only top-level arrays, not individual records (`workspace-provider.tsx:16`); full synchronous writes include growing histories and data URLs (`:20–35`). Quota failure was tested; malformed-item handling and large-state performance were not. |
+| NEEDS FIX | Legal-review draft seeded as Published | Cookie Policy page state in `docs/database/002-existing-content.sql:20` must not become approved production legal content by applying the seed. Approval setting remains false. |
+| BLOCKED | Live authorization/RLS assurance | Cannot establish effective grants, anonymous reads, cross-owner denials, signup settings, recovery, logout, last-Super-Admin protection or signed-link behavior without authorized staging connections/tests. |
+
+## E. Connections and credentials still required
+
+No credentials are needed to review this demo. Do not paste private keys into chat.
+
+| Status | Connection | Later steps / acceptance gate |
+|---|---|---|
+| NEEDS ACCOUNT CONNECTION | User-owned database, authentication and storage | In Lovable: **Settings → General → External Supabase → Connect**; authorize/select your own project. Then review existing schema, harden/apply candidates on staging, install generated integration boundaries and test real flows. No Lovable Cloud substitution. |
+| NEEDS ACCOUNT CONNECTION | GitHub private source control | **Project settings → Git**; authorize account/organization and create the private synced repository. Actual Git sync status was not accessible/verified; repository metadata is not proof of user-owned sync. |
+| NEEDS ACCOUNT CONNECTION | Notification service | Select a sending service, securely configure server-only key, approved recipients and verified sending domain; test actual delivery and failure handling. |
+| NEEDS ACCOUNT CONNECTION | Cloudflare-owned hosting | After separate deployment approval, use a private source repository and authorized Cloudflare account setup. Do not claim that connecting the account makes the app operational. |
+| BLOCKED | Domain and launch permission | Select actual public origin; approve exact DNS/production changes separately. No published/custom domain is known. |
+| NEEDS ACCOUNT CONNECTION | Challenge provider, if chosen | Placeholder `CHALLENGE_SECRET_KEY` is not an integration. Select abuse protection appropriate to the real submission flow; independently approve the rate-limit design. |
+
+`.env.example:1–12` correctly distinguishes browser-public settings from server-only secrets. Values have no active consumers yet for a connected backend; placeholders alone are not readiness completion.
+
+## F. Deployment blockers and exact hosting assessment
+
+**Correction to the prior report:** Cloudflare-owned self-hosting is not categorically impossible. Official Lovable documentation supports external self-hosting; TanStack/Cloudflare document Workers deployment. This project already has a Cloudflare-targeting adapter. Its reliability on the user's account remains **unverified**; no migration/configuration change is justified merely to add a second adapter.
+
+| Status | Item | Evidence |
+|---|---|---|
+| READY | Current adapter identified | `vite.config.ts:1–15` uses `@lovable.dev/vite-tanstack-config` **2.26.5**, which installs **Nitro 3.0.260603-beta** during builds. Installed Start **1.168.60**, Router **1.170.41**, Vite **8.1.5**. This is not the Cloudflare Vite plugin path. |
+| READY | Current configured target identified | Installed wrapper `node_modules/@lovable.dev/vite-tanstack-config/dist/index.js:1169–1215`: current sandbox branch selects **`cloudflare-module`**, `dist/server` and `dist/client`, node compatibility enabled, generated deployment config. External environment preset selection must be separately confirmed. |
+| READY | Worker packaging rules identified | Nitro `node_modules/nitro/dist/_presets.mjs:22–31,697–713`: ESM Worker/workerd export conditions, base-worker `noExternals:true`. Do not add `ssr.external`; deployed npm packages must be bundled. |
+| BLOCKED | Actual production artifacts unavailable | No `dist/`, `.output/`, `build/` or root Wrangler artifact available for inspection. Expected—not observed—sandbox paths: `dist/server/index.mjs`, `dist/server/wrangler.json`, `dist/client/`, `.wrangler/deploy/config.json`. Missing root Wrangler file alone is not a defect because Nitro generates configuration. |
+| BLOCKED | Generated runtime configuration unverified | Expected generated `main`, `ASSETS` binding/directory, compatibility date/flags and `no_bundle:true` are supported by Nitro code (`_presets.mjs:484–525`). Actual Worker name, final date/flags, assets and deploy pointer must be inspected after an authorized build. Wrapper may remove redundant `nodejs_compat` for dates ≥2026-08-04; absence alone is not proof compatibility is off. |
+| BLOCKED | Worker execution and performance | No production SSR/deep-link/server-function/assets tests on chosen host; no Lighthouse/Web Vitals, cold-start, CPU/memory or bundle-size acceptance results. Preview build OK is insufficient. |
+| READY | Server wrapper exists, source only | `src/server.ts:10–19,21–59` forwards request/env/context, returns HTML 500 fallback; `src/start.ts:5–29` installs error/CSRF middleware. 500 paths and deployed middleware were not exercised. |
+| BLOCKED | Operational and approval gates | Backend connections, policy hardening, public delivery, legal approval, domain, secure administrator bootstrap, secrets and staging acceptance remain open. User has not authorized publishing. |
+
+### Deployment alternatives — proposals, not changes
+
+- **NEEDS ACCOUNT CONNECTION:** retain Nitro's documented Cloudflare Worker-module target for owner-managed deployment; verify artifacts/config/runtime first.
+- **NEEDS FIX, if deliberately selected later:** official TanStack `@cloudflare/vite-plugin` integration is an alternative adapter, not something to stack blindly on this existing wrapper (which already installs React/Start).
+- **BLOCKED pending user approval:** Lovable-managed Publish is a separately supported hosted path, not silently substituted for Cloudflare-owned hosting.
+- **NEEDS ACCOUNT CONNECTION:** other external Nitro-compatible hosting is possible through owner-managed setup and chosen preset; no alternative has been selected or tested.
+
+**Official sources consulted:**
+
+- https://docs.lovable.dev/tips-tricks/external-deployment-hosting
+- https://docs.lovable.dev/tips-tricks/deployment-hosting-ownership
+- https://docs.lovable.dev/features/hosting
+- https://tanstack.com/start/latest/docs/framework/react/guide/hosting
+- https://developers.cloudflare.com/workers/framework-guides/web-apps/tanstack-start/
+
+`public/robots.txt` currently returns 200, preserves named crawler blocks and allows crawling; no Sitemap directive. This is not a robots failure. No sitemap/domain changes were made. Public-specific canonicals and absolute OG/Twitter images should await an actual public origin; bundled relative assets must not be advertised as absolute social images. FAQ structured data exists; a full structured-data/production search acceptance audit remains open.
+
+## G. Recommended fixes — approval required
+
+| Status | Order | Proposed work |
+|---|---|---|
+| NEEDS FIX | 1 | Resolve dependency advisories with compatible upgrades and regression checks; harden candidate media/storage/inquiry/public-read policies and grants before applying them. |
+| NEEDS FIX | 2 | Correct capability status omissions; complete About/Custom Solutions; obtain truthful approved legal copy and storage/retention disclosure; correct Cloudflare readiness wording. Preserve design. |
+| NEEDS FIX | 3 | Add new-record module field templates, fix accessibility IDs/validation/focus and silent spam feedback, strengthen local-state validation; reconcile roadmap. |
+| NEEDS ACCOUNT CONNECTION | 4 | Connect the user's own services only when requested; implement authoritative auth/permissions, real forms/idempotency/abuse controls, CMS public read-back and validated storage. |
+| BLOCKED | 5 | After authorized staging integration: verify grants/RLS for every role, recovery/logout, first-admin safeguards, actual notification delivery, publication and backups/restore. |
+| BLOCKED | 6 | After hosting/origin approval: inspect generated artifacts, test chosen runtime, performance/security headers and error paths, add correct sitemap/canonicals/social metadata, then request final launch approval. |
+
+These recommendations are **not implemented**. Accounts alone do not supply the missing integration work.
+
+## H. Final launch checklist
+
+- [ ] **NEEDS FIX:** No unfinished capability is presented as available; all cards/copy reflect verified maturity.
+- [ ] **NEEDS FIX:** About/Custom Solutions and required public content are complete; article scope explicitly decided.
+- [ ] **NEEDS FIX:** Approved Privacy/Terms/Cookie text accurately covers processing, browser storage, telemetry, retention and contact rights.
+- [ ] **NEEDS FIX:** Dependency findings triaged/resolved and scans rerun; SQL hardening reviewed.
+- [ ] **NEEDS FIX:** Accessibility references, field errors, keyboard/focus/contrast reviewed on desktop/mobile.
+- [ ] **NEEDS ACCOUNT CONNECTION:** User-owned database/Auth/Storage and private GitHub sync verified.
+- [ ] **BLOCKED:** Secure first administrator, role enforcement, account lifecycle and cross-role denials pass staging tests.
+- [ ] **BLOCKED:** Real Contact/Demo submissions persist, read back, reject abuse/duplicates and deliver notifications with tested failure states.
+- [ ] **BLOCKED:** CMS draft/publish/schedule/public read-back and media access match intended permissions.
+- [ ] **BLOCKED:** Backups/restore and privacy deletion procedures tested.
+- [ ] **BLOCKED:** Chosen host has verified SSR, assets, deep links, server functions, 404/500 behavior and acceptable measured performance.
+- [ ] **BLOCKED:** Real production origin, sitemap/canonicals/social images and search-indexing exclusions verified.
+- [ ] **BLOCKED:** User explicitly approves publishing and exact domain/DNS changes.
+
+**Final decision:** suitable for continued private demo review; **not ready for production launch**. Wait for approval before fixes or final deployment preparation.
+---
+
+## Continuation audit — November 2, 2026, 23:20 UTC (remixed copy, imported from uploaded ZIP)
+
+**Overall status remains BLOCKED for production launch.** Nothing was published, deployed or connected.
+
+### Transfer
+- The Remix produced only the blank starter. The full project was restored from the user-uploaded `lovable-project-9f19dbe0.zip` (128 files; `.git` and `node_modules` excluded). All 21 public/utility routes, 23 admin views, components, content, tests, `docs/` (including this audit and both SQL candidates), `roadmap.md`, `AGENTS.md`, `.env.example` and the Phase A plan are present.
+- Not transferred (expected): any database, Auth users, storage objects, secrets, GitHub sync, domain or hosting configuration. None existed in the original as live connections.
+
+### Fixed in this session
+| Status | Item | Evidence |
+|---|---|---|
+| READY | Dependency advisories | `zod` 3.25.76 → 4.6.6 (direct); `overrides` pin `source-map-js` 1.2.2, `js-yaml` 4.3.2, `seroval` 1.6.12, nested `zod` 4.6.6. One Zod 4 API change: `consent` literal now uses `{ error }` (`src/lib/workspace-model.ts`). Re-scan: **0 known vulnerabilities in 54 production packages.** |
+| READY | Tests | `bunx vitest run`: **2 files, 17 tests passed** after upgrade. |
+| READY | Production build (trial, temp folder) | `vite build` exit 0; generated `dist/server/index.mjs`, `dist/server/wrangler.json` (`main: index.mjs`, `ASSETS` → `../client`, `no_bundle: true`, compatibility date 2026-11-02), `dist/client/_headers`, `.wrangler/deploy/config.json`. |
+| READY (local only) | Cloudflare runtime smoke test | Built Worker run under local `wrangler dev` (workerd): `/`, `/contact`, `/request-demo`, `/admin`, `/admin/inquiries`, `/privacy-policy` → 200; unknown path → 404. Not a test on a Cloudflare account. |
+| DEMO ONLY | Contact form re-verified | Empty submit shows validation errors; valid submit reaches "saved in this browser" with demo reference; record appears in `/admin/inquiries`. No page errors. |
+
+### Unchanged since previous audit
+All Section B, C, D (source/SQL) and E findings remain open as written; none needed a live account to be re-confirmed, and none were re-implemented to avoid unapproved scope. RLS, Auth, Storage and CMS readiness cannot be verified: no user-owned backend is connected.
+
+### Public-only fixes — November 2, 2026, 23:25 UTC
+| Status | Item | Evidence |
+|---|---|---|
+| READY (local Worker) | Admin hidden on production builds | `src/lib/site-mode.ts`; `/admin`, `/admin/inquiries`, `/auth`, `/reset-password` → **404** in built Worker; footer admin link absent. Preview keeps the demo. |
+| READY | Homepage status labels | All six capability cards now carry badges (5 In Development/Planned, 1 Planned); approach/pillar copy no longer present-tense for unfinished work. |
+| READY | Forms marked as demos | Existing "Demo form · not sent to AETHER-TRADE" notice confirmed in built HTML; button reads "Save demo inquiry". |
+| NEEDS LEGAL APPROVAL | Privacy, Terms of Use, Cookie Policy rewritten | Full sections accurately describe demo forms, browser storage, hosting logs, no analytics/sale. Marked "Pending legal review"; no privacy contact published yet. Not lawyer-approved. |
+| READY | Tests/build | 17/17 tests pass; production build exit 0. |

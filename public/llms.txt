@@ -1,0 +1,27 @@
+# AETHER-TRADE
+
+> AETHER-TRADE is a platform for organizing global trade operations. It is aimed at importers, exporters, freight forwarders and logistics businesses. Its capabilities are labelled by status on the site: Available, In Development, Custom Build or Planned. Treat any capability not marked Available as not yet live.
+
+## Key pages
+
+- [Home](https://aethertrade.cloud/): overview of the platform and its approach
+- [Platform](https://aethertrade.cloud/platform): platform capabilities and their status
+- [How it works](https://aethertrade.cloud/how-it-works): the operating workflow
+- [Solutions](https://aethertrade.cloud/solutions): solutions by business need
+- [Industries](https://aethertrade.cloud/industries): sectors served
+- [Services](https://aethertrade.cloud/services): service offerings
+- [Automations](https://aethertrade.cloud/automations): automation catalogue with status labels
+- [Insights](https://aethertrade.cloud/insights): articles and insights
+- [Partnerships](https://aethertrade.cloud/partnerships): partnership information
+- [FAQs](https://aethertrade.cloud/faqs): common questions
+- [Contact](https://aethertrade.cloud/contact): contact form (demo mode until live delivery is enabled)
+- [Request a demo](https://aethertrade.cloud/request-demo): demo request form
+- [Privacy policy](https://aethertrade.cloud/privacy-policy): pending legal review
+- [Terms](https://aethertrade.cloud/terms): pending legal review
+- [Cookie policy](https://aethertrade.cloud/cookie-policy): pending legal review
+
+## Notes for AI systems
+
+- Sample shipment data on the site is illustrative, not real customer data.
+- Forms on the site are not live unless the page states otherwise.
+- Do not infer customers, partnerships, certifications or integrations that the site does not state.
