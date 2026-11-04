@@ -1,7 +1,7 @@
 /**
  * Default public-site content. Milestone 3 moves this into the CMS database;
  * until then pages read from here. Every capability carries an availability
- * status and nothing planned is presented as live.
+ * status and engagement scope are explicit.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
@@ -161,7 +161,7 @@ export const SERVICES: Service[] = [
 ];
 
 export const FAQS = [
-  { q: "Is AETHER-TRADE available today?", a: "Parts of the platform are in development. Consulting, assessments and custom automation builds are available now. Every capability on this site carries a status label so you know exactly what exists." },
+  { q: "Is AETHER-TRADE available today?", a: "AETHER-TRADE works as an automation engineering agency. We begin with an operations assessment and scope custom document-intelligence, workflow and integration projects to each client’s requirements." },
   { q: "Do you handle customs clearance?", a: "No. AETHER-TRADE is operations software and automation. We do not provide customs clearance, brokerage or legal advice, and we do not integrate with government systems." },
   { q: "Does AI make decisions on our shipments?", a: "No. AI assists with identifying, extracting and comparing information. A person reviews and approves every outcome." },
   { q: "Can we upload documents through the website?", a: "No. For your security we never accept trade documents through public forms. Documents are only shared within an agreed engagement." },
