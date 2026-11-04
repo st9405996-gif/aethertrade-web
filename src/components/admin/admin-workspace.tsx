@@ -85,7 +85,7 @@ function RecordEditor({ initial, onSaved, seoOnly }: { initial: ContentRecord; o
   let sections: PageSection[] = []; try { sections = JSON.parse(record.fields['sections'] || "[]") as PageSection[]; if (!Array.isArray(sections)) sections = []; } catch { sections = []; }
   const setSections = (next: PageSection[]) => setRecord({ ...record, fields: { ...record.fields, sections: JSON.stringify(next) } });
   const field = (name: "title" | "slug" | "category" | "seoTitle" | "seoDescription" | "canonical", label: string) => <label className="grid gap-2 text-sm" key={name}>{label}<Input value={record[name]} onChange={e => setRecord({ ...record, [name]: e.target.value })}/></label>;
-  function save() {
+  async function save() {
     const result = contentSchema.safeParse(record); if (!result.success) { setError(result.error.issues.map(e => e.message).join(". ")); return; }
     if (!demoCan(workspace.role, "publish") && (record.publication !== "Draft" || initial.publication === "Published" || initial.publication === "Scheduled")) { setError("Your account does not have permission to publish this record."); return; }
     if (workspace.data.records.some(r => r.id !== record.id && r.module === record.module && r.slug === record.slug)) { setError("A record with this slug already exists."); return; }
