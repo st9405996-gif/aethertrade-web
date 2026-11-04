@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { LockKeyhole, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ export default function AuthPage() {
     } catch(x) { setError(x instanceof Error?x.message:"Authentication failed."); }
     finally { setBusy(false); }
   }
-  if(authenticated) void navigate({to:"/admin",replace:true});
+  useEffect(() => { if (authenticated) void navigate({to:"/admin",replace:true}); }, [authenticated, navigate]);
   return <div className="container-page mx-auto max-w-lg py-16">
     <LockKeyhole className="mb-6 size-8 text-primary"/><p className="eyebrow">Administrator access</p>
     <h1 className="mt-3 text-3xl font-semibold">{recovery?"Recover your account":"Sign in to AETHER-TRADE"}</h1>
