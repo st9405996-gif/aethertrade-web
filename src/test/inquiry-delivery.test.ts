@@ -150,7 +150,8 @@ describe("deliverInquiry (mocked providers; not verified against real accounts)"
     });
     await deliverInquiry({ ...input, kind: "demo" }, config, fetchMock as unknown as typeof fetch);
     const teamCall = fetchMock.mock.calls.filter(([url]) => String(url).includes("api.resend.com"))[0];
-    expect(JSON.parse((teamCall![1] as RequestInit).body as string).to).toEqual(["sales@aethertrade.cloud"]);
+    const teamBody = JSON.parse((teamCall![1] as RequestInit).body as string);
+    expect(teamBody.to).toEqual(["sales@aethertrade.cloud"]);
   });
 
   it("keeps the stored inquiry when a notification provider fails, and reports it honestly", async () => {
