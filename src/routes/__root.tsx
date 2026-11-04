@@ -88,6 +88,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 // Canonical public origin. Change only if the production domain changes; see public/sitemap.xml.
 const SITE_URL = "https://aethertrade.cloud";
+const GOOGLE_ANALYTICS_ID = "G-JY6M0YJY1S";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -110,6 +111,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     scripts: [
+      {
+        src: `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
+        async: true,
+      },
+      {
+        children: `window.dataLayer = window.dataLayer || [];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
+      },
       {
         type: "application/ld+json",
         children: JSON.stringify([
