@@ -112,6 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        type: "text/javascript",
         src: "https://cdn.consentmanager.net/delivery/autoblocking/30b2b75d02cfa.js",
         "data-cmp-ab": "1",
         "data-cmp-host": "d.delivery.consentmanager.net",
