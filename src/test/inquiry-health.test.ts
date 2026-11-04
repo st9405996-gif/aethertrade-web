@@ -15,8 +15,9 @@ const env = {
   SUPABASE_URL: "https://example-project.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "service_role_test_value_0123456789",
   RESEND_API_KEY: "re_test_value_0123456789",
-  INQUIRY_NOTIFY_TO: "hello@aethertrade.cloud",
-  INQUIRY_FROM_EMAIL: "AETHER-TRADE <notifications@internal-sender-domain.test>",
+  INQUIRY_NOTIFY_TO: "operations@aethertrade.cloud",
+  INQUIRY_SALES_NOTIFY_TO: "sales@aethertrade.cloud",
+  INQUIRY_FROM_EMAIL: "AETHER-TRADE <hello@aethertrade.cloud>",
   CONFIRMATION_SECRET: "confirmation_test_secret_0123456789abcdef",
   TURNSTILE_SECRET_KEY: "turnstile_test_secret_0123456789",
   PUBLIC_SITE_HOSTNAME: "aethertrade.cloud",
@@ -53,7 +54,7 @@ function providers(
     if (url.includes("api.resend.com/domains")) {
       return new Response(
         JSON.stringify(
-          o.domains ?? { data: [{ name: "internal-sender-domain.test", status: "verified" }] },
+          o.domains ?? { data: [{ name: "aethertrade.cloud", status: "verified" }] },
         ),
         { status: o.resend ?? 200 },
       );
@@ -142,7 +143,7 @@ describe("runInquiryHealthCheck", () => {
     const { httpStatus, report } = await runInquiryHealthCheck(
       env,
       providers({
-        domains: { data: [{ name: "internal-sender-domain.test", status: "pending" }] },
+        domains: { data: [{ name: "aethertrade.cloud", status: "pending" }] },
         turnstile: { success: false, "error-codes": ["invalid-input-response"] },
       }) as unknown as typeof fetch,
     );
@@ -193,7 +194,7 @@ describe("runInquiryHealthCheck", () => {
       const text = JSON.stringify(report);
       for (const secret of SECRET_VALUES) expect(text).not.toContain(secret);
       expect(text).not.toContain("ECONNREFUSED");
-      expect(text).not.toContain("internal-sender-domain.test");
+      expect(text).not.toContain("aethertrade.cloud");
       expect(text).not.toContain("hello@aethertrade.cloud");
       expect(text).not.toContain("internal.example");
     }
