@@ -130,17 +130,19 @@ function Users() {
   return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Administrator access is managed through Supabase authentication and database roles.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
 }
 function Connections() {
-  const workspace = useWorkspace(); const [confirm, setConfirm] = useState(false);
-  return <><div className="mb-8 border-l-2 border-primary bg-primary/5 p-5"><h2 className="font-semibold">Administrator connections</h2><p className="mt-2 text-sm text-muted-foreground">No credential values are collected here. Account connections use their official settings. The CMS uses the connected Supabase project and authenticated administrator session.</p></div>
-    <div className="divide-y divide-border border-y border-border">{[
-      ["Supabase", "Not connected", "1. Open project Settings → General → External Supabase. 2. Choose Connect and authorize your account. 3. Select your project. 4. Return here so migrations, authentication and persistence can be connected and tested."],
-      ["GitHub", "Unverified", "1. Open Project settings → Git. 2. Authorize GitHub. 3. Choose the account or organization for the new private repository. Source synchronization does not back up database rows or storage objects."],
-      ["Cloudflare hosting", "Unsupported here", "Direct deployment of this Lovable app to your Cloudflare Pages or Workers account is unsupported here. No deployment configuration or successful hosting claim is supplied. Lovable Publish is an alternative only if you approve it."],
-      ["Domain & DNS", "Not connected", "Connect the domain only after you explicitly approve production launch. For supported hosting, use Project settings → Domains; approve any exact DNS changes separately."],
-      ["Notifications", "Not configured", "Choose an email service later. Sending credentials and recipients must be configured securely and real delivery tested before email notifications are enabled."],
-      ["Authentication", "Not operational", "Administrator accounts, invitations, password recovery and permission enforcement need your database connection and secure first-account provisioning. There is no public signup."],
-    ].map(([name, state, text]) => <section key={name} className="py-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-3 font-medium"><Plug className="size-4 text-primary"/>{name}</h2><Status value={state || "Not connected"}/></div><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{text}</p></section>)}</div>
-    <section className="mt-8"><h2 className="text-lg font-semibold">CMS backup</h2><p className="mt-2 text-sm text-muted-foreground">Export a copy of the current CMS records for safekeeping.</p><div className="mt-4 flex flex-wrap gap-3"><Button variant="outline" disabled={!demoCan(workspace.role, "settings")} onClick={() => download("aether-demo-workspace.json", JSON.stringify(workspace.data, null, 2))}><Download/>Export demo workspace</Button><Button variant="outline" disabled={!demoCan(workspace.role, "settings")} onClick={() => setConfirm(true)}><RotateCcw/>Reset unavailable</Button></div></section>
-    <Dialog open={confirm} onOpenChange={setConfirm}><DialogContent><DialogHeader><DialogTitle>Reset CMS data?</DialogTitle><DialogDescription>A live CMS reset is disabled to protect your production content.</DialogDescription></DialogHeader><Button variant="destructive" onClick={() => attempt(() => { workspace.reset(); setConfirm(false); }, "Demo workspace reset")}><RotateCcw/>Reset disabled</Button></DialogContent></Dialog>
-  </>;
+  const { authenticated, role } = useWorkspace();
+  const items = [
+    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions and audit history use the configured Supabase project."],
+    ["Administrator authentication", authenticated ? "Connected" : "Disconnected", "This workspace requires a verified Supabase session and an assigned database role."],
+    ["Cloudflare Worker", "Runtime configured", "The website is served by the existing Cloudflare Worker deployment."],
+    ["Media storage", "Not configured", "The database media catalogue is available, but an upload bucket has not yet been provisioned."],
+    ["Inquiry email delivery", "Disabled pending live test", "Inquiry delivery remains controlled by the existing server configuration."],
+  ];
+  return <div className="divide-y divide-border border-y border-border">
+    {items.map(([name,state,description]) => <section key={name} className="py-5">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-medium">{name}</h2><Status value={state}/></div>
+      <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</p>
+    </section>)}
+    <p className="py-4 text-xs text-muted-foreground">Signed-in role: {role}. Database permissions are enforced by Supabase Row Level Security.</p>
+  </div>;
 }
