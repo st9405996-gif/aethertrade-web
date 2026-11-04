@@ -19,13 +19,12 @@ import { Footer } from "@/components/site/footer";
 import { WorkspaceProvider } from "@/components/admin/workspace-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-// Brand typography — Geist Sans + Geist Mono, bundled locally.
-import "@fontsource/geist-sans/400.css";
-import "@fontsource/geist-sans/500.css";
-import "@fontsource/geist-sans/600.css";
-import "@fontsource/geist-sans/700.css";
-import "@fontsource/geist-mono/400.css";
-import "@fontsource/geist-mono/500.css";
+// Enterprise typography — Inter for clear B2B readability.
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
+
 
 function NotFoundComponent() {
   return (
