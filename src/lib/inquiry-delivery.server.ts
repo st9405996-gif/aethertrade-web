@@ -302,7 +302,9 @@ export async function deliverInquiry(
   }
 
   const notified = await sendEmail(fetchImpl, config, {
-    to: [input.kind === "demo" || input.category === "Sales" ? config.salesNotifyTo : config.notifyTo],
+    to: [
+      input.kind === "demo" || input.category === "Sales" ? config.salesNotifyTo : config.notifyTo,
+    ],
     subject: `New ${input.kind} inquiry ${reference}`,
     text: teamNotificationText(input, reference),
     replyTo: input.email,
