@@ -1,5 +1,3 @@
-import { env as cloudflareEnv } from "cloudflare:workers";
-
 const SERVER_BINDING_KEYS = [
   "ABUSE_HASH_SECRET",
   "CONFIRMATION_SECRET",
@@ -17,18 +15,15 @@ const SERVER_BINDING_KEYS = [
 ] as const;
 
 /**
- * Read Cloudflare bindings from the current request's runtime context.
- * Keep process.env as a fallback for local development and non-Worker tests;
- * never copy request-specific bindings into process.env.
+ * Read only the server bindings this application needs.
+ *
+ * Cloudflare Workers populates process.env from Worker bindings when
+ * nodejs_compat_populate_process_env is enabled. This avoids importing
+ * cloudflare:workers into the Nitro-generated bundle and avoids mutating
+ * process.env ourselves between requests.
  */
 export function readServerEnv(): Record<string, string | undefined> {
-  const runtime = cloudflareEnv as unknown as Record<string, unknown>;
-  const local = typeof process !== "undefined" && process.env ? process.env : {};
+  const runtime = typeof process !== "undefined" && process.env ? process.env : {};
 
-  return Object.fromEntries(
-    SERVER_BINDING_KEYS.map((key) => [
-      key,
-      typeof runtime[key] === "string" ? (runtime[key] as string) : local[key],
-    ]),
-  );
+  return Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, runtime[key]]));
 }
