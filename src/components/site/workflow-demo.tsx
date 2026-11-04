@@ -397,13 +397,9 @@ export function WorkflowDemo() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,24rem)_1fr]">
+      <div className="grid gap-5">
         {/* Node list */}
-        <ol className="relative flex flex-col gap-1" aria-label="Workflow steps">
-          <span
-            className="absolute left-[1.4rem] top-4 bottom-4 w-px bg-border"
-            aria-hidden="true"
-          />
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Workflow steps">
           {stepsForFlow.map((step) => {
             const Icon = step.icon;
             const isActive = step.id === active;
