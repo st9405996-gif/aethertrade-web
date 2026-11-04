@@ -8,7 +8,7 @@ async function getConfig():Promise<Config>{
  const r=await fetch("/api/admin-config",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
  const payload=await r.json().catch(()=>null);
  if(!r.ok)throw Error(typeof payload?.message==="string"?payload.message:`Admin configuration request failed with status ${r.status}.`);
- const url=typeof payload?.url==="string"?payload.url.replace(/\\/$/,""):"";
+ const url=typeof payload?.url==="string"?(payload.url.endsWith("/")?payload.url.slice(0,-1):payload.url):"";
  const key=typeof payload?.key==="string"?payload.key:"";
  if(!url||!key)throw Error("Admin configuration response is incomplete. Check the Cloudflare Supabase bindings.");
  return {url,key};
