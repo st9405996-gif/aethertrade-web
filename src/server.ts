@@ -54,7 +54,8 @@ export default {
         return withSecurityHeaders(new Response("Method not allowed", { status: 405, headers: { "allow": "GET" } }));
       }
       const config = readServerEnv();
-      const url = config["SUPABASE_URL"]?.replace(/\\/$/, "");
+      const rawUrl = config["SUPABASE_URL"];
+      const url = rawUrl?.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
       const key = config["SUPABASE_PUBLISHABLE_KEY"];
       if (!url || !key) {
         return withSecurityHeaders(new Response(JSON.stringify({ message: "Supabase public connection settings are missing from the Cloudflare Worker." }), {
