@@ -1,7 +1,7 @@
 /**
  * Static catalogue preview used on the homepage before the CMS-backed
  * catalogue (Milestone 4) replaces it. Content mirrors the launch plan:
- * availability statuses are explicit and nothing planned is presented as live.
+ * each entry is an example engagement that can be scoped as a custom build.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
