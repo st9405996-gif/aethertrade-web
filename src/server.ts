@@ -45,8 +45,41 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+const RUNTIME_BINDING_KEYS = [
+  "ABUSE_HASH_SECRET",
+  "CONFIRMATION_SECRET",
+  "INQUIRY_DELIVERY_ENABLED",
+  "INQUIRY_FROM_EMAIL",
+  "INQUIRY_NOTIFY_TO",
+  "INQUIRY_SALES_NOTIFY_TO",
+  "PUBLIC_SITE_HOSTNAME",
+  "RESEND_API_KEY",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_URL",
+  "TURNSTILE_SECRET_KEY",
+  "VITE_TURNSTILE_SITE_KEY",
+] as const;
+
+/**
+ * Cloudflare passes Worker bindings as the second fetch argument. They are not
+ * automatically copied into process.env by nodejs_compat, while server functions
+ * read their configuration through process.env. Copy only known string bindings
+ * at the request boundary; never log or serialize these values.
+ */
+function hydrateRuntimeBindings(env: unknown): void {
+  if (typeof process === "undefined" || !process.env || !env || typeof env !== "object") return;
+  const bindings = env as Record<string, unknown>;
+  for (const key of RUNTIME_BINDING_KEYS) {
+    const value = bindings[key];
+    if (typeof value === "string") process.env[key] = value;
+    else delete process.env[key];
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    hydrateRuntimeBindings(env);
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
