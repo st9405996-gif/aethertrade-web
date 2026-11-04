@@ -249,7 +249,7 @@ export function InquiryForm({
               value={values.category}
               onChange={(e) => setValues({ ...values, category: e.target.value })}
             >
-              {["General inquiry", "Platform", "Automation", "Services", "Partnership"].map((x) => (
+              {["General inquiry", "Sales", "Platform", "Automation", "Services", "Partnership"].map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </select>
