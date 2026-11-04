@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software, AI-powered workflows and connected business systems.",
+          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for mid-market importers, exporters and logistics enterprises.",
       },
       { property: "og:title", content: "AETHER-TRADE" },
       {
@@ -222,10 +222,10 @@ function Hero() {
     <section className="relative isolate overflow-hidden">
       <img
         src={heroImage}
-        alt="Container ship at night overlaid with a glowing global trade network"
+        alt="Container ship and international logistics operations"
         width={1920}
         height={1080}
-        className="absolute inset-0 -z-10 h-full w-full object-cover object-[70%_center]"
+        className="absolute inset-0 -z-10 h-full w-full object-cover object-[70%_center] brightness-110 saturate-75"
       />
       <div
         className="absolute inset-0 -z-10"
@@ -239,7 +239,7 @@ function Hero() {
             Global Trade Operations. Connected by Intelligence.
           </h1>
           <p className="mt-5 text-lg font-medium text-primary">
-            Your AI-Powered Operations Partner for Global Trade.
+            Custom document intelligence and workflow automation for global trade.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
             We engineer custom document intelligence and end-to-end workflow automation for mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry and customs friction.
