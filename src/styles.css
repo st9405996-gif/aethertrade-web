@@ -199,3 +199,40 @@
     stroke-dashoffset: -24;
   }
 }
+
+
+/* Premium enterprise light theme: white surfaces, slate typography, ocean-blue actions. */
+:root, .light, .dark {
+  color-scheme: light;
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #0EA5E9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F8FAFC;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #334155;
+  --accent: #E0F2FE;
+  --accent-foreground: #0F172A;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #CBD5E1;
+  --ring: #0EA5E9;
+  --success: #15803D;
+  --warning: #B45309;
+  --planned: #64748B;
+  --glow: transparent;
+  --shadow-glow: none;
+  --shadow-card: 0 8px 24px -18px rgb(15 23 42 / 24%);
+  --hero-veil: linear-gradient(90deg, rgb(255 255 255 / 96%) 0%, rgb(255 255 255 / 88%) 48%, rgb(255 255 255 / 42%) 100%);
+}
+@layer base {
+  body { color: #334155; font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
+  h1, h2, h3, h4, h5, h6 { color: #0F172A; font-weight: 700; }
+  a, button { transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+}
