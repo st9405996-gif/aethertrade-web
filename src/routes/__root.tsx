@@ -94,17 +94,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AETHER-TRADE — Your AI-Powered Operations Partner for Global Trade" },
+      { title: "AETHER-TRADE — Trade Automation Engineering" },
       {
         name: "description",
         content:
-          "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software, AI-powered workflows and connected business systems.",
+          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
       },
       { name: "author", content: "AETHER-TRADE" },
       { property: "og:title", content: "AETHER-TRADE" },
       {
         property: "og:description",
-        content: "Your AI-Powered Operations Partner for Global Trade.",
+        content: "Custom document intelligence and workflow automation for global trade.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
