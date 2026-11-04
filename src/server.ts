@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { readServerEnv } from "./lib/server-env.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -47,6 +48,26 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const requestUrl = new URL(request.url);
+    if (requestUrl.pathname === "/api/admin-config") {
+      if (request.method !== "GET") {
+        return withSecurityHeaders(new Response("Method not allowed", { status: 405, headers: { "allow": "GET" } }));
+      }
+      const config = readServerEnv();
+      const rawUrl = config["SUPABASE_URL"];
+      const url = rawUrl?.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
+      const key = config["SUPABASE_PUBLISHABLE_KEY"];
+      if (!url || !key) {
+        return withSecurityHeaders(new Response(JSON.stringify({ message: "Supabase public connection settings are missing from the Cloudflare Worker." }), {
+          status: 503,
+          headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+        }));
+      }
+      return withSecurityHeaders(new Response(JSON.stringify({ url, key }), {
+        status: 200,
+        headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store, max-age=0" },
+      }));
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
