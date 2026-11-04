@@ -187,12 +187,12 @@ const FAQS = [
     a: "Integrations are scoped per engagement — commonly email, shared drives, ERPs, TMSs and CRMs through approved APIs and webhooks. Every integration is agreed with you during scoping; we don't claim integrations we haven't built.",
   },
   {
-    q: "How do you label what is ready today versus planned?",
-    a: "Every capability and catalogue entry carries an availability status — Available, In Development, Custom Build or Planned — so you always know what you are buying.",
+    q: "How do engagements work?",
+    a: "We start with an operations audit, document the current workflow, agree measurable outcomes and then scope a custom engineering engagement. Deliverables and integrations are confirmed before work begins.",
   },
   {
     q: "How do we get started?",
-    a: "Request a demo. We walk through your current document workflow, identify the highest-friction steps and scope what a first phase would look like. No account is required.",
+    a: "Book an operations audit. We review your current document workflow, identify friction points and define a practical first phase. No account is required.",
   },
 ];
 
