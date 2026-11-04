@@ -16,7 +16,7 @@ if (!robots.includes(`Sitemap: ${config.site.url.replace(/\/+$/, "")}/sitemap.xm
   errors.push("robots.txt must reference the canonical sitemap URL.");
 }
 if (!llms.startsWith(`# ${config.site.name}\n`)) errors.push("llms.txt is missing the site heading.");
-if (/<loc>[^<]*[<>&][^<]*<\/loc>/.test(sitemap)) errors.push("Sitemap contains unescaped XML characters.");
+if (/&(?!amp;|lt;|gt;|quot;|apos;)/.test(sitemap)) errors.push("Sitemap contains an unescaped XML ampersand.");
 
 if (errors.length) {
   console.error("SEO checks failed:");
