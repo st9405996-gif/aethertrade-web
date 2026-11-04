@@ -28,7 +28,6 @@ import heroImage from "@/assets/hero-global-trade.jpg";
 import { SectionHeader } from "@/components/site/section";
 import { WorkflowDemo } from "@/components/site/workflow-demo";
 import { CtaBand } from "@/components/site/cta-band";
-import { StatusBadge, type AvailabilityStatus } from "@/components/site/status-badge";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -42,7 +41,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       {
-        title: "AETHER-TRADE — Global Trade Operations. Connected by Intelligence.",
+        title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
       },
       {
         name: "description",
@@ -52,7 +51,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "AETHER-TRADE" },
       {
         property: "og:description",
-        content: "Your AI-Powered Operations Partner for Global Trade.",
+        content: "Custom document intelligence. Connected workflows. Human-controlled automation.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,62 +92,30 @@ const APPROACH = [
   {
     icon: FolderTree,
     title: "Trade Operations",
-    body: "Designed so each shipment lives as a structured case — documents, data and decisions in one place. In development.",
+    body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
   },
   {
     icon: ScanSearch,
     title: "Document Intelligence",
-    body: "Designed to identify document types and extract available information for review. In development.",
+    body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
   },
   {
     icon: Workflow,
     title: "Workflow Automation",
-    body: "Repetitive steps automated with approval points your team controls — built per engagement.",
+    body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
   },
   {
     icon: LayoutDashboard,
     title: "Operational Visibility",
-    body: "Planned: case status, findings and workload visible to the people who need them.",
+    body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
   },
 ];
 
 const CAPABILITIES = [
-  {
-    icon: FolderTree,
-    title: "Shipment & case organization",
-    body: "Group documents, data and communication around each shipment or case.",
-    status: "In Development" as AvailabilityStatus,
-  },
-  {
-    icon: ScanSearch,
-    title: "Document intelligence",
-    body: "Identify document types and extract available information automatically.",
-    status: "In Development",
-  },
-  {
-    icon: GitCompareArrows,
-    title: "Cross-document reconciliation",
-    body: "Compare key values across document sets and surface mismatches.",
-    status: "In Development",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Evidence-backed findings",
-    body: "Every finding carries references so reviewers can verify it.",
-    status: "In Development",
-  },
-  {
-    icon: UserCheck,
-    title: "Human review workflows",
-    body: "Findings route to your team — people make the consequential decisions.",
-    status: "Planned",
-  },
-  {
-    icon: BarChart3,
-    title: "Operational reporting",
-    body: "Case activity, recurring issues and workload, compiled for your team.",
-    status: "Planned",
-  },
+  { icon: FolderTree, title: "Trade Operations", body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace." },
+  { icon: ScanSearch, title: "Document Intelligence", body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs." },
+  { icon: Workflow, title: "Workflow Automation", body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy." },
+  { icon: LayoutDashboard, title: "Operational Visibility", body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions." },
 ];
 
 const AUDIENCES = [
@@ -198,7 +165,7 @@ const TRUST = [
   {
     icon: ShieldCheck,
     title: "Honest capability labelling",
-    body: "Available, in-development and planned capabilities are labelled clearly. We don't present planned work as live.",
+    body: "We agree scope and deliverables up front, then test each workflow with your team before handover.",
   },
 ];
 
@@ -275,18 +242,16 @@ function Hero() {
             Your AI-Powered Operations Partner for Global Trade.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            AETHER-TRADE helps importers, exporters, freight forwarders and
-            logistics businesses organize trade operations through intelligent
-            software, AI-powered workflows and connected business systems.
+            We engineer custom document intelligence and end-to-end workflow automation for mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry and customs friction.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
               <Link to="/request-demo" search={{ automation: undefined }}>
-                Request a Demo <ArrowRight />
+                Book an Operations Audit <ArrowRight />
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>
-              <Link to="/platform">Explore the Platform</Link>
+              <Link to="/services">Explore Our Services</Link>
             </Button>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
@@ -353,9 +318,9 @@ function WorkflowSection() {
     <section className="section-pad" aria-labelledby="workflow-title">
       <div className="container-page">
         <SectionHeader
-          eyebrow="How a shipment moves through the platform"
-          title="From scattered documents to evidence-backed review."
-          description="Follow one shipment through the review workflow — including what happens when information is missing."
+          eyebrow="Illustrative workflow"
+          title="From fragmented inputs to controlled operational workflows."
+          description="An illustrative eight-step example of a tailored document workflow. Sample data only; not a live integration."
         />
         <div className="mt-12">
           <WorkflowDemo />
@@ -370,8 +335,8 @@ function Capabilities() {
     <section className="section-pad border-y border-border bg-secondary/30" aria-labelledby="capabilities-title">
       <div className="container-page">
         <SectionHeader
-          eyebrow="Platform capabilities"
-          title="What the platform does for your operations."
+          eyebrow="Engineering capabilities"
+          title="Systems engineered around your operations."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CAPABILITIES.map((c) => (
@@ -383,7 +348,7 @@ function Capabilities() {
                 <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                   <c.icon className="size-5 text-primary" />
                 </span>
-                <StatusBadge status={c.status as AvailabilityStatus} />
+                
               </div>
               <h3 className="text-base font-semibold">{c.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{c.body}</p>
@@ -441,8 +406,8 @@ function CataloguePreview() {
           <SectionHeader
             align="left"
             eyebrow="Automation catalogue"
-            title="Pre-built automations for recurring trade work."
-            description="Each entry states the problem it solves, how it works and its availability — so you always know what is live today."
+            title="Custom automations engineered around your operation."
+            description="Example workflows we can scope and engineer around your systems, controls and operational requirements."
           />
           <Button variant="outline-hero" asChild>
             <Link to="/automations">
@@ -455,7 +420,7 @@ function CataloguePreview() {
             <article key={item.slug} className="card-elevated flex flex-col gap-3 p-6">
               <div className="flex items-start justify-between gap-3">
                 <p className="eyebrow">{item.category}</p>
-                <StatusBadge status={item.availability as AvailabilityStatus} />
+                
               </div>
               <h3 className="text-base font-semibold">{item.name}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -472,7 +437,7 @@ function CataloguePreview() {
                     to="/request-demo"
                     search={{ automation: item.slug }}
                   >
-                    Request This Solution
+                    Discuss This Workflow
                   </Link>
                 </Button>
               </div>
