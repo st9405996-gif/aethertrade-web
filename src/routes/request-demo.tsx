@@ -16,9 +16,9 @@ export const Route = createFileRoute("/request-demo")({
       {
         name: "description",
         content:
-          "Request a demo of AETHER-TRADE. No account required — tell us about your trade operations and what you want to improve.",
+          "Book an operations audit of AETHER-TRADE. No account required — tell us about your trade operations and what you want to improve.",
       },
-      { property: "og:title", content: "Request a Demo — AETHER-TRADE" },
+      { property: "og:title", content: "Book an Operations Audit — AETHER-TRADE" },
       {
         property: "og:description",
         content: "See AETHER-TRADE applied to your trade operations.",
@@ -33,6 +33,6 @@ export const Route = createFileRoute("/request-demo")({
 function RequestDemoPage() {
   const { automation } = Route.useSearch();
   return (
-    <><PageHero eyebrow="Request a demo" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><InquiryForm kind="demo" automation={automation}/></>
+    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><InquiryForm kind="demo" automation={automation}/></>
   );
 }
