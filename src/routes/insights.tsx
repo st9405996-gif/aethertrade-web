@@ -1,16 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/section";
-import { meta, PlaceholderNote } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
-import { INSIGHTS } from "@/content/site-content";
+import { getPublishedInsights } from "@/lib/public-insights.functions";
 
 export const Route = createFileRoute("/insights")({
-  head: () =>
-    meta("Insights", "Practical writing on trade operations, document workflows and responsible AI in logistics."),
+  loader: () => getPublishedInsights(),
+  head: () => ({
+    meta: [
+      { title: "Insights — AETHER-TRADE" },
+      {
+        name: "description",
+        content:
+          "Practical perspectives on trade operations, document workflows and responsible AI in logistics.",
+      },
+      { property: "og:type", content: "website" },
+    ],
+  }),
   component: InsightsPage,
 });
 
 function InsightsPage() {
+  const articles = Route.useLoaderData();
+
   return (
     <>
       <PageHero
@@ -19,18 +30,50 @@ function InsightsPage() {
         description="Practical perspectives on documents, workflows and where AI genuinely helps."
       />
       <section className="container-page section-pad space-y-8">
-        <PlaceholderNote>Articles coming soon — full posts publish through the CMS</PlaceholderNote>
-        <div className="grid gap-5 md:grid-cols-3">
-          {INSIGHTS.map((p) => (
-            <article key={p.slug} className="rounded-xl border border-border bg-card p-6">
-              <p className="eyebrow mb-2">{p.category}</p>
-              <h2 className="text-lg font-semibold">{p.title}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{p.excerpt}</p>
-            </article>
-          ))}
-        </div>
+        {articles.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+            No articles have been published yet. Check back soon.
+          </p>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-3">
+            {articles.map((article) => (
+              <article
+                key={article.slug}
+                className="flex flex-col rounded-xl border border-border bg-card p-6"
+              >
+                {article.category ? (
+                  <p className="eyebrow mb-2">{article.category}</p>
+                ) : null}
+                <h2 className="text-lg font-semibold">
+                  <Link
+                    to="/insights/$slug"
+                    params={{ slug: article.slug }}
+                    className="transition-colors hover:text-primary"
+                  >
+                    {article.title}
+                  </Link>
+                </h2>
+                <p className="mt-2 flex-1 text-sm text-muted-foreground">
+                  {article.body.length > 220
+                    ? `${article.body.slice(0, 217).trimEnd()}…`
+                    : article.body}
+                </p>
+                <Link
+                  to="/insights/$slug"
+                  params={{ slug: article.slug }}
+                  className="mt-5 text-sm font-medium text-primary hover:underline"
+                >
+                  Read article
+                </Link>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
-      <CtaBand title="Have a question we should write about?" description="Tell us what your team is wrestling with." />
+      <CtaBand
+        title="Have a question we should write about?"
+        description="Tell us what your team is wrestling with."
+      />
     </>
   );
 }
