@@ -63,12 +63,12 @@ create table if not exists public.content_redirects (
 
 alter table public.content_redirects enable row level security;
 revoke all on public.content_redirects from anon, authenticated;
-grant select on public.content_redirects to anon;
-grant select, insert, update, delete on public.content_redirects to authenticated;
+grant select on public.content_redirects to anon, authenticated;
+grant insert, update, delete on public.content_redirects to authenticated;
 
 drop policy if exists "Public active redirects" on public.content_redirects;
 create policy "Public active redirects"
-  on public.content_redirects for select to anon
+  on public.content_redirects for select to anon, authenticated
   using (is_active = true);
 
 drop policy if exists "Editors read redirects" on public.content_redirects;
@@ -96,8 +96,8 @@ commit;
 
 -- POST-MIGRATION VERIFICATION (run separately after staging apply):
 -- 1. Confirm content_records row count and original IDs/slugs are unchanged.
--- 2. Confirm anon can read only active redirects and cannot write.
--- 3. Confirm authenticated non-publishers cannot read or mutate redirects.
--- 4. Confirm a publisher can create/update/delete redirects.
+-- 2. Confirm anon and ordinary authenticated users can read active redirects only.
+-- 3. Confirm authenticated non-publishers cannot read inactive redirects or mutate.
+-- 4. Confirm a publisher can read all and create/update/delete redirects.
 -- 5. Confirm invalid search intent and non-array aeo_questions are rejected after
 --    validating the two NOT VALID constraints in a separate controlled step.
