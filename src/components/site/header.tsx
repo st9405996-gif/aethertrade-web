@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/site/logo";
-import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -44,10 +43,9 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <Button variant="hero" size="sm" asChild className="hidden sm:inline-flex">
             <Link to="/request-demo" search={{ automation: undefined }}>
-              Request a Demo
+              Book an Operations Audit
               <ArrowRight />
             </Link>
           </Button>
@@ -95,7 +93,7 @@ export function Header() {
                 <SheetClose asChild>
                   <Button variant="hero" size="lg" className="w-full" asChild>
                     <Link to="/request-demo" search={{ automation: undefined }}>
-                      Request a Demo
+                      Book an Operations Audit
                       <ArrowRight />
                     </Link>
                   </Button>
