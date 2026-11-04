@@ -129,34 +129,58 @@ export interface Service {
 
 export const SERVICES: Service[] = [
   {
-    title: "Operations Assessment",
-    body: "A structured review of how documents, data and decisions move through your trade operations today.",
+    title: "Trade Operations & Workflow Assessment",
+    body: "Map how shipments, customer requests, data and approvals move through your import-export or logistics operation, then identify the best automation opportunities.",
     status: "Available",
-    deliverables: ["Workflow map", "Bottleneck findings", "Prioritized opportunities"],
+    deliverables: ["Current-state workflow map", "Bottleneck and risk review", "Prioritized automation roadmap"],
   },
   {
-    title: "Workflow Automation Build",
-    body: "Design and build of automations for follow-ups, notifications, intake and data hand-offs.",
+    title: "Freight Forwarding & Shipment Operations Automation",
+    body: "Custom workflows for shipment milestones, status enquiries, agent coordination, exception handling, hand-offs and customer updates.",
     status: "Custom Build",
-    deliverables: ["Scoped specification", "Built automation", "Handover documentation"],
+    deliverables: ["Shipment milestone workflows", "Exception and escalation routing", "Customer update automation"],
   },
   {
-    title: "Custom AI Agents",
-    body: "Task-specific assistants that draft, classify or summarize — always with human review before anything is sent or approved.",
+    title: "Import-Export & Trade Workflow Automation",
+    body: "Automate repeatable work across purchase orders, suppliers, buyers, bookings, shipment coordination, approvals and operational hand-offs.",
     status: "Custom Build",
-    deliverables: ["Agent design", "Review controls", "Pilot evaluation"],
+    deliverables: ["Process-specific workflow design", "System and inbox integrations", "Tested automation with handover"],
   },
   {
-    title: "Systems Integration",
-    body: "Connecting email, spreadsheets, CRM and accounting tools you already use, scoped per engagement.",
+    title: "Document Intelligence & Processing",
+    body: "Classify trade documents, extract structured fields, compare related records and flag missing or inconsistent information for human review.",
     status: "Custom Build",
-    deliverables: ["Integration plan", "Connectors", "Monitoring guidance"],
+    deliverables: ["Document intake and classification", "Field extraction and validation", "Exception queues and review workpapers"],
   },
   {
-    title: "Pilot & Ongoing Support",
-    body: "A measured pilot on real work, followed by optional support and iteration as your operation changes.",
+    title: "Custom AI Agents & Assistants",
+    body: "Purpose-built agents for operations, customer support, sales coordination, research, reporting and internal knowledge workflows, with clear approval boundaries.",
+    status: "Custom Build",
+    deliverables: ["Agent and tool design", "Human approval and access controls", "Evaluation, monitoring and handover"],
+  },
+  {
+    title: "Business Process & Back-Office Automation",
+    body: "Automate repetitive tasks across email, CRM, spreadsheets, finance operations, procurement, customer onboarding and internal service processes.",
+    status: "Custom Build",
+    deliverables: ["Process mapping", "Automated triggers and actions", "Exception handling and audit trail"],
+  },
+  {
+    title: "Systems Integration & Data Workflows",
+    body: "Connect approved email, CRM, ERP, accounting, spreadsheets, shared drives and third-party APIs where access and documentation permit.",
+    status: "Custom Build",
+    deliverables: ["Integration plan", "Configured API or application connections", "Monitoring and failure handling"],
+  },
+  {
+    title: "Dashboards, Reporting & Operational Analytics",
+    body: "Turn approved operational data into recurring reports, workload visibility, shipment summaries and exception dashboards.",
+    status: "Custom Build",
+    deliverables: ["KPI and reporting specification", "Automated reporting workflow", "Dashboard and data-quality checks"],
+  },
+  {
+    title: "Pilot, Deployment & Ongoing Support",
+    body: "Validate a scoped workflow with your team, deploy it in an agreed environment and improve it based on measured results.",
     status: "Available",
-    deliverables: ["Pilot plan", "Success measures", "Support arrangement"],
+    deliverables: ["Pilot plan and success measures", "Deployment and team handover", "Optional maintenance and iteration"],
   },
 ];
 
