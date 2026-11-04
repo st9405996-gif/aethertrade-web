@@ -12,7 +12,7 @@ export const Route = createFileRoute("/request-demo")({
   validateSearch,
   head: () => ({
     meta: [
-      { title: "Request a Demo — AETHER-TRADE" },
+      { title: "Book an Operations Audit — AETHER-TRADE" },
       {
         name: "description",
         content:
