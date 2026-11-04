@@ -16,6 +16,7 @@ export interface DeliveryConfig {
   serviceRoleKey: string;
   resendApiKey: string;
   notifyTo: string;
+  salesNotifyTo: string;
   fromEmail: string;
   confirmationSecret: string;
   turnstileSecret: string;
@@ -96,6 +97,7 @@ const configSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
   RESEND_API_KEY: z.string().min(10),
   INQUIRY_NOTIFY_TO: z.email(),
+  INQUIRY_SALES_NOTIFY_TO: z.email(),
   INQUIRY_FROM_EMAIL: senderSchema,
   CONFIRMATION_SECRET: z.string().min(32),
   TURNSTILE_SECRET_KEY: z.string().min(10),
@@ -117,6 +119,7 @@ export function parseDeliveryConfig(env: Record<string, string | undefined>): Co
     SUPABASE_SERVICE_ROLE_KEY: env["SUPABASE_SERVICE_ROLE_KEY"] ?? "",
     RESEND_API_KEY: env["RESEND_API_KEY"] ?? "",
     INQUIRY_NOTIFY_TO: env["INQUIRY_NOTIFY_TO"] ?? "",
+    INQUIRY_SALES_NOTIFY_TO: env["INQUIRY_SALES_NOTIFY_TO"] ?? "",
     INQUIRY_FROM_EMAIL: env["INQUIRY_FROM_EMAIL"] ?? "",
     CONFIRMATION_SECRET: env["CONFIRMATION_SECRET"] ?? "",
     TURNSTILE_SECRET_KEY: env["TURNSTILE_SECRET_KEY"] ?? "",
@@ -136,6 +139,7 @@ export function parseDeliveryConfig(env: Record<string, string | undefined>): Co
       serviceRoleKey: d.SUPABASE_SERVICE_ROLE_KEY,
       resendApiKey: d.RESEND_API_KEY,
       notifyTo: d.INQUIRY_NOTIFY_TO,
+      salesNotifyTo: d.INQUIRY_SALES_NOTIFY_TO,
       fromEmail: d.INQUIRY_FROM_EMAIL,
       confirmationSecret: d.CONFIRMATION_SECRET,
       turnstileSecret: d.TURNSTILE_SECRET_KEY,
@@ -298,7 +302,9 @@ export async function deliverInquiry(
   }
 
   const notified = await sendEmail(fetchImpl, config, {
-    to: [config.notifyTo],
+    to: [
+      input.kind === "demo" || input.category === "Sales" ? config.salesNotifyTo : config.notifyTo,
+    ],
     subject: `New ${input.kind} inquiry ${reference}`,
     text: teamNotificationText(input, reference),
     replyTo: input.email,

@@ -19,8 +19,9 @@ const env = {
   SUPABASE_URL: "https://example-project.supabase.co/",
   SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY,
   RESEND_API_KEY: RESEND_KEY,
-  INQUIRY_NOTIFY_TO: "hello@aethertrade.cloud",
-  INQUIRY_FROM_EMAIL: "AETHER-TRADE <notifications@example-verified-domain.test>",
+  INQUIRY_NOTIFY_TO: "operations@aethertrade.cloud",
+  INQUIRY_SALES_NOTIFY_TO: "sales@aethertrade.cloud",
+  INQUIRY_FROM_EMAIL: "AETHER-TRADE <hello@aethertrade.cloud>",
   CONFIRMATION_SECRET: CONFIRMATION_SECRET,
   TURNSTILE_SECRET_KEY: TURNSTILE_SECRET,
   PUBLIC_SITE_HOSTNAME: "aethertrade.cloud",
@@ -31,8 +32,9 @@ const config: DeliveryConfig = {
   supabaseUrl: "https://example-project.supabase.co",
   serviceRoleKey: SERVICE_KEY,
   resendApiKey: RESEND_KEY,
-  notifyTo: "hello@aethertrade.cloud",
-  fromEmail: "AETHER-TRADE <notifications@example-verified-domain.test>",
+  notifyTo: "operations@aethertrade.cloud",
+  salesNotifyTo: "sales@aethertrade.cloud",
+  fromEmail: "AETHER-TRADE <hello@aethertrade.cloud>",
   confirmationSecret: CONFIRMATION_SECRET,
   turnstileSecret: TURNSTILE_SECRET,
   publicSiteHostname: "aethertrade.cloud",
@@ -134,11 +136,22 @@ describe("deliverInquiry (mocked providers; not verified against real accounts)"
     );
     expect(emailCalls).toHaveLength(2);
     const teamBody = JSON.parse((emailCalls[0]![1] as RequestInit).body as string);
-    expect(teamBody.to).toEqual(["hello@aethertrade.cloud"]);
+    expect(teamBody.to).toEqual(["operations@aethertrade.cloud"]);
     expect(teamBody.reply_to).toBe("reviewer@example.com");
     const confirmBody = JSON.parse((emailCalls[1]![1] as RequestInit).body as string);
     expect(confirmBody.to).toEqual(["reviewer@example.com"]);
     expect(confirmBody.text).toContain(result.reference);
+  });
+
+  it("routes demo and sales inquiries to the sales mailbox", async () => {
+    fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("/rest/v1/inquiries")) return new Response(null, { status: 201 });
+      return json(200, { id: "email_sales" });
+    });
+    await deliverInquiry({ ...input, kind: "demo" }, config, fetchMock as unknown as typeof fetch);
+    const teamCall = fetchMock.mock.calls.filter(([url]) => String(url).includes("api.resend.com"))[0];
+    const teamBody = JSON.parse((teamCall![1] as RequestInit).body as string);
+    expect(teamBody.to).toEqual(["sales@aethertrade.cloud"]);
   });
 
   it("keeps the stored inquiry when a notification provider fails, and reports it honestly", async () => {
