@@ -6,8 +6,7 @@ import { ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useWorkspace } from "@/components/admin/workspace-provider";
-import { inquirySchema, type Inquiry } from "@/lib/workspace-model";
+import { inquirySchema } from "@/lib/workspace-model";
 import { submitInquiry, getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 import { loadTurnstile, TURNSTILE_SITE_KEY } from "@/lib/turnstile-client";
@@ -19,7 +18,6 @@ export function InquiryForm({
   kind: "contact" | "demo";
   automation?: string | undefined;
 }) {
-  const workspace = useWorkspace();
   const navigate = useNavigate();
   const submit = useServerFn(submitInquiry);
   const readMode = useServerFn(getInquiryDeliveryMode);
@@ -81,6 +79,10 @@ export function InquiryForm({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (lock.current) return;
+    if (!isLive) {
+      setError("The inquiry service is temporarily unavailable. Please try again later.");
+      return;
+    }
     const parsed = inquirySchema.safeParse(values);
     if (!parsed.success) {
       const issues = parsed.error.issues;
@@ -109,28 +111,13 @@ export function InquiryForm({
           turnstileToken: challengeToken || undefined,
         },
       });
-      if (result.mode === "live") {
-        // Delivery is configured on the server; the reference is the one the server stored.
-        await navigate({
-          to: "/thank-you",
-          search: { reference: result.reference, token: result.confirmationToken ?? undefined },
-        });
-        return;
+      if (result.mode !== "live") {
+        throw new Error("The inquiry service is temporarily unavailable. Your details were not saved.");
       }
-      const inquiry: Inquiry = {
-        ...parsed.data,
-        id,
-        reference: `DEMO-${id.slice(0, 8).toUpperCase()}`,
-        status: "New",
-        createdAt: new Date().toISOString(),
-        notes: [],
-        assignedTo: "",
-        followUp: "",
-      };
-      workspace.addInquiry(inquiry);
+      // Only navigate after the server confirms persistence and returns its reference.
       await navigate({
         to: "/thank-you",
-        search: { reference: inquiry.reference, token: undefined },
+        search: { reference: result.reference, token: result.confirmationToken ?? undefined },
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Your submission was not saved. Please try again.");
@@ -197,10 +184,9 @@ export function InquiryForm({
           <div className="flex gap-3 border-l-2 border-warning bg-warning/10 p-4 text-sm">
             <AlertCircle className="size-5 shrink-0 text-warning" />
             <p>
-              <strong>Demo form · not sent to AETHER-TRADE.</strong>
+              <strong>Inquiry service unavailable.</strong>
               <br />
-              Submissions are saved only in this browser for testing. No database record or email is
-              created. Use illustrative details.
+              This form is not accepting submissions until secure server-side delivery is configured. Your details will not be stored in this browser.
             </p>
           </div>
         )}
@@ -306,7 +292,7 @@ export function InquiryForm({
         <Button
           variant="hero"
           size="lg"
-          disabled={busy || !workspace.ready || (challengeRequired && !challengeToken)}
+          disabled={busy || !isLive || (challengeRequired && !challengeToken)}
           type="submit"
         >
           {busy ? <Loader2 className="animate-spin" /> : <ArrowRight />}
@@ -316,7 +302,9 @@ export function InquiryForm({
               : "Validating…"
             : isLive
               ? "Send inquiry"
-              : "Save demo inquiry"}
+              : delivery === undefined
+                ? "Checking availability…"
+                : "Temporarily unavailable"}
         </Button>
       </form>
     </section>
