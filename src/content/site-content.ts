@@ -1,7 +1,7 @@
 /**
  * Default public-site content. Milestone 3 moves this into the CMS database;
  * until then pages read from here. Every capability carries an availability
- * status and nothing planned is presented as live.
+ * status and engagement scope are explicit.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
@@ -14,27 +14,27 @@ export interface Capability {
 
 export const PLATFORM_MODULES: Capability[] = [
   {
-    title: "Trade Case Workspace",
+    title: "Trade Case Architecture",
     body: "Each shipment or trade transaction becomes a structured case that holds its documents, extracted data, review notes and decisions.",
-    status: "In Development",
+    status: "Custom Build",
     points: ["Case timeline", "Linked documents", "Reviewer notes"],
   },
   {
     title: "Document Intelligence",
     body: "Identifies common trade document types and extracts available fields for human review — invoices, packing lists, transport documents.",
-    status: "In Development",
+    status: "Custom Build",
     points: ["Type identification", "Field extraction", "Confidence flags"],
   },
   {
     title: "Cross-Document Comparison",
     body: "Compares values across documents in a case and highlights mismatches such as quantities, weights, parties or totals.",
-    status: "In Development",
+    status: "Custom Build",
     points: ["Mismatch highlighting", "Side-by-side evidence"],
   },
   {
-    title: "Review & Approval Workflow",
+    title: "Approval-Aware Workflow Engineering",
     body: "Routes flagged items to the right person and records who reviewed what, when and why — an evidence trail, not a black box.",
-    status: "Planned",
+    status: "Custom Build",
     points: ["Assignments", "Audit trail", "Human sign-off"],
   },
   {
@@ -44,9 +44,9 @@ export const PLATFORM_MODULES: Capability[] = [
     points: ["Email triggers", "Scheduled follow-ups", "Hand-offs"],
   },
   {
-    title: "Operational Reporting",
+    title: "Operational Dashboards & Reporting",
     body: "Summaries of case status, open exceptions and turnaround — built from your own operational data.",
-    status: "Planned",
+    status: "Custom Build",
     points: ["Exception overview", "Turnaround views"],
   },
   {
@@ -161,7 +161,7 @@ export const SERVICES: Service[] = [
 ];
 
 export const FAQS = [
-  { q: "Is AETHER-TRADE available today?", a: "Parts of the platform are in development. Consulting, assessments and custom automation builds are available now. Every capability on this site carries a status label so you know exactly what exists." },
+  { q: "Is AETHER-TRADE available today?", a: "AETHER-TRADE works as an automation engineering agency. We begin with an operations assessment and scope custom document-intelligence, workflow and integration projects to each client’s requirements." },
   { q: "Do you handle customs clearance?", a: "No. AETHER-TRADE is operations software and automation. We do not provide customs clearance, brokerage or legal advice, and we do not integrate with government systems." },
   { q: "Does AI make decisions on our shipments?", a: "No. AI assists with identifying, extracting and comparing information. A person reviews and approves every outcome." },
   { q: "Can we upload documents through the website?", a: "No. For your security we never accept trade documents through public forms. Documents are only shared within an agreed engagement." },

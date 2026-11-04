@@ -1,7 +1,7 @@
 /**
  * Static catalogue preview used on the homepage before the CMS-backed
  * catalogue (Milestone 4) replaces it. Content mirrors the launch plan:
- * availability statuses are explicit and nothing planned is presented as live.
+ * each entry is an example engagement that can be scoped as a custom build.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
@@ -42,7 +42,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
       "New inquiry → classification → internal routing with context → acknowledgement to the sender.",
     integrations: ["Email (IMAP/SMTP)", "CRM", "Team chat"],
     deploymentModel: "Managed environment",
-    availability: "In Development",
+    availability: "Custom Build",
   },
   {
     slug: "shipment-follow-up-automation",
@@ -56,7 +56,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
       "Open request detected → follow-up prepared → human approval → sent and logged on the case.",
     integrations: ["Email (IMAP/SMTP)", "Shared inbox", "Case tracker"],
     deploymentModel: "Managed environment",
-    availability: "In Development",
+    availability: "Custom Build",
   },
   {
     slug: "document-intake-workflow",
@@ -70,7 +70,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
       "Documents received → type detection → field extraction → structured case → exception flags for reviewers.",
     integrations: ["Email (IMAP/SMTP)", "Shared drives", "Custom API"],
     deploymentModel: "Managed or client-owned environment",
-    availability: "In Development",
+    availability: "Custom Build",
   },
   {
     slug: "invoice-packing-list-reconciliation",
@@ -84,7 +84,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
       "Document set linked → cross-document comparison → mismatches flagged with references → human review.",
     integrations: ["ERP", "Email (IMAP/SMTP)", "Custom API"],
     deploymentModel: "Managed or client-owned environment",
-    availability: "In Development",
+    availability: "Custom Build",
   },
   {
     slug: "reporting-automation",
@@ -98,7 +98,7 @@ export const CATALOGUE_PREVIEW: CatalogueItem[] = [
       "Scheduled run → data compiled from approved sources → report prepared → distribution list notified.",
     integrations: ["ERP", "Spreadsheets", "Email (IMAP/SMTP)"],
     deploymentModel: "Managed environment",
-    availability: "Planned",
+    availability: "Custom Build",
   },
   {
     slug: "custom-ai-agent",

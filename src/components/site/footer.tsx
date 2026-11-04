@@ -29,7 +29,7 @@ const COLUMNS: { heading: string; links: { label: string; to: string }[] }[] = [
       { label: "Careers", to: "/careers" },
       { label: "FAQs", to: "/faqs" },
       { label: "Contact", to: "/contact" },
-      { label: "Request a Demo", to: "/request-demo" },
+      { label: "Book an Operations Audit", to: "/request-demo" },
     ],
   },
   {

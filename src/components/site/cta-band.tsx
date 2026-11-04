@@ -20,10 +20,10 @@ export function CtaBand({
         loading="lazy"
         width={1920}
         height={1024}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover brightness-110 saturate-75 opacity-30"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40"
+        className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/65"
         aria-hidden="true"
       />
       <div className="container-page relative py-20 sm:py-24">
@@ -36,7 +36,7 @@ export function CtaBand({
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
               <Link to="/request-demo" search={{ automation: undefined }}>
-                Request a Demo <ArrowRight />
+                Book an Operations Audit <ArrowRight />
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>

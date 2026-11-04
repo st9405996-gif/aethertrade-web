@@ -19,8 +19,8 @@ function PlatformPage() {
     <>
       <PageHero
         eyebrow="The platform"
-        title="One Intelligent Platform for Connected Trade Operations."
-        description="Trade document intelligence, workflow automation and operational visibility — organized around your shipments and cases, with people in control of every decision."
+        title="Automation Engineering for Connected Trade Operations."
+        description="We design and implement document intelligence, controlled rule engines and connected workflows around your existing systems and approval processes."
       >
         <Button variant="outline" asChild>
           <Link to="/how-it-works">See how engagements work</Link>
@@ -29,8 +29,8 @@ function PlatformPage() {
       <section className="container-page section-pad">
         <SectionHeader
           eyebrow="Modules"
-          title="What the platform is made of"
-          description="Each module is labelled with its current status. Nothing marked In Development or Planned is presented as a live product."
+          title="What we can engineer with your team"
+          description="Every engagement is scoped around your systems, operational constraints and measurable outcomes."
         />
         <div className="mt-12">
           <CardGrid items={PLATFORM_MODULES.map((m) => ({ ...m }))} />
@@ -50,7 +50,7 @@ function PlatformPage() {
           ))}
         </div>
       </section>
-      <CtaBand title="See the platform applied to your operation." description="We'll walk through the modules most relevant to your workflows." />
+      <CtaBand title="Map the highest-friction workflow in your operation." description="We'll walk through the modules most relevant to your workflows." />
     </>
   );
 }
