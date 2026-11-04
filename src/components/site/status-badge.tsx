@@ -8,7 +8,7 @@ const STYLES: Record<AvailabilityStatus, string> = {
 };
 /** Public catalogue label. Development labels are intentionally omitted from public cards. */
 export function StatusBadge({ status, className }: { status: AvailabilityStatus; className?: string }) {
-  if (status === "In Development") return null;
+  if (status === "In Development" || status === "Planned") return null;
   return <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[0.7rem] uppercase tracking-wider", STYLES[status], className)}>
     <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />{status}
   </span>;
