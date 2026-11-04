@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { readServerEnv } from "@/lib/server-env.server";
 
+export interface AeoQuestion {
+  question: string;
+  answer: string;
+}
+
 export interface PublishedInsight {
   slug: string;
   title: string;
@@ -10,6 +15,8 @@ export interface PublishedInsight {
   seoTitle: string;
   seoDescription: string;
   author: string;
+  geoSummary: string;
+  aeoQuestions: AeoQuestion[];
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -22,6 +29,17 @@ function asRecord(value: unknown): JsonRecord | null {
 
 function asText(value: unknown): string {
   return typeof value === "string" ? value : "";
+}
+
+function parseAeoQuestions(value: unknown): AeoQuestion[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 12).flatMap((entry) => {
+    const item = asRecord(entry);
+    const question = asText(item?.question).trim();
+    const answer = asText(item?.answer).trim();
+    if (!question || !answer || question.length > 240 || answer.length > 1200) return [];
+    return [{ question, answer }];
+  });
 }
 
 function parsePublishedInsight(value: unknown): PublishedInsight | null {
@@ -44,6 +62,8 @@ function parsePublishedInsight(value: unknown): PublishedInsight | null {
     seoTitle: asText(row.seo_title),
     seoDescription: asText(row.seo_description),
     author: asText(fields?.author),
+    geoSummary: asText(fields?.geoSummary).trim().slice(0, 1200),
+    aeoQuestions: parseAeoQuestions(fields?.aeoQuestions),
   };
 }
 
@@ -82,7 +102,6 @@ async function readPublishedInsights(slug?: string): Promise<PublishedInsight[]>
   });
 
   if (!response.ok) {
-    // Do not return backend details, credentials, or hidden content to the browser.
     throw new Error(`Published content request failed with status ${response.status}.`);
   }
 

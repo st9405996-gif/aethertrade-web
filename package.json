@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seo": "node scripts/build-seo.mjs",
+    "seo:check": "node scripts/check-seo.mjs",
     "build:site": "node scripts/build-seo.mjs && vite build"
   },
   "overrides": {
