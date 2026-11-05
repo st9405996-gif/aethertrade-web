@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const Route = createFileRoute("/terms")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "terms" } }) }),
-  head: () => meta("Terms of Use", "Terms governing use of the AETHER-TRADE website."),
+  head:  ({ loaderData }) => mergeCmsHead((() => meta("Terms of Use", "Terms governing use of the AETHER-TRADE website."))(), loaderData?.cmsPage) ,
   component: TermsPage,
 });
 
