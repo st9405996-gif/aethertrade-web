@@ -79,6 +79,70 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   return new Response(upstream.body,{status:upstream.status,statusText:upstream.statusText,headers:outHeaders});
 }
 
+
+async function dynamicSeoDocument(pathname: string, config: Record<string, string | undefined>): Promise<Response | null> {
+  if (pathname !== "/sitemap.xml" && pathname !== "/llms.txt") return null;
+  const baseUrl = config["SUPABASE_URL"]?.replace(/\\/+$/, "");
+  const key = config["SUPABASE_PUBLISHABLE_KEY"];
+  if (!baseUrl || !key) return null;
+  try {
+    const headers = { apikey: key, Authorization: "Bearer " + key, Accept: "application/json" };
+    const recordsUrl = new URL(baseUrl + "/rest/v1/content_records");
+    recordsUrl.searchParams.set("select", "module,slug,title,canonical");
+    recordsUrl.searchParams.set("module", "in.(pages,insights)");
+    recordsUrl.searchParams.set("noindex", "eq.false");
+    recordsUrl.searchParams.set("or", `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date().toISOString()}))`);
+    recordsUrl.searchParams.set("order", "module.asc,position.asc,title.asc");
+    recordsUrl.searchParams.set("limit", "500");
+    const settingsUrl = new URL(baseUrl + "/rest/v1/global_seo_settings");
+    settingsUrl.searchParams.set("select", "settings");
+    settingsUrl.searchParams.set("id", "eq.1");
+    settingsUrl.searchParams.set("is_published", "eq.true");
+    settingsUrl.searchParams.set("limit", "1");
+    const [recordsResponse, settingsResponse] = await Promise.all([
+      fetch(recordsUrl, { headers }), fetch(settingsUrl, { headers }),
+    ]);
+    if (!recordsResponse.ok) return null;
+    const payload: unknown = await recordsResponse.json();
+    if (!Array.isArray(payload)) return null;
+    const records = payload.flatMap(value => {
+      if (!value || typeof value !== "object") return [];
+      const row = value as Record<string, unknown>;
+      if (typeof row.slug !== "string" || typeof row.title !== "string" || !["pages", "insights"].includes(String(row.module))) return [];
+      return [{ module: String(row.module), slug: row.slug, title: row.title, canonical: typeof row.canonical === "string" ? row.canonical : "" }];
+    });
+    let siteName = "AETHER-TRADE";
+    let siteUrl = "https://aethertrade.cloud";
+    let description = "AETHER-TRADE helps businesses organize global trade operations through document intelligence and workflow automation.";
+    if (settingsResponse.ok) {
+      const settingsPayload: unknown = await settingsResponse.json();
+      const first = Array.isArray(settingsPayload) ? settingsPayload[0] : null;
+      const saved = first && typeof first === "object" ? (first as Record<string, unknown>).settings : null;
+      if (saved && typeof saved === "object") {
+        const value = saved as Record<string, unknown>;
+        if (typeof value.siteName === "string" && value.siteName.trim()) siteName = value.siteName.trim().slice(0, 120);
+        if (typeof value.siteUrl === "string") {
+          try { const candidate = new URL(value.siteUrl); if (candidate.protocol === "https:" && candidate.hostname === "aethertrade.cloud") siteUrl = candidate.origin; } catch { /* retain production origin */ }
+        }
+        if (typeof value.organizationDescription === "string" && value.organizationDescription.trim()) description = value.organizationDescription.trim().slice(0, 500);
+      }
+    }
+    const body = pathname === "/sitemap.xml"
+      ? buildRuntimeSitemap(records, siteUrl)
+      : buildRuntimeLlms(records, siteName, description, siteUrl);
+    return new Response(body, {
+      status: 200,
+      headers: {
+        "content-type": pathname === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=0, s-maxage=60",
+      },
+    });
+  } catch (error) {
+    console.error("Dynamic SEO document generation failed", error);
+    return null;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const requestUrl = new URL(request.url);
