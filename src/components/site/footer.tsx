@@ -24,10 +24,7 @@ export function Footer() {
   const email = brand?.fields.email?.trim() || "";
   const phone = brand?.fields.phone?.trim() || "";
   const address = brand?.fields.address?.trim() || "";
-  const socialLinks = (brand?.fields.social || "").split("\n").map(value => value.trim()).flatMap(value => {
-    try { const url = new URL(value); return url.protocol === "https:" ? [url.toString()] : []; }
-    catch { return []; }
-  });
+  const socialLinks = (brand?.fields.social || "").split("\n").map(value => value.trim()).filter(value => value.startsWith("https://"));
   const footerItems = data?.filter(item => item.category.toLowerCase() === "footer" && item.fields.visible !== "false")
     .map(item => ({ label: item.title, to: item.body.trim(), heading: item.fields.group || "Company" }))
     .filter(item => item.to.startsWith("/") && !item.to.startsWith("//"));
