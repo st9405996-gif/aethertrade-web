@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { readServerEnv } from "@/lib/server-env.server";
 
 export interface CmsPageSection {
   id: string;
@@ -77,6 +76,7 @@ export const getPublishedCmsPage = createServerFn({ method: "GET" })
     return parsed.data;
   })
   .handler(async ({ data }) => {
+    const { readServerEnv } = await import("@/lib/server-env.server");
     const env = readServerEnv();
     const baseUrl = env["SUPABASE_URL"]?.replace(/\/$/, "");
     const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
