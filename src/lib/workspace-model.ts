@@ -44,9 +44,9 @@ export interface Inquiry {
   consent: true; status: typeof inquiryValues[number]; createdAt: string;
   notes: { text: string; at: string }[]; assignedTo: string; followUp: string;
 }
-export interface MediaRecord { id: string; name: string; type: string; size: number; alt: string; url: string; }
+export interface MediaRecord { id: string; name: string; type: string; size: number; alt: string; url: string; bucketId: string; objectPath: string; }
 export interface Revision { id: string; record: ContentRecord; at: string; action: string; }
-export interface Audit { id: string; action: string; title: string; at: string; }
+export interface Audit { id: string; action: string; title: string; at: string; changedFields: string[]; }
 export interface DemoWorkspace { records: ContentRecord[]; inquiries: Inquiry[]; media: MediaRecord[]; revisions: Revision[]; audit: Audit[]; }
 
 export const contentSchema = z.object({
