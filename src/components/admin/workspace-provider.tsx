@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision, Audit, AnalyticsEvent, Subscriber } from "@/lib/workspace-model";
+import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 type Config={configured:true}; type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
 type JsonRow = Record<string, unknown>;
 const row = (value: unknown): JsonRow => value !== null && typeof value === "object" && !Array.isArray(value) ? value as JsonRow : {};
@@ -50,7 +51,8 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
   followUp:text(source,"follow_up"),
  };
 }
-type Ctx={data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
+type AssignableAdminRole = Exclude<Role, "Super Admin">;
+type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
@@ -139,8 +141,12 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   setData(old=>({...old,subscribers:old.subscribers.map(x=>x.id===id?{...x,status:"unsubscribed"}:x)}));
   void refreshAfterWrite();
  }
+ async function listUsers(){const s=await fresh();return listAdminUsers({data:{accessToken:s.access_token}});}
+ async function inviteUser(email:string,adminRole:AssignableAdminRole){const s=await fresh();await inviteAdminUser({data:{email,role:adminRole,accessToken:s.access_token}});}
+ async function changeUserRole(userId:string,adminRole:AssignableAdminRole){const s=await fresh();await updateAdminUserRole({data:{targetUserId:userId,role:adminRole,accessToken:s.access_token}});}
+ async function revokeUser(userId:string){const s=await fresh();await removeAdminUser({data:{targetUserId:userId,accessToken:s.access_token}});}
  async function reset(){throw Error("Live CMS data cannot be reset from this panel.");}
- const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
+ const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWorkspace(){const c=useContext(Context);if(!c)throw new Error("Workspace provider is missing");return c;}
