@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
@@ -10,8 +11,10 @@ export const Route = createFileRoute("/privacy-policy")({
 });
 
 function PrivacyPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <LegalPage title="Privacy Policy." intro="This notice describes how the AETHER-TRADE website currently handles information submitted through its contact and operations-audit forms.">
+    <>
+      <LegalPage title="Privacy Policy." intro="This notice describes how the AETHER-TRADE website currently handles information submitted through its contact and operations-audit forms.">
       <h2>Information submitted through our forms</h2>
       <p>
         When you submit the Contact or Request an Operations Audit form, the information you provide is sent to AETHER-TRADE.
@@ -55,6 +58,8 @@ function PrivacyPage() {
         period has not yet been published. For a question about an inquiry or a request concerning your information, contact
         <a className="text-primary underline" href="mailto:sales@aethertrade.cloud"> sales@aethertrade.cloud</a> and include your inquiry reference if available.
       </p>
-    </LegalPage>
+      </LegalPage>
+      <CmsPageSections page={cmsPage} />
+    </>
   );
 }
