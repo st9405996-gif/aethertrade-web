@@ -83,6 +83,7 @@ type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecor
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
+ const [globalSeo,setGlobalSeo]=useState<GlobalSeoSettings>(DEFAULT_GLOBAL_SEO),[globalSeoPublished,setGlobalSeoPublished]=useState(false);
  const store=(s:Session)=>{localStorage.setItem(KEY,JSON.stringify(s));setSession(s);};
  async function refresh(c:Config,s:Session){const r=await fetch("/api/admin-supabase/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});const x=await r.json();if(!r.ok)throw Error(err(x));const n={access_token:x.access_token,refresh_token:x.refresh_token,expires_at:Math.floor(Date.now()/1000)+Number(x.expires_in||3600),user:x.user};store(n);return n;}
  async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return session.expires_at<Math.floor(Date.now()/1000)+60?refresh(cfg,session):session;}
