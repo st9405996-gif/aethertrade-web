@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import {
   ArrowRight,
   FolderX,
@@ -38,6 +39,7 @@ import {
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }) }),
   head: () => ({
     meta: [
       {
