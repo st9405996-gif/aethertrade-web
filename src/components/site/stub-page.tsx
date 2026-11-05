@@ -1,5 +1,7 @@
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
+import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 
 /**
  * Interim page used until the full page content ships in the next milestone.
@@ -10,11 +12,13 @@ export function StubPage({
   title,
   description,
   note,
+  cmsPage,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   note: string;
+  cmsPage?: PublishedCmsPage | null;
 }) {
   return (
     <>
@@ -23,6 +27,7 @@ export function StubPage({
           {note}
         </p>
       </PageHero>
+      <CmsPageSections page={cmsPage ?? null} />
       <CtaBand
         title="Start the conversation."
         description="Tell us about your business, your operational challenges and what you want to improve."

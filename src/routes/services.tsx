@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/services")({
   component: ServicesPage,
 });
 function ServicesPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const cards = items.length ? items.map(item => ({
     title: item.title, body: item.body,
     status: (item.availability || "Custom Build") as "Available" | "In Development" | "Custom Build" | "Planned",
@@ -27,6 +28,7 @@ function ServicesPage() {
       <Button variant="outline" asChild><Link to="/custom-solutions">About custom solutions</Link></Button>
     </PageHero>
     <section className="container-page section-pad"><SectionHeader eyebrow="What we offer" title="Services" /><div className="mt-12"><CardGrid items={cards} /></div></section>
-    <CtaBand title="Start with an operations assessment." description="A clear picture of where automation will — and won't — help." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Start with an operations assessment." description="A clear picture of where automation will — and won't — help." />
   </>;
 }

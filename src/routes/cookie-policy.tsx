@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
@@ -10,8 +11,10 @@ export const Route = createFileRoute("/cookie-policy")({
 });
 
 function CookiePolicyPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <LegalPage title="Cookie & Browser Storage Policy." intro="AETHER-TRADE uses limited browser storage for essential website preferences and administrator sign-in. We do not currently use advertising or analytics tools.">
+    <>
+      <LegalPage title="Cookie & Browser Storage Policy." intro="AETHER-TRADE uses limited browser storage for essential website preferences and administrator sign-in. We do not currently use advertising or analytics tools.">
       <h2>Browser storage used by the website</h2>
       <ul>
         <li><strong className="text-foreground">Theme preference</strong>: remembers your light or dark display preference on this device.</li>
@@ -29,6 +32,8 @@ function CookiePolicyPage() {
         You can clear website data through your browser settings. Clearing administrator session data will sign the
         administrator out; clearing the theme preference will restore the default display setting.
       </p>
-    </LegalPage>
+      </LegalPage>
+      <CmsPageSections page={cmsPage} />
+    </>
   );
 }

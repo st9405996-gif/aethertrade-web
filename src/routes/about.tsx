@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { StubPage } from "@/components/site/stub-page";
 
 export const Route = createFileRoute("/about")({
@@ -26,8 +27,10 @@ export const Route = createFileRoute("/about")({
 });
 
 function AboutPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
     <StubPage
+      cmsPage={cmsPage}
       eyebrow="About"
       title="Building More Connected Operations for Global Trade."
       description="Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses."

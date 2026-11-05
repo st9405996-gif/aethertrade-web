@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/platform")({
   component: PlatformPage,
 });
 function PlatformPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const cards = items.length ? items.map(item => ({
     title: item.title, body: item.body,
     status: (item.availability || "Custom Build") as "Available" | "In Development" | "Custom Build" | "Planned",
@@ -33,6 +34,7 @@ function PlatformPage() {
     <section className="border-t border-border"><div className="container-page section-pad grid gap-8 md:grid-cols-3">
       {[["Human review by design","AI identifies and compares; people approve. Every decision is attributable."],["Evidence, not guesses","Flags point to the exact document and field so reviewers can verify quickly."],["Fits around your tools","Built to work alongside email, spreadsheets and existing systems."]].map(([title, body]) => <div key={title}><h3 className="font-semibold">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{body}</p></div>)}
     </div></section>
-    <CtaBand title="Map the highest-friction workflow in your operation." description="We'll walk through the modules most relevant to your workflows." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Map the highest-friction workflow in your operation." description="We'll walk through the modules most relevant to your workflows." />
   </>;
 }

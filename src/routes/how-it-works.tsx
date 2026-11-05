@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/how-it-works")({
 });
 
 function HowItWorksPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
     <>
       <PageHero
@@ -46,6 +48,7 @@ function HowItWorksPage() {
           </div>
         </div>
       </section>
+      <CmsPageSections page={cmsPage} />
       <CtaBand title="Pick the first workflow together." description="Tell us where your team loses the most time." />
     </>
   );
