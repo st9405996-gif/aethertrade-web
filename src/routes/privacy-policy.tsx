@@ -5,46 +5,56 @@ import { LegalPage } from "@/components/site/legal-page";
 
 export const Route = createFileRoute("/privacy-policy")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "privacy-policy" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => meta("Privacy Policy", "What information the AETHER-TRADE website handles, where it is kept and your choices."))(), loaderData?.cmsPage) ,
+  head: ({ loaderData }) => mergeCmsHead(meta("Privacy Policy", "What information AETHER-TRADE collects through its website forms, how it is used and how to contact us."), loaderData?.cmsPage),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy." intro="This page explains, in plain terms, what the AETHER-TRADE website does with information today.">
-      <h2>Current status of our forms</h2>
+    <LegalPage title="Privacy Policy." intro="This notice describes how the AETHER-TRADE website currently handles information submitted through its contact and operations-audit forms.">
+      <h2>Information submitted through our forms</h2>
       <p>
-        The Contact and Request a Demo forms are currently <strong className="text-foreground">demonstration forms</strong>.
-        When you submit one, our server checks that the fields are filled in correctly and then discards them. Nothing is
-        stored on our systems, no email is sent and AETHER-TRADE does not receive your message. A copy is kept only in
-        your own browser so the demo can show a confirmation.
+        When you submit the Contact or Request an Operations Audit form, the information you provide is sent to AETHER-TRADE.
+        This may include your name, business email address, company, country, inquiry category, selected automation,
+        message, requirements and consent response. The website stores the inquiry in its operational database and
+        generates a reference number so the request can be followed up.
       </p>
-      <h2>Information you enter</h2>
-      <ul>
-        <li>Name, business email, company, country and the text of your message or requirements.</li>
-        <li>Your privacy consent choice.</li>
-      </ul>
-      <p>Please use illustrative details and never include confidential trade documents or shipment information.</p>
-      <h2>Information stored in your browser</h2>
-      <ul>
-        <li>Your light/dark theme preference.</li>
-        <li>Copies of demo form submissions you make on this device.</li>
-      </ul>
-      <p>This stays on your device, is not sent to us and can be removed by clearing site data in your browser. See the <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link>.</p>
-      <h2>Technical information</h2>
       <p>
-        Like any website, our hosting provider processes standard request details (such as IP address, browser type and
-        pages requested) to deliver pages and protect the service. We do not use advertising or analytics cookies.
+        The website also sends an acknowledgment to the email address you provide and a notification to the AETHER-TRADE
+        sales inbox. Email delivery is handled by Resend. Database and application infrastructure are provided by
+        Supabase and Cloudflare. These providers process information as needed to host, secure and operate the service.
+      </p>
+      <p>Please do not submit confidential trade documents, passwords, payment details or sensitive shipment information.</p>
+      <h2>How we use inquiry information</h2>
+      <ul>
+        <li>To review and respond to your inquiry.</li>
+        <li>To contact you about the business request you submitted.</li>
+        <li>To maintain inquiry status, reference and operational records.</li>
+        <li>To protect the form from automated abuse and repeated submissions.</li>
+      </ul>
+      <h2>Technical and security information</h2>
+      <p>
+        Cloudflare hosts and protects the website. The form uses Cloudflare Turnstile and server-side rate limiting to
+        reduce automated abuse. Hosting and security services may process technical request information such as IP address,
+        browser details and request metadata.
+      </p>
+      <h2>Browser storage</h2>
+      <p>
+        The website stores your theme preference in your browser. The administrator workspace also stores its sign-in
+        session in browser storage so an administrator can remain signed in. See the <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link>
+        for more information.
       </p>
       <h2>Sharing and sale</h2>
-      <p>We do not sell personal information and do not share form details with third parties.</p>
-      <h2>When this changes</h2>
       <p>
-        Before our forms start sending inquiries to AETHER-TRADE, this policy will be updated to describe what is stored,
-        how long it is kept, who can access it and how to ask for it to be corrected or deleted.
+        AETHER-TRADE does not sell personal information. Information is shared with the service providers described above
+        only as needed to host the website, protect the forms, store inquiries and deliver email.
       </p>
-      <h2>Contact</h2>
-      <p>A dedicated privacy contact will be published here before inquiries are collected.</p>
+      <h2>Retention and privacy requests</h2>
+      <p>
+        Inquiry records are retained in the operational system for business follow-up and recordkeeping. A fixed retention
+        period has not yet been published. For a question about an inquiry or a request concerning your information, contact
+        <a className="text-primary underline" href="mailto:sales@aethertrade.cloud"> sales@aethertrade.cloud</a> and include your inquiry reference if available.
+      </p>
     </LegalPage>
   );
 }
