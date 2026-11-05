@@ -180,7 +180,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
-  const admin = router.state.location.pathname.startsWith("/admin");
+  const pathname = router.state.location.pathname;
+  const admin = pathname.startsWith("/admin");
+  const bareAuthPage = admin || pathname === "/auth" || pathname === "/reset-password";
 
   return (
     <QueryClientProvider client={queryClient}>
