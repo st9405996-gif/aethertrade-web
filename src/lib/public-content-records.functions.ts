@@ -30,7 +30,7 @@ function parseRecord(value: unknown, now = Date.now()): PublicContentRecord | nu
   const rawFields = asRecord(row.fields);
   const fields = Object.fromEntries(Object.entries(rawFields).slice(0, 80).map(([key, item]) => [
     key.slice(0, 100),
-    typeof item === "string" ? item.slice(0, 10000) : JSON.stringify(item).slice(0, 10000),
+    typeof item === "string" ? item.slice(0, 10000) : (JSON.stringify(item) ?? "").slice(0, 10000),
   ]));
   return {
     id: asText(row.id),
@@ -46,7 +46,7 @@ function parseRecord(value: unknown, now = Date.now()): PublicContentRecord | nu
 }
 
 const inputSchema = z.object({
-  module: z.enum(["platform", "services", "solutions", "industries", "navigation", "branding", "settings"]),
+  module: z.enum(["platform", "services", "solutions", "industries", "navigation", "branding"]),
 });
 export const getPublishedContentRecords = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => {
