@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { useState } from "react";
 import { PageHero } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/automations")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "automations" } }) }),
   head: () =>
     meta(
       "Automation Catalogue",
