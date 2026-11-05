@@ -103,13 +103,13 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
       throw new Error("The invitation response did not include a valid user ID.");
     }
 
-    const roleResponse = await fetch(env.baseUrl + "/rest/v1/user_roles", {
+    const roleResponse = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
       method: "POST",
-      headers: { ...serviceHeaders(env), Prefer: "return=representation" },
-      body: JSON.stringify({ user_id: invitedUserId, role: data.role }),
+      headers: serviceHeaders(env),
+      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: invitedUserId, p_target_role: data.role, p_operation: "INVITE" }),
     });
-    const rolePayload = await roleResponse.json().catch(() => null);
-    if (!roleResponse.ok || !Array.isArray(rolePayload) || rolePayload.length === 0) {
+    const rolePayload = await roleResponse.json().catch(() => null) as { success?: boolean } | null;
+    if (!roleResponse.ok || rolePayload?.success !== true) {
       await fetch(env.baseUrl + "/auth/v1/admin/users/" + invitedUserId, {
         method: "DELETE",
         headers: serviceHeaders(env),
@@ -162,15 +162,13 @@ export const updateAdminUserRole = createServerFn({ method: "POST" })
     const env = getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     if (data.targetUserId === OWNER_ID) throw new Error("The owner account role cannot be changed.");
-    const url = new URL(env.baseUrl + "/rest/v1/user_roles");
-    url.searchParams.set("user_id", "eq." + data.targetUserId);
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: { ...serviceHeaders(env), Prefer: "return=representation" },
-      body: JSON.stringify({ role: data.role }),
+    const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
+      method: "POST",
+      headers: serviceHeaders(env),
+      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: data.targetUserId, p_target_role: data.role, p_operation: "ROLE_UPDATE" }),
     });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !Array.isArray(payload) || payload.length === 0) throw new Error("Administrator role could not be updated.");
+    const payload = await response.json().catch(() => null) as { success?: boolean } | null;
+    if (!response.ok || payload?.success !== true) throw new Error("Administrator role could not be updated.");
     return { success: true as const, role: data.role };
   });
 
@@ -184,13 +182,12 @@ export const removeAdminUser = createServerFn({ method: "POST" })
     const env = getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     if (data.targetUserId === OWNER_ID) throw new Error("The owner account cannot be removed.");
-    const url = new URL(env.baseUrl + "/rest/v1/user_roles");
-    url.searchParams.set("user_id", "eq." + data.targetUserId);
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: { ...serviceHeaders(env), Prefer: "return=representation" },
+    const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
+      method: "POST",
+      headers: serviceHeaders(env),
+      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: data.targetUserId, p_target_role: null, p_operation: "ROLE_REVOKE" }),
     });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !Array.isArray(payload) || payload.length === 0) throw new Error("Administrator access could not be revoked.");
+    const payload = await response.json().catch(() => null) as { success?: boolean } | null;
+    if (!response.ok || payload?.success !== true) throw new Error("Administrator access could not be revoked.");
     return { success: true as const };
   });
