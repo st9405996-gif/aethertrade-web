@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { adminProxyTarget } from "./lib/admin-proxy";
 import { readServerEnv } from "./lib/server-env.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -46,24 +47,6 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
-const ADMIN_PROXY_PREFIX = "/api/admin-supabase";
-const ADMIN_TABLES = new Set(["audit_logs","analytics_events","content_records","content_revisions","inquiries","inquiry_notes","media_assets","newsletter_subscribers","user_roles"]);
-const PUBLIC_MEDIA_PREFIX = "/storage/v1/object/public/website-media/";
-const UPLOAD_MEDIA_PREFIX = "/storage/v1/object/website-media/";
-function safeStorageObjectPath(value: string): boolean {
-  return value.length > 0 && value.split("/").every((part) => /^[A-Za-z0-9._~-]+$/.test(part) && part !== "." && part !== "..");
-}
-function adminProxyTarget(pathname: string, search: string, method: string): string | null {
-  const path = pathname.slice(ADMIN_PROXY_PREFIX.length);
-  const grantType = new URLSearchParams(search).get("grant_type");
-  if ((path === "/auth/v1/token" && ["password","refresh_token"].includes(grantType ?? "")) || path === "/auth/v1/recover" || path === "/auth/v1/user" || path === "/auth/v1/logout") return path + search;
-  const table = new RegExp("^/rest/v1/([a-z_]+)$").exec(path);
-  if (table && ADMIN_TABLES.has(table[1])) return path + search;
-  if (method === "GET" && path.startsWith(PUBLIC_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(PUBLIC_MEDIA_PREFIX.length))) return path + search;
-  if (["POST","PUT"].includes(method) && path.startsWith(UPLOAD_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(UPLOAD_MEDIA_PREFIX.length))) return path + search;
-  if (method === "DELETE" && path === "/storage/v1/object/website-media") return path + search;
-  return null;
-}
 async function proxyAdminSupabase(request: Request): Promise<Response> {
   const requestUrl = new URL(request.url);
   if (request.method === "OPTIONS") return new Response("Method not allowed", { status: 405 });
@@ -77,7 +60,7 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   if (!target) return new Response("Not found", {status:404});
   const targetPath = target.split("?")[0];
   const storage = targetPath.startsWith("/storage/v1/object/");
-  const publicStorageRead = targetPath.startsWith(PUBLIC_MEDIA_PREFIX) && request.method === "GET";
+  const publicStorageRead = targetPath.startsWith("/storage/v1/object/public/website-media/") && request.method === "GET";
   const publicAuth = targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover";
   const rest = targetPath.startsWith("/rest/v1/");
   const auth = ((targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover" || targetPath === "/auth/v1/logout") && request.method === "POST") || (targetPath === "/auth/v1/user" && ["GET","PUT"].includes(request.method));
