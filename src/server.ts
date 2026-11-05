@@ -82,7 +82,7 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
 
 async function dynamicSeoDocument(pathname: string, config: Record<string, string | undefined>): Promise<Response | null> {
   if (pathname !== "/sitemap.xml" && pathname !== "/llms.txt") return null;
-  const baseUrl = config["SUPABASE_URL"]?.replace(/\\/+$/, "");
+  const baseUrl = config["SUPABASE_URL"]?.replace(/\/+$/, "");
   const key = config["SUPABASE_PUBLISHABLE_KEY"];
   if (!baseUrl || !key) return null;
   try {
