@@ -54,3 +54,19 @@ Validate inquiry lifecycle end-to-end: secure server submission, duplicate/idemp
 - Test Media Storage permissions with anonymous and authenticated users.
 - Check SEO output, sitemap, robots, canonical and noindex.
 - Verify backups, secrets, error logging and deploy rollback.
+
+
+## Production incident verification — 2026-11-06
+
+### Confirmed Global SEO save defect
+
+- **Status: FIX IMPLEMENTED IN SOURCE; production deployment pending verification.**
+- Browser request evidence: `PATCH /api/admin-supabase/rest/v1/global_seo_settings?id=eq.1` returned HTTP 404 with plain-text `Not found`.
+- Read-only database inspection confirmed `public.global_seo_settings` exists and contains the singleton row `id=1`; this was not a missing-table or missing-row issue.
+- The deployed Cloudflare Worker source and repository `src/server.ts` both used an explicit `ADMIN_TABLES` allowlist that omitted `global_seo_settings`. The proxy therefore returned 404 before contacting Supabase.
+- The allowlist was extracted into a pure helper, the missing table was added, and regression tests now cover Global SEO GET/PATCH, all existing admin tables, unknown-table rejection and media path validation.
+- Do not call this production-fixed until the updated Worker is deployed and a real authenticated Global SEO save/read-back succeeds.
+
+### Broader audit boundaries
+
+The existing pre-launch audit remains valid for its stated scope. Source review and database schema checks are not equivalent to browser-driven end-to-end testing. Admin modules requiring external account/provider setup or controlled live actions remain marked blocked/not tested until those checks are completed. No live email, destructive reset, user invitation, or public inquiry has been sent as part of this incident investigation.
