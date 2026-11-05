@@ -180,18 +180,20 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
-  const admin = router.state.location.pathname.startsWith("/admin");
+  const pathname = router.state.location.pathname;
+  const admin = pathname.startsWith("/admin");
+  const bareAuthPage = admin || pathname === "/auth" || pathname === "/reset-password";
 
   return (
     <QueryClientProvider client={queryClient}>
       <WorkspaceProvider>
         <div className="flex min-h-screen flex-col">
-          {!admin && <Header />}
+          {!bareAuthPage && <Header />}
           <main className="flex-1">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
           </main>
-          {!admin && <Footer />}
+          {!bareAuthPage && <Footer />}
         </div>
         <Toaster />
       </WorkspaceProvider>
