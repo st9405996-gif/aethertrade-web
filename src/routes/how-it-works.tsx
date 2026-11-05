@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -6,6 +7,7 @@ import { WorkflowDemo } from "@/components/site/workflow-demo";
 import { HOW_IT_WORKS_STEPS } from "@/content/site-content";
 
 export const Route = createFileRoute("/how-it-works")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "how-it-works" } }) }),
   head: () =>
     meta(
       "How It Works",
