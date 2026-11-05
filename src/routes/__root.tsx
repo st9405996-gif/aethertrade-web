@@ -19,7 +19,7 @@ import { Footer } from "@/components/site/footer";
 import { WorkspaceProvider } from "@/components/admin/workspace-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { getPublishedCmsPage } from "@/lib/public-cms.functions";
-import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
+import { CmsPageRenderer } from "@/components/site/cms-page-renderer";\nimport { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
 
 // Enterprise typography — Inter-first system stack with bundled Geist fallback.
 import "@fontsource/geist-sans/400.css";
@@ -264,7 +264,7 @@ function RootComponent() {
             {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
             {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
           </main>
-          {!bareAuthPage && <Footer />}
+          {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname}/>}\n          {!bareAuthPage && <Footer />}
         </div>
         <Toaster />
       </WorkspaceProvider>
