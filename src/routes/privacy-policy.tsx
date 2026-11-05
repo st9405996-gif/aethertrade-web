@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const Route = createFileRoute("/privacy-policy")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "privacy-policy" } }) }),
-  head: () => meta("Privacy Policy", "What information the AETHER-TRADE website handles, where it is kept and your choices."),
+  head:  ({ loaderData }) => mergeCmsHead((() => meta("Privacy Policy", "What information the AETHER-TRADE website handles, where it is kept and your choices."))(), loaderData?.cmsPage) ,
   component: PrivacyPage,
 });
 
