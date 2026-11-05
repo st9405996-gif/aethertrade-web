@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PLATFORM_MODULES } from "@/content/site-content";
 
 export const Route = createFileRoute("/platform")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "platform" } }) }),
   head: () =>
     meta(
       "Platform",
