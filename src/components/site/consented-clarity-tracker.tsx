@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { hasAnalyticsConsent, type ConsentManagerApi } from "@/lib/consentmanager-analytics";
 
 const CLARITY_PROJECT_ID = "z94mamag59";
+type ClarityFunction = ((...args: unknown[]) => void) & { q?: unknown[][] };
 
 declare global {
   interface Window {
     __cmp?: ConsentManagerApi;
-    clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] };
+    clarity?: ClarityFunction;
   }
 }
 
@@ -21,10 +22,10 @@ export function ConsentedClarityTracker() {
 
       if (granted) {
         if (!window.clarity) {
-          const clarity = ((...args: unknown[]) => {
+          const clarity: ClarityFunction = (...args) => {
             clarity.q = clarity.q || [];
             clarity.q.push(args);
-          }) as Window["clarity"];
+          };
           window.clarity = clarity;
         }
 
