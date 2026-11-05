@@ -45,11 +45,77 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
           {module === "users" && <Users/>}
           {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
           {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · changed fields: {r.changedFields.length ? r.changedFields.join(", ") : "No field detail"}</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
-          {module === "analytics" && <Empty icon={Activity} title="No measured visitor data" body="Visitor tracking and consent-aware reporting are not connected. No counts or conversion rates have been fabricated."/>}
-          {module === "subscribers" && <Empty icon={MessageSquare} title="No subscribers collected" body="Newsletter collection and delivery require an approved service and consent configuration."/>}
+          {module === "analytics" && <AnalyticsDashboard/>}
+          {module === "subscribers" && <Subscribers/>}
         </>}
       </main>
     </div>
+  </div>;
+}
+function AnalyticsDashboard() {
+  const { data } = useWorkspace();
+  const total = data.analytics.length;
+  const counts = data.analytics.reduce<Record<string, number>>((acc, event) => {
+    acc[event.eventType] = (acc[event.eventType] || 0) + 1;
+    return acc;
+  }, {});
+  const pageCounts = data.analytics.reduce<Record<string, number>>((acc, event) => {
+    acc[event.pagePath] = (acc[event.pagePath] || 0) + 1;
+    return acc;
+  }, {});
+  const topPages = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (!total) return <Empty icon={Activity} title="No consented visitor events yet" body="This dashboard reports only first-party events submitted after analytics consent. It does not fabricate visits, conversions or engagement metrics." />;
+  return <div className="space-y-8">
+    <p className="text-xs text-muted-foreground">Showing the latest {total} consented events. No visitor names, email addresses or shipment data are collected.</p>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
+      ["Events", total],
+      ["Page views", counts.page_view || 0],
+      ["CTA clicks", counts.cta_click || 0],
+      ["Demo conversions", counts.demo_conversion || 0],
+    ].map(([label, value]) => <div key={String(label)} className="rounded-md border border-border bg-card p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-4 font-mono text-3xl">{value}</p></div>)}</div>
+    <section><h2 className="mb-4 text-lg font-semibold">Top pages</h2><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[420px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Path</th><th className="text-right">Events</th></tr></thead><tbody>{topPages.map(([path, count]) => <tr key={path} className="border-t border-border"><td className="py-3 font-mono">{path}</td><td className="text-right">{count}</td></tr>)}</tbody></table></div></section>
+    <section><h2 className="mb-4 text-lg font-semibold">Recent events</h2><div className="divide-y divide-border border-y border-border">{data.analytics.slice(0, 25).map(event => <div key={event.id} className="flex flex-wrap justify-between gap-3 py-3"><div><p className="text-sm font-medium">{event.eventType}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{event.pagePath}{event.automationSlug ? " · "+event.automationSlug : ""}</p></div><span className="text-xs text-muted-foreground">{date(event.createdAt)}</span></div>)}</div></section>
+  </div>;
+}
+function Subscribers() {
+  const workspace = useWorkspace();
+  const [email, setEmail] = useState("");
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
+  const [error, setError] = useState("");
+  const [pendingUnsubscribe, setPendingUnsubscribe] = useState<string | null>(null);
+  const rows = workspace.data.subscribers;
+  async function add() {
+    setError("");
+    try {
+      await workspace.addSubscriber(email, consentConfirmed);
+      setEmail("");
+      setConsentConfirmed(false);
+      toast.success("Consented subscriber record saved");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add subscriber");
+    }
+  }
+  async function unsubscribe() {
+    if (!pendingUnsubscribe) return;
+    try {
+      await workspace.updateSubscriberStatus(pendingUnsubscribe, "unsubscribed");
+      setPendingUnsubscribe(null);
+      toast.success("Subscriber marked as unsubscribed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update subscriber");
+    }
+  }
+  return <div className="space-y-7">
+    <div className="rounded-md border border-border bg-card p-5">
+      <h2 className="text-lg font-semibold">Add a consented subscriber</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Admin-only manual entry. This list does not send newsletter emails; double opt-in and unsubscribe email delivery must be configured before a campaign is enabled.</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]"><Input type="email" aria-label="Subscriber email" placeholder="name@company.com" value={email} onChange={e => setEmail(e.target.value)} maxLength={254}/><Button disabled={!email.trim() || !consentConfirmed || !demoCan(workspace.role, "users")} onClick={add}><Plus/>Add subscriber</Button></div>
+      <label className="mt-4 flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={consentConfirmed} onChange={e => setConsentConfirmed(e.target.checked)}/><span>I confirm that this email owner has explicitly consented to receive newsletter communications.</span></label>
+      {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+    </div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Subscriber records ({rows.length})</h2><Button variant="outline" disabled={!rows.length || !demoCan(workspace.role, "export")} onClick={() => download("aethertrade-subscribers.csv", [["Email","Status","Consent at","Source"],...rows.map(r=>[r.email,r.status,r.consentAt,r.source])].map(row=>row.map(safeCsvCell).join(",")).join("\n"),"text/csv")}><Download/>Export CSV</Button></div>
+    {rows.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[640px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Email</th><th>Status</th><th>Consent recorded</th><th>Source</th><th className="text-right">Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-t border-border"><td className="py-4">{row.email}</td><td><Status value={row.status==="subscribed"?"Subscribed":"Unsubscribed"}/></td><td className="text-xs">{date(row.consentAt)}</td><td className="text-xs">{row.source}</td><td className="text-right">{row.status==="subscribed" ? <Button size="sm" variant="outline" onClick={()=>setPendingUnsubscribe(row.id)}>Mark unsubscribed</Button> : <span className="text-xs text-muted-foreground">No action</span>}</td></tr>)}</tbody></table></div> : <Empty icon={MessageSquare} title="No subscriber records" body="Add an email only after you have a clear consent confirmation. No newsletter messages are sent by this module."/>}
+    <Dialog open={!!pendingUnsubscribe} onOpenChange={open=>!open&&setPendingUnsubscribe(null)}><DialogContent><DialogHeader><DialogTitle>Mark this subscriber as unsubscribed?</DialogTitle><DialogDescription>This will update the subscriber status and keep the record for suppression. It does not send an email.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setPendingUnsubscribe(null)}>Cancel</Button><Button variant="destructive" onClick={unsubscribe}>Confirm unsubscribe</Button></div></DialogContent></Dialog>
   </div>;
 }
 function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string; body: string }) { return <div className="flex min-h-64 flex-col items-center justify-center border-y border-border px-5 py-10 text-center"><Icon className="mb-5 size-8 text-muted-foreground"/><h2 className="text-lg font-medium">{title}</h2><p className="mt-2 max-w-lg text-sm text-muted-foreground">{body}</p></div>; }
