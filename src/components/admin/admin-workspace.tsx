@@ -43,8 +43,8 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
           {module === "seo" && <ContentManager module="pages" seoOnly/>}
           {module === "connections" && <Connections/>}
           {module === "users" && <Users/>}
-          {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as a demo draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
-          {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · event metadata only</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
+          {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
+          {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · changed fields: {r.changedFields.length ? r.changedFields.join(", ") : "No field detail"}</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
           {module === "analytics" && <Empty icon={Activity} title="No measured visitor data" body="Visitor tracking and consent-aware reporting are not connected. No counts or conversion rates have been fabricated."/>}
           {module === "subscribers" && <Empty icon={MessageSquare} title="No subscribers collected" body="Newsletter collection and delivery require an approved service and consent configuration."/>}
         </>}
@@ -54,13 +54,28 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
 }
 function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string; body: string }) { return <div className="flex min-h-64 flex-col items-center justify-center border-y border-border px-5 py-10 text-center"><Icon className="mb-5 size-8 text-muted-foreground"/><h2 className="text-lg font-medium">{title}</h2><p className="mt-2 max-w-lg text-sm text-muted-foreground">{body}</p></div>; }
 function Overview() {
-  const { data, role } = useWorkspace();
+  const { data, role, authenticated } = useWorkspace();
   const permitted = demoCan(role, "inquiries");
-  const stats = [{ label: "Demo inquiries", value: permitted ? data.inquiries.length : "Restricted", icon: MessageSquare }, { label: "New inquiries", value: permitted ? data.inquiries.filter(r => r.status === "New").length : "Restricted", icon: BriefcaseBusiness }, { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files }, { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen }];
-  return <><div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Records from the connected database</p></div>)}</div>
-    <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]"><section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "The selected simulated role cannot access inquiry details."}/>}</section>
-    <section><h2 className="mb-4 text-lg font-semibold">Connection status</h2><div className="divide-y divide-border border-y border-border">{["Database & storage", "Administrator authentication", "Notifications", "Production hosting"].map(t => <div key={t} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{t}</span><Status value="Not connected"/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section></div>
-    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{data.records.filter(r => r.module === id).length} demo records</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
+  const stats = [
+    { label: "Inquiries", value: permitted ? data.inquiries.length : "Restricted", icon: MessageSquare },
+    { label: "New inquiries", value: permitted ? data.inquiries.filter(r => r.status === "New").length : "Restricted", icon: BriefcaseBusiness },
+    { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files },
+    { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen },
+  ];
+  const connectionRows = [
+    ["Supabase CMS & inquiry database", authenticated ? "Connected" : "Disconnected"],
+    ["Administrator authentication", authenticated ? "Connected" : "Disconnected"],
+    ["Website media storage", "Provisioned"],
+    ["Inquiry email delivery", "Not verified"],
+    ["Cloudflare Worker", "Production active"],
+  ];
+  return <>
+    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Live records from the connected database</p></div>)}</div>
+    <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]">
+      <section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "Your database role does not allow inquiry access."}/>}</section>
+      <section><h2 className="mb-4 text-lg font-semibold">Connection readiness</h2><div className="divide-y divide-border border-y border-border">{connectionRows.map(([name,state]) => <div key={name} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{name}</span><Status value={state}/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section>
+    </div>
+    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{data.records.filter(r => r.module === id).length} database records</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
   </>;
 }
 function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly?: boolean }) {
@@ -110,20 +125,59 @@ function Inquiries() {
   </>;
 }
 function MediaLibrary() {
-  const workspace = useWorkspace(); const [error, setError] = useState(""); const [search, setSearch] = useState("");
-  const [edit, setEdit] = useState<typeof workspace.data.media[number] | null>(null); const [remove, setRemove] = useState<string | null>(null);
-  async function upload(e: ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; if (!file) return; setError("");
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) { setError("Upload accepts JPG, PNG or WebP images up to 2 MB. Documents and executable files are not allowed."); e.target.value = ""; return; }
-    try { const url = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Image could not be read")); reader.onerror = () => reject(new Error("Image could not be read")); reader.readAsDataURL(file); });
-      const decoded = new window.Image(); decoded.src = url; await decoded.decode();
-      await workspace.addMedia({ id: crypto.randomUUID(), name: file.name, type: file.type, size: file.size, alt: "", url }); toast.success("Image uploaded");
-    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed"); } finally { e.target.value = ""; }
+  const workspace = useWorkspace();
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [altText, setAltText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [edit, setEdit] = useState<typeof workspace.data.media[number] | null>(null);
+  const [remove, setRemove] = useState<string | null>(null);
+
+  async function upload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size <= 0 || file.size > 2 * 1024 * 1024) {
+      setError("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+      e.target.value = "";
+      return;
+    }
+    setBusy(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Image could not be read"));
+        reader.onerror = () => reject(new Error("Image could not be read"));
+        reader.readAsDataURL(file);
+      });
+      const decoded = new window.Image();
+      decoded.src = dataUrl;
+      await decoded.decode();
+      await workspace.addMedia(file, altText);
+      setAltText("");
+      toast.success("Image uploaded to Supabase Storage");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
   }
-  const rows = workspace.data.media.filter(r => `${r.name} ${r.alt}`.toLowerCase().includes(search.toLowerCase()));
-  return <><div className="mb-5 flex flex-wrap justify-between gap-3"><Input className="w-64" placeholder="Search media…" aria-label="Search media" value={search} onChange={e => setSearch(e.target.value)}/><Button disabled title="Supabase Storage bucket is not configured"><Upload/>Upload unavailable</Button></div><p className="mb-5 text-xs text-muted-foreground">Uploads are disabled until a Supabase Storage bucket and access policies are configured. Supported target formats: JPG / PNG / WebP · 2 MB maximum.</p>{error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
-    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={`Delete ${r.name}`} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Existing website assets are preserved. Persistent upload is unavailable until a Supabase Storage bucket is configured."/>}
-    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent><DialogHeader><DialogTitle>Media metadata</DialogTitle><DialogDescription>Media reference: {edit?.id}.</DialogDescription></DialogHeader>{edit && <><label className="grid gap-2 text-sm">File name<Input value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })}/></label><label className="grid gap-2 text-sm">Alt text<Textarea value={edit.alt} onChange={e => setEdit({ ...edit, alt: e.target.value })}/></label><Button onClick={() => attempt(() => { workspace.updateMedia(edit); setEdit(null); }, "Media metadata saved")}><Save/>Save</Button></>}</DialogContent></Dialog>
-    <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Remove media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the catalogue entry; the storage object lifecycle must be verified.</DialogDescription></DialogHeader><Button variant="destructive" onClick={() => { if (remove) attempt(() => workspace.removeMedia(remove), "Media item removed"); setRemove(null); }}><Trash2/>Remove image</Button></DialogContent></Dialog>
+
+  const rows = workspace.data.media.filter(r => (r.name + " " + r.alt).toLowerCase().includes(search.toLowerCase()));
+  return <>
+    <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+      <Input className="w-full" placeholder="Search media…" aria-label="Search media" value={search} onChange={e => setSearch(e.target.value)}/>
+      <Input className="w-full" placeholder="Default alt text for new image" aria-label="Default alt text for new images" value={altText} onChange={e => setAltText(e.target.value)} maxLength={500}/>
+      <Button asChild disabled={busy || !demoCan(workspace.role, "draft")}>
+        <label><Upload/>{busy ? "Uploading…" : "Upload image"}<input type="file" className="sr-only" aria-label="Upload image" accept="image/jpeg,image/png,image/webp" disabled={busy || !demoCan(workspace.role, "draft")} onChange={upload}/></label>
+      </Button>
+    </div>
+    <p className="mb-5 text-xs text-muted-foreground">Persistent Supabase Storage · public website-media bucket · JPG / PNG / WebP · 2 MB maximum. Files are stored under your authenticated user folder.</p>
+    {error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
+    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><p className="mt-1 text-xs text-muted-foreground">{r.alt || "Alt text not set"}</p><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={"Delete " + r.name} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Upload a JPG, PNG or WebP image to add a persistent asset to the website media library."/>}
+    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent><DialogHeader><DialogTitle>Media metadata</DialogTitle><DialogDescription>Changes are saved to the media catalogue.</DialogDescription></DialogHeader>{edit && <><label className="grid gap-2 text-sm">File name<Input value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })} maxLength={255}/></label><label className="grid gap-2 text-sm">Alt text<Textarea value={edit.alt} onChange={e => setEdit({ ...edit, alt: e.target.value })} maxLength={500}/></label><Button onClick={async () => { try { await workspace.updateMedia(edit); setEdit(null); toast.success("Media metadata saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save metadata"); } }}><Save/>Save</Button></>}</DialogContent></Dialog>
+    <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the object from Supabase Storage and deletes its catalogue record.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={async () => { if (!remove) return; try { await workspace.removeMedia(remove); setRemove(null); toast.success("Media item deleted"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not delete media item"); } }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
 function Users() {
