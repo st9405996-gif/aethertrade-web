@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
@@ -13,7 +13,7 @@ const validateSearch = (search: Record<string, unknown>) => ({
 export const Route = createFileRoute("/request-demo")({
   validateSearch,
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "request-demo" } }) }),
-  head: () => ({
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       { title: "Book an Operations Audit — AETHER-TRADE" },
       {
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/request-demo")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: RequestDemoPage,
 });
 
