@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -249,8 +249,73 @@ function MediaLibrary() {
     <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the object from Supabase Storage and deletes its catalogue record.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={async () => { if (!remove) return; try { await workspace.removeMedia(remove); setRemove(null); toast.success("Media item deleted"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not delete media item"); } }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
+type AdminRole = "Administrator" | "Content Editor" | "Sales Manager" | "Viewer";
+type AdminUser = { userId: string; email: string; displayName: string; role: string; createdAt: string };
+const adminRoles: AdminRole[] = ["Administrator", "Content Editor", "Sales Manager", "Viewer"];
 function Users() {
-  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth is connected, but the current database authorization is owner-only (Super Admin). This matrix is reference-only; administrator invitations stay disabled until the server-side role assignment and policy model is fully implemented and tested.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
+  const workspace = useWorkspace();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [email, setEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<AdminRole>("Content Editor");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [pendingRemove, setPendingRemove] = useState<string | null>(null);
+  const refreshUsers = useCallback(async () => {
+    setLoading(true);
+    try { setUsers(await workspace.listAdminUsers()); setError(""); }
+    catch (e) { setError(e instanceof Error ? e.message : "Administrator list could not be loaded."); }
+    finally { setLoading(false); }
+  }, [workspace.listAdminUsers]);
+  useEffect(() => { void refreshUsers(); }, [refreshUsers]);
+  async function invite() {
+    setSaving(true); setError("");
+    try {
+      await workspace.inviteAdminUser(email, inviteRole);
+      setEmail("");
+      await refreshUsers();
+      toast.success("Administrator invitation sent");
+    } catch (e) { setError(e instanceof Error ? e.message : "Invitation could not be sent."); }
+    finally { setSaving(false); }
+  }
+  async function changeRole(userId: string, nextRole: AdminRole) {
+    setSaving(true); setError("");
+    try {
+      await workspace.updateAdminUserRole(userId, nextRole);
+      await refreshUsers();
+      toast.success("Administrator role updated");
+    } catch (e) { setError(e instanceof Error ? e.message : "Role could not be updated."); }
+    finally { setSaving(false); }
+  }
+  async function revoke() {
+    if (!pendingRemove) return;
+    setSaving(true); setError("");
+    try {
+      await workspace.removeAdminUser(pendingRemove);
+      setPendingRemove(null);
+      await refreshUsers();
+      toast.success("Administrator access revoked");
+    } catch (e) { setError(e instanceof Error ? e.message : "Administrator access could not be revoked."); }
+    finally { setSaving(false); }
+  }
+  return <div className="space-y-8">
+    <section className="rounded-md border border-border bg-card p-5">
+      <h2 className="font-semibold">Invite administrator</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Only the verified account owner can invite users. The invitation email sends the new administrator to the secure password setup page. Invitations are limited to five per hour.</p>
+      <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_190px_auto]">
+        <Input type="email" aria-label="Administrator email" placeholder="name@company.com" value={email} maxLength={254} onChange={e => setEmail(e.target.value)}/>
+        <select className={selectClass} aria-label="Administrator role" value={inviteRole} onChange={e => setInviteRole(e.target.value as AdminRole)}>{adminRoles.map(r => <option key={r} value={r}>{r}</option>)}</select>
+        <Button disabled={!email.trim() || saving || !demoCan(workspace.role, "users")} onClick={invite}><Plus/>Send invitation</Button>
+      </div>
+    </section>
+    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    <section>
+      <div className="mb-4 flex items-center justify-between gap-3"><h2 className="font-semibold">Administrator accounts</h2><Button size="sm" variant="outline" disabled={loading || saving} onClick={() => void refreshUsers()}>Refresh</Button></div>
+      {loading ? <p className="py-8 text-sm text-muted-foreground">Loading administrator accounts…</p> : users.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Administrator</th><th>Email</th><th>Role</th><th>Created</th><th className="text-right">Access</th></tr></thead><tbody>{users.map(user => <tr key={user.userId} className="border-t border-border"><td className="py-4 font-medium">{user.displayName}</td><td>{user.email}</td><td>{user.role === "Super Admin" ? <Status value="Super Admin"/> : <select className={selectClass} aria-label={"Role for "+user.email} value={user.role} disabled={saving || !demoCan(workspace.role, "users")} onChange={e => void changeRole(user.userId, e.target.value as AdminRole)}>{adminRoles.map(r => <option key={r}>{r}</option>)}</select>}</td><td className="text-xs text-muted-foreground">{date(user.createdAt)}</td><td className="text-right">{user.role === "Super Admin" ? <span className="text-xs text-muted-foreground">Owner protected</span> : <Button size="sm" variant="destructive" disabled={saving || !demoCan(workspace.role, "users")} onClick={() => setPendingRemove(user.userId)}><Trash2/>Revoke</Button>}</td></tr>)}</tbody></table></div> : <Empty icon={Shield} title="No administrator accounts" body="No accounts with an assigned administrator role were returned."/>}
+    </section>
+    <section><h2 className="mb-4 font-semibold">Role permissions reference</h2><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><p className="mt-3 text-xs text-muted-foreground">The table is a reference; Supabase Row Level Security is the enforcement layer.</p></section>
+    <Dialog open={!!pendingRemove} onOpenChange={open => !open && setPendingRemove(null)}><DialogContent><DialogHeader><DialogTitle>Revoke administrator access?</DialogTitle><DialogDescription>This removes the selected user's AETHER-TRADE role. It does not delete their Supabase account.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setPendingRemove(null)}>Cancel</Button><Button variant="destructive" disabled={saving} onClick={() => void revoke()}><Trash2/>Confirm revoke</Button></div></DialogContent></Dialog>
+  </div>;
 }
 function Connections() {
   const { authenticated, role } = useWorkspace();
