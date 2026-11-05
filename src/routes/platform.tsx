@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -8,11 +8,11 @@ import { PLATFORM_MODULES } from "@/content/site-content";
 
 export const Route = createFileRoute("/platform")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "platform" } }) }),
-  head: () =>
+  head:  ({ loaderData }) => mergeCmsHead((() =>
     meta(
       "Platform",
       "One intelligent platform for connected trade operations: case workspaces, document intelligence, cross-document checks and human-reviewed workflows.",
-    ),
+    ))(), loaderData?.cmsPage) ,
   component: PlatformPage,
 });
 
