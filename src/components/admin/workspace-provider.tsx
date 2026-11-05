@@ -15,60 +15,7 @@ const numeric = (source: JsonRow, key: string, fallback = 0): number => typeof s
 const KEY="aether-admin-session-v1", empty=():DemoWorkspace=>({records:[],inquiries:[],media:[],revisions:[],audit:[],analytics:[],subscribers:[]});
 const uuid=(s:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 const err=(value:unknown)=>{const x=row(value);return String(x.message??x.msg??x.error_description??x.error??"Supabase request failed");};
-async function call(c:Config,accessToken:string,path:string,method="GET",body?:unknown):Promise<any>{
- if(!c.configured)throw Error("Supabase is not configured.");
- const headers=new Headers({Accept:"application/json",Authorization:"Bearer "+accessToken});
- if(body!==undefined)headers.set("Content-Type","application/json");
- if(method==="POST")headers.set("Prefer","return=representation");
- const response=await fetch("/api/admin-supabase"+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:"no-store"});
- const raw=await response.text();
- let payload:unknown=null;
- if(raw){try{payload=JSON.parse(raw);}catch{payload=raw;}}
- if(!response.ok)throw Error(typeof payload==="string"?payload:err(payload));
- return payload;
-}
-function mapRecord(source:JsonRow):ContentRecord {
- const fields=row(source.fields);
- return {
-  id:text(source,"id"),
-  module:text(source,"module") as ContentRecord["module"],
-  slug:text(source,"slug"),
-  title:text(source,"title"),
-  body:text(source,"body"),
-  category:text(source,"category"),
-  publication:text(source,"publication") as ContentRecord["publication"],
-  availability:text(source,"availability") as ContentRecord["availability"],
-  position:numeric(source,"position"),
-  scheduledAt:text(source,"scheduled_at"),
-  seoTitle:text(source,"seo_title"),
-  seoDescription:text(source,"seo_description"),
-  canonical:text(source,"canonical"),
-  noindex:source.noindex===true,
-  updatedAt:text(source,"updated_at"),
-  fields:Object.fromEntries(Object.entries(fields).map(([key,value])=>[key,typeof value==="string"?value:JSON.stringify(value)??""])),
- };
-}
-function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
- return {
-  id:text(source,"id"),
-  reference:text(source,"reference"),
-  kind:text(source,"kind")==="demo"?"demo":"contact",
-  name:text(source,"contact_name"),
-  email:text(source,"email"),
-  company:text(source,"company"),
-  country:text(source,"country"),
-  category:text(source,"category"),
-  automation:text(source,"automation_slug"),
-  message:text(source,"message"),
-  requirements:text(source,"requirements"),
-  consent:true,
-  status:text(source,"status") as Inquiry["status"],
-  createdAt:text(source,"created_at"),
-  notes:notes.filter(note=>note.inquiry_id===source.id).map(note=>({text:text(note,"body"),at:text(note,"created_at")})),
-  assignedTo:text(source,"assigned_to"),
-  followUp:text(source,"follow_up"),
- };
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function call(_config: Config, accessToken: string, path: string, method = "GET", body?: unknown): Promise<any> {
  const response = await fetch("/api/admin-supabase" + path, {
   method,
