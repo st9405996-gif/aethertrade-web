@@ -214,6 +214,14 @@ function RootComponent() {
   const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
 
   useEffect(() => {
+    if (pathname !== "/") return;
+    const authType = new URLSearchParams(window.location.hash.slice(1)).get("type");
+    if (authType === "invite" || authType === "recovery") {
+      window.location.replace("/reset-password" + window.location.search + window.location.hash);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     if (!cmsPage || !cmsSlug || !hasCmsContent) return;
     const title = cmsPage.seoTitle || cmsPage.title + " — AETHER-TRADE";
     document.title = title;
