@@ -142,6 +142,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function updateInquiry(r:Inquiry){if(!uuid(r.id))throw Error("Invalid inquiry.");const previous=data.inquiries.find(x=>x.id===r.id);await write("/rest/v1/inquiries?id=eq."+r.id,"PATCH",{status:r.status,assigned_to:uuid(r.assignedTo)?r.assignedTo:null,follow_up:r.followUp||null});const added=(r.notes||[]).slice(previous?.notes.length||0);for(const note of added)await write("/rest/v1/inquiry_notes","POST",{inquiry_id:r.id,body:note.text});setData(old=>({...old,inquiries:old.inquiries.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
  async function addMedia(file:File,altText=""){
   if(!session||!cfg)throw Error("Please sign in.");
+  if(!altText.trim())throw Error("Add descriptive alt text before uploading this image.");
   if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>2097152)throw Error("Only JPG, PNG or WebP images up to 2 MB are accepted.");
   const s=await fresh();const user=await call(cfg,s.access_token,"/auth/v1/user");
   const safeName=file.name.normalize("NFKD").replace(/[^A-Za-z0-9._~-]+/g,"-").replace(/-+/g,"-").replace(/^[-.]+|[-.]+$/g,"").slice(0,100)||"image";
@@ -158,7 +159,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
    throw e;
   }
  }
- async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");await write("/rest/v1/media_assets?id=eq."+r.id,"PATCH",{filename:r.name,alt_text:r.alt});setData(old=>({...old,media:old.media.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
+ async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");if(!r.alt.trim())throw Error("Alt text is required for public images.");await write("/rest/v1/media_assets?id=eq."+r.id,"PATCH",{filename:r.name,alt_text:r.alt});setData(old=>({...old,media:old.media.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
  async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const row=data.media.find(x=>x.id===id);if(!row||row.bucketId!=="website-media"||!row.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();const deleted=await fetch("/api/admin-supabase/storage/v1/object/website-media",{method:"DELETE",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify({prefixes:[row.objectPath]})});const payload=await deleted.json().catch(()=>null);if(!deleted.ok)throw Error(err(payload));await call(cfg!,s.access_token,"/rest/v1/media_assets?id=eq."+id,"DELETE");setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));void refreshAfterWrite();}
  async function addSubscriber(email:string,consentConfirmed:boolean){
   const normalized=email.trim().toLowerCase();
