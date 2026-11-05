@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/solutions")({
   component: SolutionsPage,
 });
 function SolutionsPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const records = items.length ? items.map(item => ({
     slug: item.slug, title: item.title, audience: item.body,
     challenges: lines(item.fields.challenges || ""), helps: lines(item.fields.benefits || ""),
@@ -33,6 +34,7 @@ function SolutionsPage() {
         <div><p className="eyebrow mb-2">How we help</p><ul className="list-disc space-y-1 pl-5 text-sm">{item.helps.map(value => <li key={value}>{value}</li>)}</ul></div>
       </article>)}
     </section>
-    <CtaBand title="Don't see your exact situation?" description="Most operations are a mix. Tell us about yours." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Don't see your exact situation?" description="Most operations are a mix. Tell us about yours." />
   </>;
 }
