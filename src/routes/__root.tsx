@@ -213,7 +213,7 @@ function RootComponent() {
     staleTime: 60_000,
   });
   const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
-  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
+  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));\n  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
 
   useEffect(() => {
     if (!cmsPage || !cmsSlug || !hasCmsContent) return;
@@ -261,7 +261,7 @@ function RootComponent() {
           <main className="flex-1">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
-            {!cmsOverridesRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
+            {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
           </main>
           {!bareAuthPage && <Footer />}
         </div>
