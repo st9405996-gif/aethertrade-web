@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
@@ -11,6 +12,7 @@ const validateSearch = (search: Record<string, unknown>) => ({
 
 export const Route = createFileRoute("/request-demo")({
   validateSearch,
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "request-demo" } }) }),
   head: () => ({
     meta: [
       { title: "Book an Operations Audit — AETHER-TRADE" },
@@ -33,7 +35,8 @@ export const Route = createFileRoute("/request-demo")({
 
 function RequestDemoPage() {
   const { automation } = Route.useSearch();
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><CmsPageSections slug="request-demo"/><InquiryForm kind="demo" automation={automation}/></>
+    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><CmsPageSections page={cmsPage}/><InquiryForm kind="demo" automation={automation}/></>
   );
 }
