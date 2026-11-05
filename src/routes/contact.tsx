@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/section";
-import { InquiryForm } from "@/components/site/inquiry-form";\nimport { CmsPageSections } from "@/components/site/cms-page-renderer";
+import { InquiryForm } from "@/components/site/inquiry-form";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
