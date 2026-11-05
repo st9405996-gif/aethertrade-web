@@ -1,4 +1,14 @@
-import type { PublishedCmsPage } from "@/lib/public-cms.functions";
+import { useQuery } from "@tanstack/react-query";\nimport { getPublishedCmsPage, type PublishedCmsPage } from "@/lib/public-cms.functions";
+
+export function CmsPageSections({ slug }: { slug: string }) {
+  const { data: page } = useQuery({
+    queryKey: ["published-cms-page", slug],
+    queryFn: () => getPublishedCmsPage({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  if (!page || (!page.body.trim() && !page.sections.length)) return null;
+  return <CmsPageRenderer page={page} showTitle={false} />;
+}
 
 export function CmsPageRenderer({ page, showTitle = true }: { page: PublishedCmsPage; showTitle?: boolean }) {
   const hasBody = page.body.trim().length > 0;
