@@ -57,7 +57,7 @@ function adminProxyTarget(pathname: string, search: string, method: string): str
   const path = pathname.slice(ADMIN_PROXY_PREFIX.length);
   const grantType = new URLSearchParams(search).get("grant_type");
   if ((path === "/auth/v1/token" && ["password","refresh_token"].includes(grantType ?? "")) || path === "/auth/v1/recover" || path === "/auth/v1/user" || path === "/auth/v1/logout") return path + search;
-  const table = path.match(/^\\/rest\\/v1\\/([a-z_]+)$/);
+  const table = new RegExp("^/rest/v1/([a-z_]+)$").exec(path);
   if (table && ADMIN_TABLES.has(table[1])) return path + search;
   if (method === "GET" && path.startsWith(PUBLIC_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(PUBLIC_MEDIA_PREFIX.length))) return path + search;
   if (["POST","PUT"].includes(method) && path.startsWith(UPLOAD_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(UPLOAD_MEDIA_PREFIX.length))) return path + search;
