@@ -96,3 +96,32 @@ export const getPublishedCmsPage = createServerFn({ method: "GET" })
     if (!Array.isArray(payload)) throw new Error("Published CMS page response was not a list.");
     return parsePage(payload[0]) ?? null;
   });
+
+export function mergeCmsHead(base: any, page?: PublishedCmsPage | null): any {
+  if (!page) return base;
+  const hasContent = page.body.trim().length > 0 || page.sections.length > 0;
+  const hasSeo = Boolean(page.seoTitle || page.seoDescription || page.canonical);
+  if (!hasContent && !hasSeo && !page.noindex) return base;
+
+  const title = page.seoTitle || (hasContent ? page.title + " — AETHER-TRADE" : "");
+  const description = page.seoDescription;
+  const canonical = page.canonical || (hasContent
+    ? "https://aethertrade.cloud" + (page.slug === "home" ? "/" : "/" + page.slug)
+    : "");
+
+  const meta = (base.meta || []).filter((item: any) => {
+    if (title && (item.title || item.property === "og:title" || item.name === "twitter:title")) return false;
+    if (description && (item.name === "description" || item.property === "og:description" || item.name === "twitter:description")) return false;
+    if (canonical && item.property === "og:url") return false;
+    if ((hasContent || hasSeo || page.noindex) && item.name === "robots") return false;
+    return true;
+  });
+  if (title) meta.push({ title }, { property: "og:title", content: title }, { name: "twitter:title", content: title });
+  if (description) meta.push({ name: "description", content: description }, { property: "og:description", content: description }, { name: "twitter:description", content: description });
+  if (page.noindex) meta.push({ name: "robots", content: "noindex, nofollow" });
+  if (canonical) meta.push({ property: "og:url", content: canonical });
+
+  const links = (base.links || []).filter((item: any) => item.rel !== "canonical");
+  if (canonical) links.push({ rel: "canonical", href: canonical });
+  return { ...base, meta, links };
+}
