@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { readServerEnv } from "@/lib/server-env.server";
+import { isPublicAt } from "@/lib/publication";
 
 export interface CmsPageSection {
   id: string;
@@ -50,9 +51,9 @@ function parseSections(value: unknown): CmsPageSection[] {
     return [{ id: asText(item.id).slice(0, 80) || "section-" + index, title, body, imageUrl, imageAlt }];
   });
 }
-function parsePage(value: unknown): PublishedCmsPage | null {
+function parsePage(value: unknown, now = Date.now()): PublishedCmsPage | null {
   const row = asRecord(value);
-  if (!row || row.publication !== "Published") return null;
+  if (!row || !isPublicAt(row.publication, row.scheduled_at, now)) return null;
   const slug = asText(row.slug);
   const title = asText(row.title).trim();
   if (!slug || !title) return null;
@@ -82,9 +83,9 @@ export const getPublishedCmsPage = createServerFn({ method: "GET" })
     const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
     if (!baseUrl || !publishableKey) throw new Error("Public CMS connection is not configured.");
     const url = new URL(baseUrl + "/rest/v1/content_records");
-    url.searchParams.set("select", "slug,title,body,publication,seo_title,seo_description,canonical,noindex,fields");
+    url.searchParams.set("select", "slug,title,body,publication,scheduled_at,seo_title,seo_description,canonical,noindex,fields");
     url.searchParams.set("module", "eq.pages");
-    url.searchParams.set("publication", "eq.Published");
+    url.searchParams.set("or", `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date().toISOString()}))`);
     url.searchParams.set("slug", "eq." + data.slug);
     url.searchParams.set("limit", "1");
     const response = await fetch(url, {
