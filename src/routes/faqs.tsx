@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
 import { FaqList, meta } from "@/components/site/blocks";
@@ -28,11 +29,12 @@ export const Route = createFileRoute("/faqs")({
   component: FaqsPage,
 });
 function FaqsPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const faqs = items.length ? items.map(item => ({ q: item.title, a: item.body })) : FAQS;
   return <>
     <PageHero eyebrow="FAQs" title="Straight Answers." description="What we do, what we don't, and how working with us starts." />
     <section className="container-page section-pad"><FaqList items={faqs} /></section>
-    <CtaBand title="Still have a question?" description="Ask us directly — we'll give you a straight answer." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Still have a question?" description="Ask us directly — we'll give you a straight answer." />
   </>;
 }
