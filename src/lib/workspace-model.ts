@@ -15,8 +15,8 @@ const rolePermissions: Record<Role, Permission[]> = {
   "Sales Manager": ["inquiries", "export", "report"],
   Viewer: ["report"],
 };
-// UI simulation only. These values must never authorize a connected endpoint.
-export function demoCan(role: Role, permission: Permission) { return rolePermissions[role].includes(permission); }
+// UI gating only. Supabase Row Level Security is the actual authorization layer.
+export function roleCan(role: Role, permission: Permission) { return rolePermissions[role].includes(permission); }
 export const modules = [
   ["overview", "Overview", "Workspace"], ["pages", "Pages & sections", "Content"],
   ["platform", "Platform", "Content"], ["automations", "Automations", "Content"],
