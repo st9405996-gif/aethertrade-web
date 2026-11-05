@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/section";
-import { InquiryForm } from "@/components/site/inquiry-form";\nimport { CmsPageSections } from "@/components/site/cms-page-renderer";
+import { InquiryForm } from "@/components/site/inquiry-form";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 /** Preserves catalogue context ("Request This Solution" links carry the slug). */
 const validateSearch = (search: Record<string, unknown>) => ({
