@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/sonner";
 import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
+import { ConsentedClarityTracker } from "@/components/site/consented-clarity-tracker";
 import { getGlobalSeoSettings } from "@/lib/global-seo.functions";
 
 // Enterprise typography — Inter-first system stack with bundled Geist fallback.
@@ -272,6 +273,7 @@ function RootComponent() {
             {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
           </main>
           {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname}/>}
+          {!bareAuthPage && <ConsentedClarityTracker />}
           {!bareAuthPage && <Footer />}
         </div>
         <Toaster />

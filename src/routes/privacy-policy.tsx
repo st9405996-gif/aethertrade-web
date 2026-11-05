@@ -6,7 +6,7 @@ import { LegalPage } from "@/components/site/legal-page";
 
 export const Route = createFileRoute("/privacy-policy")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "privacy-policy" } }) }),
-  head: ({ loaderData }) => mergeCmsHead(meta("Privacy Policy", "What information AETHER-TRADE collects through its website forms, how it is used and how to contact us."), loaderData?.cmsPage),
+  head: ({ loaderData }) => mergeCmsHead(meta("Privacy Policy", "What information AETHER-TRADE collects through its website forms and analytics, how it is used and how to contact us."), loaderData?.cmsPage),
   component: PrivacyPage,
 });
 
@@ -14,7 +14,7 @@ function PrivacyPage() {
   const { cmsPage } = Route.useLoaderData();
   return (
     <>
-      <LegalPage title="Privacy Policy." intro="This notice describes how the AETHER-TRADE website currently handles information submitted through its contact and operations-audit forms.">
+      <LegalPage title="Privacy Policy." intro="This notice describes how the AETHER-TRADE website handles information submitted through its forms and technical information collected when you visit the website.">
       <h2>Information submitted through our forms</h2>
       <p>
         When you submit the Contact or Request an Operations Audit form, the information you provide is sent to AETHER-TRADE.
@@ -35,22 +35,31 @@ function PrivacyPage() {
         <li>To maintain inquiry status, reference and operational records.</li>
         <li>To protect the form from automated abuse and repeated submissions.</li>
       </ul>
+      <h2>Analytics and website usage</h2>
+      <p>
+        If you grant the audience-statistics/analytics permission in the consent banner, the website uses Google Analytics
+        and Microsoft Clarity to measure visits and understand how visitors use public pages. Clarity can provide
+        interaction recordings and heatmaps. These tools may process technical information such as page views, interactions,
+        browser and device details. Clarity is configured with advertising storage denied and is loaded only after analytics
+        consent is granted. You can change your analytics choice through the consent preferences control. For details,
+        see the <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link>.
+      </p>
       <h2>Technical and security information</h2>
       <p>
-        Cloudflare hosts and protects the website. The form uses Cloudflare Turnstile and server-side rate limiting to
+        Cloudflare hosts and protects the website. The forms use Cloudflare Turnstile and server-side rate limiting to
         reduce automated abuse. Hosting and security services may process technical request information such as IP address,
         browser details and request metadata.
       </p>
       <h2>Browser storage</h2>
       <p>
-        The website stores your theme preference in your browser. The administrator workspace also stores its sign-in
-        session in browser storage so an administrator can remain signed in. See the <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link>
+        The website stores your theme preference and consent choice in your browser. The administrator workspace also stores
+        its sign-in session in browser storage so an administrator can remain signed in. See the <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link>
         for more information.
       </p>
       <h2>Sharing and sale</h2>
       <p>
         AETHER-TRADE does not sell personal information. Information is shared with the service providers described above
-        only as needed to host the website, protect the forms, store inquiries and deliver email.
+        only as needed to host the website, protect the forms, store inquiries, deliver email and provide consented analytics.
       </p>
       <h2>Retention and privacy requests</h2>
       <p>
