@@ -1,0 +1,14 @@
+create index if not exists idx_audit_logs_actor_id on public.audit_logs(actor_id);
+create index if not exists idx_content_records_created_by on public.content_records(created_by);
+create index if not exists idx_content_revisions_actor_id on public.content_revisions(actor_id);
+create index if not exists idx_global_seo_settings_updated_by on public.global_seo_settings(updated_by);
+create index if not exists idx_inquiries_assigned_to on public.inquiries(assigned_to);
+create index if not exists idx_inquiries_automation_id on public.inquiries(automation_id);
+create index if not exists idx_inquiry_notes_author_id on public.inquiry_notes(author_id);
+create index if not exists idx_inquiry_notes_inquiry_id on public.inquiry_notes(inquiry_id);
+create index if not exists idx_inquiry_status_history_actor_id on public.inquiry_status_history(actor_id);
+create index if not exists idx_inquiry_status_history_inquiry_id on public.inquiry_status_history(inquiry_id);
+create index if not exists idx_job_applications_listing_id on public.job_applications(listing_id);
+create index if not exists idx_media_assets_owner_id on public.media_assets(owner_id);
+create index if not exists idx_newsletter_subscribers_created_by on public.newsletter_subscribers(created_by);
+create index if not exists idx_role_permissions_permission on public.role_permissions(permission);
