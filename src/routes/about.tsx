@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { StubPage } from "@/components/site/stub-page";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "about" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       { title: "About — AETHER-TRADE" },
       {
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/about")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: AboutPage,
 });
 

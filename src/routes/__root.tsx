@@ -18,6 +18,9 @@ import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { WorkspaceProvider } from "@/components/admin/workspace-provider";
 import { Toaster } from "@/components/ui/sonner";
+import type { PublishedCmsPage } from "@/lib/public-cms.functions";
+import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
+import { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
 
 // Enterprise typography — Inter-first system stack with bundled Geist fallback.
 import "@fontsource/geist-sans/400.css";
@@ -183,6 +186,78 @@ function RootComponent() {
   const pathname = router.state.location.pathname;
   const admin = pathname.startsWith("/admin");
   const bareAuthPage = admin || pathname === "/auth" || pathname === "/reset-password";
+  const pageSlugs: Record<string, string> = {
+    "/": "home",
+    "/about": "about",
+    "/platform": "platform",
+    "/how-it-works": "how-it-works",
+    "/solutions": "solutions",
+    "/industries": "industries",
+    "/services": "services",
+    "/automations": "automations",
+    "/custom-solutions": "custom-solutions",
+    "/insights": "insights",
+    "/partnerships": "partnerships",
+    "/careers": "careers",
+    "/faqs": "faqs",
+    "/contact": "contact",
+    "/request-demo": "request-demo",
+    "/privacy-policy": "privacy-policy",
+    "/terms": "terms",
+    "/cookie-policy": "cookie-policy",
+  };
+  const cmsSlug = pageSlugs[pathname] ?? null;
+  const leafMatch = router.state.matches[router.state.matches.length - 1] as unknown as { loaderData?: { cmsPage?: PublishedCmsPage | null } } | undefined;
+  const cmsPage = leafMatch?.loaderData?.cmsPage ?? null;
+  const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
+  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
+  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
+
+  useEffect(() => {
+    if (pathname !== "/") return;
+    const authType = new URLSearchParams(window.location.hash.slice(1)).get("type");
+    if (authType === "invite" || authType === "recovery") {
+      window.location.replace("/reset-password" + window.location.search + window.location.hash);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!cmsPage || !cmsSlug || !hasCmsContent) return;
+    const title = cmsPage.seoTitle || cmsPage.title + " — AETHER-TRADE";
+    document.title = title;
+    const updateMeta = (attribute: "name" | "property", key: string, content: string) => {
+      let element = document.head.querySelector('meta[' + attribute + '="' + key + '"]') as HTMLMetaElement | null;
+      if (!content) {
+        element?.remove();
+        return;
+      }
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(attribute, key);
+        document.head.appendChild(element);
+      }
+      element.content = content;
+    };
+    const canonical = /^https:\/\/[A-Za-z0-9.-]+(?:\/.*)?$/.test(cmsPage.canonical)
+      ? cmsPage.canonical
+      : "https://aethertrade.cloud" + (pathname === "/" ? "/" : pathname);
+    let canonicalLink = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.rel = "canonical";
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.href = canonical;
+    updateMeta("property", "og:title", title);
+    updateMeta("property", "og:url", canonical);
+    if (cmsPage.seoDescription) {
+      updateMeta("name", "description", cmsPage.seoDescription);
+      updateMeta("property", "og:description", cmsPage.seoDescription);
+      updateMeta("name", "twitter:description", cmsPage.seoDescription);
+    }
+    updateMeta("name", "twitter:title", title);
+    updateMeta("name", "robots", cmsPage.noindex ? "noindex, nofollow" : "");
+  }, [cmsPage, cmsSlug, hasCmsContent, pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -191,8 +266,10 @@ function RootComponent() {
           {!bareAuthPage && <Header />}
           <main className="flex-1">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
+            {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
+            {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
           </main>
+          {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname}/>}
           {!bareAuthPage && <Footer />}
         </div>
         <Toaster />

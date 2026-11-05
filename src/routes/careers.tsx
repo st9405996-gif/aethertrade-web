@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { meta, PlaceholderNote } from "@/components/site/blocks";
 import { Button } from "@/components/ui/button";
 import { CAREERS } from "@/content/site-content";
 
 export const Route = createFileRoute("/careers")({
-  head: () => {
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "careers" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => {
     const m = meta("Careers", "Careers at AETHER-TRADE.");
     return CAREERS.published ? m : { meta: [...m.meta, { name: "robots", content: "noindex" }] };
-  },
+  })(), loaderData?.cmsPage) ,
   component: CareersPage,
 });
 

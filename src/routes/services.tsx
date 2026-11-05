@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -6,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { SERVICES } from "@/content/site-content";
 
 export const Route = createFileRoute("/services")({
-  head: () =>
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "services" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() =>
     meta(
       "Services",
       "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
-    ),
+    ))(), loaderData?.cmsPage) ,
   component: ServicesPage,
 });
 

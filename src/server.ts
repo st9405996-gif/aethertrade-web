@@ -47,14 +47,21 @@ function isH3SwallowedErrorBody(body: string): boolean {
 }
 
 const ADMIN_PROXY_PREFIX = "/api/admin-supabase";
-const ADMIN_TABLES = new Set(["audit_logs","content_records","content_revisions","inquiries","inquiry_notes","media_assets","user_roles"]);
-function adminProxyTarget(pathname: string, search: string): string | null {
+const ADMIN_TABLES = new Set(["audit_logs","analytics_events","content_records","content_revisions","inquiries","inquiry_notes","media_assets","newsletter_subscribers","user_roles"]);
+const PUBLIC_MEDIA_PREFIX = "/storage/v1/object/public/website-media/";
+const UPLOAD_MEDIA_PREFIX = "/storage/v1/object/website-media/";
+function safeStorageObjectPath(value: string): boolean {
+  return value.length > 0 && value.split("/").every((part) => /^[A-Za-z0-9._~-]+$/.test(part) && part !== "." && part !== "..");
+}
+function adminProxyTarget(pathname: string, search: string, method: string): string | null {
   const path = pathname.slice(ADMIN_PROXY_PREFIX.length);
   const grantType = new URLSearchParams(search).get("grant_type");
   if ((path === "/auth/v1/token" && ["password","refresh_token"].includes(grantType ?? "")) || path === "/auth/v1/recover" || path === "/auth/v1/user" || path === "/auth/v1/logout") return path + search;
-  const table = path.match(/^\/rest\/v1\/([a-z_]+)$/);
+  const table = new RegExp("^/rest/v1/([a-z_]+)$").exec(path);
   if (table && ADMIN_TABLES.has(table[1])) return path + search;
-  if (path.startsWith("/storage/v1/object/public/") && path.length > 27) return path + search;
+  if (method === "GET" && path.startsWith(PUBLIC_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(PUBLIC_MEDIA_PREFIX.length))) return path + search;
+  if (["POST","PUT"].includes(method) && path.startsWith(UPLOAD_MEDIA_PREFIX) && safeStorageObjectPath(path.slice(UPLOAD_MEDIA_PREFIX.length))) return path + search;
+  if (method === "DELETE" && path === "/storage/v1/object/website-media") return path + search;
   return null;
 }
 async function proxyAdminSupabase(request: Request): Promise<Response> {
@@ -66,23 +73,25 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   const base = config["SUPABASE_URL"]?.replace(/\/$/, "");
   const key = config["SUPABASE_PUBLISHABLE_KEY"];
   if (!base || !key) return new Response(JSON.stringify({message:"Supabase server connection settings are missing."}), {status:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
-  const target = adminProxyTarget(requestUrl.pathname, requestUrl.search);
+  const target = adminProxyTarget(requestUrl.pathname, requestUrl.search, request.method);
   if (!target) return new Response("Not found", {status:404});
-  const storage = target.startsWith("/storage/v1/object/public/");
   const targetPath = target.split("?")[0];
+  const storage = targetPath.startsWith("/storage/v1/object/");
+  const publicStorageRead = targetPath.startsWith(PUBLIC_MEDIA_PREFIX) && request.method === "GET";
   const publicAuth = targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover";
   const rest = targetPath.startsWith("/rest/v1/");
   const auth = ((targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover" || targetPath === "/auth/v1/logout") && request.method === "POST") || (targetPath === "/auth/v1/user" && ["GET","PUT"].includes(request.method));
-  if (!(storage && request.method === "GET") && !(rest && ["GET","POST","PATCH","DELETE"].includes(request.method)) && !auth) return new Response("Method not allowed", {status:405});
+  const storageMethod = storage && (publicStorageRead || ["POST","PUT","DELETE"].includes(request.method));
+  if (!storageMethod && !(rest && ["GET","POST","PATCH","DELETE"].includes(request.method)) && !auth) return new Response("Method not allowed", {status:405});
   const authorization = request.headers.get("authorization");
-  if (!storage && !publicAuth && !authorization?.startsWith("Bearer ")) return new Response(JSON.stringify({message:"Authentication required."}), {status:401,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
+  if (!publicStorageRead && !publicAuth && !authorization?.startsWith("Bearer ")) return new Response(JSON.stringify({message:"Authentication required."}), {status:401,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
   const headers = new Headers({apikey:key});
-  for (const name of ["accept","content-type","prefer","range"]) { const value=request.headers.get(name); if(value) headers.set(name,value); }
+  for (const name of ["accept","content-type","prefer","range","x-upsert","cache-control"]) { const value=request.headers.get(name); if(value) headers.set(name,value); }
   if (authorization) headers.set("authorization",authorization);
   const upstream = await fetch(new URL(target,base), {method:request.method,headers,body:["GET","HEAD"].includes(request.method)?undefined:await request.arrayBuffer(),redirect:"manual"});
   const outHeaders = new Headers();
   for (const name of ["content-type","content-range","accept-ranges","etag","last-modified"]) { const value=upstream.headers.get(name); if(value) outHeaders.set(name,value); }
-  outHeaders.set("cache-control",storage?"public, max-age=300":"no-store");
+  outHeaders.set("cache-control",publicStorageRead?"public, max-age=300":"no-store");
   return new Response(upstream.body,{status:upstream.status,statusText:upstream.statusText,headers:outHeaders});
 }
 

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { useState } from "react";
 import { PageHero } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
@@ -7,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/automations")({
-  head: () =>
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "automations" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() =>
     meta(
       "Automation Catalogue",
       "Catalogue of trade-operations automations — inquiry triage, shipment follow-up, document intake, reconciliation, reporting and custom AI agents — each with its availability status.",
-    ),
+    ))(), loaderData?.cmsPage) ,
   component: AutomationsPage,
 });
 

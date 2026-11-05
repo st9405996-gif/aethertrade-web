@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { INDUSTRIES } from "@/content/site-content";
 
 export const Route = createFileRoute("/industries")({
-  head: () =>
-    meta("Industries", "Trade operations support across textiles, agriculture, machinery, consumer goods, chemicals and electronics."),
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "industries" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() =>
+    meta("Industries", "Trade operations support across textiles, agriculture, machinery, consumer goods, chemicals and electronics."))(), loaderData?.cmsPage) ,
   component: IndustriesPage,
 });
 

@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { LayoutDashboard, Files, Workflow, BriefcaseBusiness, BookOpen, MessageSquare, Image, Settings2, Shield, ArrowUpRight, Plus, Search, Pencil, Trash2, Eye, Save, X, Download, RotateCcw, ChevronRight, Globe, Plug, Menu, ArrowUp, ArrowDown, CheckCircle2, CircleDashed, Upload, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Logo } from "@/components/site/logo";
 import { useWorkspace } from "@/components/admin/workspace-provider";
+import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import { modules, makeRecord, availabilityValues, publicationValues, inquiryValues, roles, demoCan, contentSchema, isPublic, safeCsvCell, type ModuleId, type ContentRecord, type Inquiry, type Role } from "@/lib/workspace-model";
 
 const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity };
@@ -43,24 +46,105 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
           {module === "seo" && <ContentManager module="pages" seoOnly/>}
           {module === "connections" && <Connections/>}
           {module === "users" && <Users/>}
-          {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as a demo draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
-          {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · event metadata only</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
-          {module === "analytics" && <Empty icon={Activity} title="No measured visitor data" body="Visitor tracking and consent-aware reporting are not connected. No counts or conversion rates have been fabricated."/>}
-          {module === "subscribers" && <Empty icon={MessageSquare} title="No subscribers collected" body="Newsletter collection and delivery require an approved service and consent configuration."/>}
+          {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
+          {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · changed fields: {r.changedFields.length ? r.changedFields.join(", ") : "No field detail"}</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
+          {module === "analytics" && <AnalyticsDashboard/>}
+          {module === "subscribers" && <Subscribers/>}
         </>}
       </main>
     </div>
   </div>;
 }
+function AnalyticsDashboard() {
+  const { data } = useWorkspace();
+  const total = data.analytics.length;
+  const counts = data.analytics.reduce<Record<string, number>>((acc, event) => {
+    acc[event.eventType] = (acc[event.eventType] || 0) + 1;
+    return acc;
+  }, {});
+  const pageCounts = data.analytics.reduce<Record<string, number>>((acc, event) => {
+    acc[event.pagePath] = (acc[event.pagePath] || 0) + 1;
+    return acc;
+  }, {});
+  const topPages = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (!total) return <Empty icon={Activity} title="No consented visitor events yet" body="This dashboard reports only first-party events submitted after analytics consent. It does not fabricate visits, conversions or engagement metrics." />;
+  return <div className="space-y-8">
+    <p className="text-xs text-muted-foreground">Showing the latest {total} consented events. No visitor names, email addresses or shipment data are collected.</p>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
+      ["Events", total],
+      ["Page views", counts.page_view || 0],
+      ["CTA clicks", counts.cta_click || 0],
+      ["Demo conversions", counts.demo_conversion || 0],
+    ].map(([label, value]) => <div key={String(label)} className="rounded-md border border-border bg-card p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-4 font-mono text-3xl">{value}</p></div>)}</div>
+    <section><h2 className="mb-4 text-lg font-semibold">Top pages</h2><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[420px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Path</th><th className="text-right">Events</th></tr></thead><tbody>{topPages.map(([path, count]) => <tr key={path} className="border-t border-border"><td className="py-3 font-mono">{path}</td><td className="text-right">{count}</td></tr>)}</tbody></table></div></section>
+    <section><h2 className="mb-4 text-lg font-semibold">Recent events</h2><div className="divide-y divide-border border-y border-border">{data.analytics.slice(0, 25).map(event => <div key={event.id} className="flex flex-wrap justify-between gap-3 py-3"><div><p className="text-sm font-medium">{event.eventType}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{event.pagePath}{event.automationSlug ? " · "+event.automationSlug : ""}</p></div><span className="text-xs text-muted-foreground">{date(event.createdAt)}</span></div>)}</div></section>
+  </div>;
+}
+function Subscribers() {
+  const workspace = useWorkspace();
+  const [email, setEmail] = useState("");
+  const [consentConfirmed, setConsentConfirmed] = useState(false);
+  const [error, setError] = useState("");
+  const [pendingUnsubscribe, setPendingUnsubscribe] = useState<string | null>(null);
+  const rows = workspace.data.subscribers;
+  async function add() {
+    setError("");
+    try {
+      await workspace.addSubscriber(email, consentConfirmed);
+      setEmail("");
+      setConsentConfirmed(false);
+      toast.success("Consented subscriber record saved");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add subscriber");
+    }
+  }
+  async function unsubscribe() {
+    if (!pendingUnsubscribe) return;
+    try {
+      await workspace.updateSubscriberStatus(pendingUnsubscribe, "unsubscribed");
+      setPendingUnsubscribe(null);
+      toast.success("Subscriber marked as unsubscribed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update subscriber");
+    }
+  }
+  return <div className="space-y-7">
+    <div className="rounded-md border border-border bg-card p-5">
+      <h2 className="text-lg font-semibold">Add a consented subscriber</h2>
+      <p className="mt-2 text-sm text-muted-foreground">Admin-only manual entry. This list does not send newsletter emails; double opt-in and unsubscribe email delivery must be configured before a campaign is enabled.</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]"><Input type="email" aria-label="Subscriber email" placeholder="name@company.com" value={email} onChange={e => setEmail(e.target.value)} maxLength={254}/><Button disabled={!email.trim() || !consentConfirmed || !demoCan(workspace.role, "users")} onClick={add}><Plus/>Add subscriber</Button></div>
+      <label className="mt-4 flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={consentConfirmed} onChange={e => setConsentConfirmed(e.target.checked)}/><span>I confirm that this email owner has explicitly consented to receive newsletter communications.</span></label>
+      {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+    </div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Subscriber records ({rows.length})</h2><Button variant="outline" disabled={!rows.length || !demoCan(workspace.role, "export")} onClick={() => download("aethertrade-subscribers.csv", [["Email","Status","Consent at","Source"],...rows.map(r=>[r.email,r.status,r.consentAt,r.source])].map(row=>row.map(safeCsvCell).join(",")).join("\n"),"text/csv")}><Download/>Export CSV</Button></div>
+    {rows.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[640px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Email</th><th>Status</th><th>Consent recorded</th><th>Source</th><th className="text-right">Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-t border-border"><td className="py-4">{row.email}</td><td><Status value={row.status==="subscribed"?"Subscribed":"Unsubscribed"}/></td><td className="text-xs">{date(row.consentAt)}</td><td className="text-xs">{row.source}</td><td className="text-right">{row.status==="subscribed" ? <Button size="sm" variant="outline" onClick={()=>setPendingUnsubscribe(row.id)}>Mark unsubscribed</Button> : <span className="text-xs text-muted-foreground">No action</span>}</td></tr>)}</tbody></table></div> : <Empty icon={MessageSquare} title="No subscriber records" body="Add an email only after you have a clear consent confirmation. No newsletter messages are sent by this module."/>}
+    <Dialog open={!!pendingUnsubscribe} onOpenChange={open=>!open&&setPendingUnsubscribe(null)}><DialogContent><DialogHeader><DialogTitle>Mark this subscriber as unsubscribed?</DialogTitle><DialogDescription>This will update the subscriber status and keep the record for suppression. It does not send an email.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setPendingUnsubscribe(null)}>Cancel</Button><Button variant="destructive" onClick={unsubscribe}>Confirm unsubscribe</Button></div></DialogContent></Dialog>
+  </div>;
+}
 function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string; body: string }) { return <div className="flex min-h-64 flex-col items-center justify-center border-y border-border px-5 py-10 text-center"><Icon className="mb-5 size-8 text-muted-foreground"/><h2 className="text-lg font-medium">{title}</h2><p className="mt-2 max-w-lg text-sm text-muted-foreground">{body}</p></div>; }
 function Overview() {
-  const { data, role } = useWorkspace();
+  const { data, role, authenticated } = useWorkspace();
   const permitted = demoCan(role, "inquiries");
-  const stats = [{ label: "Demo inquiries", value: permitted ? data.inquiries.length : "Restricted", icon: MessageSquare }, { label: "New inquiries", value: permitted ? data.inquiries.filter(r => r.status === "New").length : "Restricted", icon: BriefcaseBusiness }, { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files }, { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen }];
-  return <><div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Records from the connected database</p></div>)}</div>
-    <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]"><section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "The selected simulated role cannot access inquiry details."}/>}</section>
-    <section><h2 className="mb-4 text-lg font-semibold">Connection status</h2><div className="divide-y divide-border border-y border-border">{["Database & storage", "Administrator authentication", "Notifications", "Production hosting"].map(t => <div key={t} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{t}</span><Status value="Not connected"/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section></div>
-    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{data.records.filter(r => r.module === id).length} demo records</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
+  const stats = [
+    { label: "Inquiries", value: permitted ? data.inquiries.length : "Restricted", icon: MessageSquare },
+    { label: "New inquiries", value: permitted ? data.inquiries.filter(r => r.status === "New").length : "Restricted", icon: BriefcaseBusiness },
+    { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files },
+    { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen },
+  ];
+  const connectionRows = [
+    ["Supabase CMS & inquiry database", authenticated ? "Connected" : "Disconnected"],
+    ["Administrator authentication", authenticated ? "Connected" : "Disconnected"],
+    ["Website media storage", "Provisioned"],
+    ["Inquiry email delivery", "Not verified"],
+    ["Cloudflare Worker", "Production active"],
+  ];
+  return <>
+    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Live records from the connected database</p></div>)}</div>
+    <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]">
+      <section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "Your database role does not allow inquiry access."}/>}</section>
+      <section><h2 className="mb-4 text-lg font-semibold">Connection readiness</h2><div className="divide-y divide-border border-y border-border">{connectionRows.map(([name,state]) => <div key={name} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{name}</span><Status value={state}/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section>
+    </div>
+    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{data.records.filter(r => r.module === id).length} database records</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
   </>;
 }
 function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly?: boolean }) {
@@ -78,7 +162,7 @@ function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly
     <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete this content record?</DialogTitle><DialogDescription>{remove?.title}. This action cannot be undone.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={() => { if (remove) attempt(() => workspace.remove(remove.id), "Record deleted"); setRemove(null); }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
-interface PageSection { id: string; title: string; body: string; }
+interface PageSection { id: string; title: string; body: string; imageUrl?: string; imageAlt?: string; }
 function RecordEditor({ initial, onSaved, seoOnly }: { initial: ContentRecord; onSaved: () => void; seoOnly: boolean }) {
   const workspace = useWorkspace(); const [record, setRecord] = useState(initial); const [error, setError] = useState("");
   const [tab, setTab] = useState(seoOnly ? "SEO" : "Content");
@@ -93,7 +177,7 @@ function RecordEditor({ initial, onSaved, seoOnly }: { initial: ContentRecord; o
     try { await workspace.save({ ...record, ...result.data }); onSaved(); toast.success("Saved to database"); } catch (e) { setError(e instanceof Error ? e.message : "Could not save"); }
   }
   return <div className="space-y-5"><div className="flex flex-wrap gap-1 border-b border-border pb-3">{(seoOnly ? ["SEO"] : ["Content", "Fields", "Publishing", "SEO"]).map(t => <Button size="sm" variant={tab === t ? "secondary" : "ghost"} key={t} onClick={() => setTab(t)}>{t}</Button>)}</div>
-    {tab === "Content" && <>{field("title", "Title")}{field("slug", "Slug")}{field("category", "Category")}<label className="grid gap-2 text-sm">Body<Textarea rows={8} value={record.body} onChange={e => setRecord({ ...record, body: e.target.value })}/></label>{record.module === "pages" && <div className="space-y-4"><div className="flex justify-between"><h3 className="font-medium">Ordered sections</h3><Button size="sm" variant="outline" onClick={() => setSections([...sections, { id: crypto.randomUUID(), title: "New section", body: "" }])}><Plus/>Add section</Button></div>{sections.map((s, i) => <div key={s.id} className="space-y-2 border-t border-border pt-3"><div className="flex gap-2"><Input aria-label={`Section ${i + 1} title`} value={s.title} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, title: e.target.value } : x))}/><Button variant="ghost" size="icon" aria-label="Move section up" disabled={!i} onClick={() => { const n = [...sections]; const current = n[i]; const previous = n[i - 1]; if (!current || !previous) return; n[i - 1] = current; n[i] = previous; setSections(n); }}><ArrowUp/></Button><Button variant="ghost" size="icon" aria-label="Move section down" disabled={i === sections.length - 1} onClick={() => { const n = [...sections]; const current = n[i]; const next = n[i + 1]; if (!current || !next) return; n[i] = next; n[i + 1] = current; setSections(n); }}><ArrowDown/></Button><Button variant="ghost" size="icon" aria-label="Remove section" onClick={() => setSections(sections.filter(x => x.id !== s.id))}><Trash2/></Button></div><Textarea aria-label={`Section ${i + 1} body`} value={s.body} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, body: e.target.value } : x))}/></div>)}</div>}</>}
+    {tab === "Content" && <>{field("title", "Title")}{field("slug", "Slug")}{field("category", "Category")}<label className="grid gap-2 text-sm">Body<Textarea rows={8} value={record.body} onChange={e => setRecord({ ...record, body: e.target.value })}/></label>{record.module === "pages" && <div className="space-y-4"><div className="flex justify-between"><h3 className="font-medium">Ordered sections</h3><Button size="sm" variant="outline" onClick={() => setSections([...sections, { id: crypto.randomUUID(), title: "New section", body: "", imageUrl: "", imageAlt: "" }])}><Plus/>Add section</Button></div>{sections.map((s, i) => <div key={s.id} className="space-y-2 border-t border-border pt-3"><div className="flex gap-2"><Input aria-label={`Section ${i + 1} title`} value={s.title} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, title: e.target.value } : x))}/><Button variant="ghost" size="icon" aria-label="Move section up" disabled={!i} onClick={() => { const n = [...sections]; const current = n[i]; const previous = n[i - 1]; if (!current || !previous) return; n[i - 1] = current; n[i] = previous; setSections(n); }}><ArrowUp/></Button><Button variant="ghost" size="icon" aria-label="Move section down" disabled={i === sections.length - 1} onClick={() => { const n = [...sections]; const current = n[i]; const next = n[i + 1]; if (!current || !next) return; n[i] = next; n[i + 1] = current; setSections(n); }}><ArrowDown/></Button><Button variant="ghost" size="icon" aria-label="Remove section" onClick={() => setSections(sections.filter(x => x.id !== s.id))}><Trash2/></Button></div><Textarea aria-label={`Section ${i + 1} body`} value={s.body} maxLength={10000} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, body: e.target.value } : x))}/><div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-2 text-sm">Section image<select className={selectClass} aria-label={`Section ${i + 1} image`} value={s.imageUrl || ""} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, imageUrl: e.target.value } : x))}><option value="">No image</option>{workspace.data.media.filter(m => m.url).map(m => <option key={m.id} value={m.url}>{m.name}</option>)}</select></label><label className="grid gap-2 text-sm">Image alt text<Input aria-label={`Section ${i + 1} image alt text`} value={s.imageAlt || ""} maxLength={500} onChange={e => setSections(sections.map(x => x.id === s.id ? { ...x, imageAlt: e.target.value } : x))}/></label></div></div>)}</div>}</>}
     {tab === "Fields" && <>{Object.keys(record.fields).filter(k => k !== "sections").map(k => <label key={k} className="grid gap-2 text-sm capitalize">{k.replace(/([A-Z])/g, " $1")}{["careersEnabled", "cookiePolicyApproved", "analyticsConsent", "visible"].includes(k) ? <select className={selectClass} value={record.fields[k]} onChange={e => setRecord({ ...record, fields: { ...record.fields, [k]: e.target.value } })}><option value="false">Disabled</option><option value="true">Enabled in demo</option></select> : <Textarea rows={3} value={record.fields[k]} onChange={e => setRecord({ ...record, fields: { ...record.fields, [k]: e.target.value } })}/>}</label>)}<label className="grid gap-2 text-sm">Position<Input type="number" min={0} value={record.position} onChange={e => setRecord({ ...record, position: Math.max(0, Number(e.target.value)) })}/></label>{!Object.keys(record.fields).length && <p className="text-sm text-muted-foreground">This record has no additional structured fields.</p>}</>}
     {tab === "Publishing" && <><label className="grid gap-2 text-sm">Publication<select className={selectClass} value={record.publication} onChange={e => setRecord({ ...record, publication: e.target.value as ContentRecord["publication"] })}>{publicationValues.map(v => <option key={v} disabled={v !== "Draft" && !demoCan(workspace.role, "publish")}>{v}</option>)}</select></label>{record.publication === "Scheduled" && <label className="grid gap-2 text-sm">Publication date<Input type="datetime-local" value={record.scheduledAt} onChange={e => setRecord({ ...record, scheduledAt: e.target.value })}/></label>}<label className="grid gap-2 text-sm">Capability availability<select className={selectClass} value={record.availability} onChange={e => setRecord({ ...record, availability: e.target.value as ContentRecord["availability"] })}>{availabilityValues.map(v => <option key={v}>{v}</option>)}</select></label><p className="text-xs text-muted-foreground">Scheduling affects demo visibility only. No production scheduler is running.</p></>}
     {tab === "SEO" && <>{field("seoTitle", "SEO title")}{field("seoDescription", "Meta description")}{field("canonical", "Canonical HTTPS URL")}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={record.noindex} onChange={e => setRecord({ ...record, noindex: e.target.checked })}/>Exclude from search indexing (demo setting)</label><div className="border-t border-border pt-4"><p className="text-lg text-primary">{record.seoTitle || record.title} — AETHER-TRADE</p><p className="mt-1 text-sm text-muted-foreground">{record.seoDescription || "No custom description entered."}</p></div></>}
@@ -110,39 +194,90 @@ function Inquiries() {
   </>;
 }
 function MediaLibrary() {
-  const workspace = useWorkspace(); const [error, setError] = useState(""); const [search, setSearch] = useState("");
-  const [edit, setEdit] = useState<typeof workspace.data.media[number] | null>(null); const [remove, setRemove] = useState<string | null>(null);
-  async function upload(e: ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; if (!file) return; setError("");
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) { setError("Upload accepts JPG, PNG or WebP images up to 2 MB. Documents and executable files are not allowed."); e.target.value = ""; return; }
-    try { const url = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Image could not be read")); reader.onerror = () => reject(new Error("Image could not be read")); reader.readAsDataURL(file); });
-      const decoded = new window.Image(); decoded.src = url; await decoded.decode();
-      await workspace.addMedia({ id: crypto.randomUUID(), name: file.name, type: file.type, size: file.size, alt: "", url }); toast.success("Image uploaded");
-    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed"); } finally { e.target.value = ""; }
+  const workspace = useWorkspace();
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [altText, setAltText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [edit, setEdit] = useState<typeof workspace.data.media[number] | null>(null);
+  const [remove, setRemove] = useState<string | null>(null);
+
+  async function upload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size <= 0 || file.size > 2 * 1024 * 1024) {
+      setError("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+      e.target.value = "";
+      return;
+    }
+    setBusy(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Image could not be read"));
+        reader.onerror = () => reject(new Error("Image could not be read"));
+        reader.readAsDataURL(file);
+      });
+      const decoded = new window.Image();
+      decoded.src = dataUrl;
+      await decoded.decode();
+      await workspace.addMedia(file, altText);
+      setAltText("");
+      toast.success("Image uploaded to Supabase Storage");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
   }
-  const rows = workspace.data.media.filter(r => `${r.name} ${r.alt}`.toLowerCase().includes(search.toLowerCase()));
-  return <><div className="mb-5 flex flex-wrap justify-between gap-3"><Input className="w-64" placeholder="Search media…" aria-label="Search media" value={search} onChange={e => setSearch(e.target.value)}/><Button disabled title="Supabase Storage bucket is not configured"><Upload/>Upload unavailable</Button></div><p className="mb-5 text-xs text-muted-foreground">Uploads are disabled until a Supabase Storage bucket and access policies are configured. Supported target formats: JPG / PNG / WebP · 2 MB maximum.</p>{error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
-    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={`Delete ${r.name}`} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Existing website assets are preserved. Persistent upload is unavailable until a Supabase Storage bucket is configured."/>}
-    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent><DialogHeader><DialogTitle>Media metadata</DialogTitle><DialogDescription>Media reference: {edit?.id}.</DialogDescription></DialogHeader>{edit && <><label className="grid gap-2 text-sm">File name<Input value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })}/></label><label className="grid gap-2 text-sm">Alt text<Textarea value={edit.alt} onChange={e => setEdit({ ...edit, alt: e.target.value })}/></label><Button onClick={() => attempt(() => { workspace.updateMedia(edit); setEdit(null); }, "Media metadata saved")}><Save/>Save</Button></>}</DialogContent></Dialog>
-    <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Remove media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the catalogue entry; the storage object lifecycle must be verified.</DialogDescription></DialogHeader><Button variant="destructive" onClick={() => { if (remove) attempt(() => workspace.removeMedia(remove), "Media item removed"); setRemove(null); }}><Trash2/>Remove image</Button></DialogContent></Dialog>
+
+  const rows = workspace.data.media.filter(r => (r.name + " " + r.alt).toLowerCase().includes(search.toLowerCase()));
+  return <>
+    <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+      <Input className="w-full" placeholder="Search media…" aria-label="Search media" value={search} onChange={e => setSearch(e.target.value)}/>
+      <Input className="w-full" placeholder="Default alt text for new image" aria-label="Default alt text for new images" value={altText} onChange={e => setAltText(e.target.value)} maxLength={500}/>
+      <Button asChild disabled={busy || !demoCan(workspace.role, "draft")}>
+        <label><Upload/>{busy ? "Uploading…" : "Upload image"}<input type="file" className="sr-only" aria-label="Upload image" accept="image/jpeg,image/png,image/webp" disabled={busy || !demoCan(workspace.role, "draft")} onChange={upload}/></label>
+      </Button>
+    </div>
+    <p className="mb-5 text-xs text-muted-foreground">Persistent Supabase Storage · public website-media bucket · JPG / PNG / WebP · 2 MB maximum. Files are stored under your authenticated user folder.</p>
+    {error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
+    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><p className="mt-1 text-xs text-muted-foreground">{r.alt || "Alt text not set"}</p><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={"Delete " + r.name} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Upload a JPG, PNG or WebP image to add a persistent asset to the website media library."/>}
+    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent><DialogHeader><DialogTitle>Media metadata</DialogTitle><DialogDescription>Changes are saved to the media catalogue.</DialogDescription></DialogHeader>{edit && <><label className="grid gap-2 text-sm">File name<Input value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })} maxLength={255}/></label><label className="grid gap-2 text-sm">Alt text<Textarea value={edit.alt} onChange={e => setEdit({ ...edit, alt: e.target.value })} maxLength={500}/></label><Button onClick={async () => { try { await workspace.updateMedia(edit); setEdit(null); toast.success("Media metadata saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save metadata"); } }}><Save/>Save</Button></>}</DialogContent></Dialog>
+    <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the object from Supabase Storage and deletes its catalogue record.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={async () => { if (!remove) return; try { await workspace.removeMedia(remove); setRemove(null); toast.success("Media item deleted"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not delete media item"); } }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
 function Users() {
-  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth and database roles are connected. The matrix below is a reference only; verify each role’s server-side policies before granting team access.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
+  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth is connected, but the current database authorization is owner-only (Super Admin). This matrix is reference-only; administrator invitations stay disabled until the server-side role assignment and policy model is fully implemented and tested.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
 }
 function Connections() {
   const { authenticated, role } = useWorkspace();
+  const readMode = useServerFn(getInquiryDeliveryMode);
+  const { data: delivery } = useQuery({
+    queryKey: ["inquiry-delivery-mode"],
+    queryFn: () => readMode(),
+    staleTime: Infinity,
+  });
+  const deliveryStatus = delivery === undefined ? "Checking" : delivery.mode === "live" ? "Configured" : "Unavailable";
+  const deliveryDescription = delivery === undefined
+    ? "Checking the server-side inquiry delivery configuration."
+    : delivery.mode === "live"
+      ? "Server configuration reports live mode. Actual email deliverability has not been verified with a test message."
+      : "The inquiry service is not configured for live delivery; the public form will not claim that submissions are sent.";
   const items = [
-    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions and audit history use the configured Supabase project."],
+    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions, audit history and consented analytics use the configured Supabase project."],
     ["Administrator authentication", authenticated ? "Connected" : "Disconnected", "This workspace requires a verified Supabase session and an assigned database role."],
-    ["Cloudflare Worker", "Runtime configured", "The website is served by the existing Cloudflare Worker deployment."],
-    ["Media storage", "Not configured", "The database media catalogue is available, but an upload bucket has not yet been provisioned."],
-    ["Inquiry email delivery", "Disabled pending live test", "Inquiry delivery remains controlled by the existing server configuration."],
+    ["Cloudflare Worker", "Production active", "The website is served by the existing Cloudflare Worker deployment."],
+    ["Media storage", "Provisioned", "website-media (public images) and internal-media (private) buckets are provisioned with image MIME and 2 MB limits."],
+    ["Inquiry email delivery", deliveryStatus, deliveryDescription],
   ];
   return <div className="divide-y divide-border border-y border-border">
     {items.map(([name,state,description]) => <section key={name} className="py-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-medium">{name}</h2><Status value={state}/></div>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</p>
     </section>)}
-    <p className="py-4 text-xs text-muted-foreground">Signed-in role: {role}. Database permissions are enforced by Supabase Row Level Security.</p>
+    <p className="py-4 text-xs text-muted-foreground">Signed-in role: {role}. Database permissions are enforced by Supabase Row Level Security; this page reports configuration, not a full penetration test.</p>
   </div>;
 }

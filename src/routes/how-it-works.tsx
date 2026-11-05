@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -6,11 +7,12 @@ import { WorkflowDemo } from "@/components/site/workflow-demo";
 import { HOW_IT_WORKS_STEPS } from "@/content/site-content";
 
 export const Route = createFileRoute("/how-it-works")({
-  head: () =>
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "how-it-works" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() =>
     meta(
       "How It Works",
       "How AETHER-TRADE engagements run: discover, scope, configure, pilot and expand — with human review at every step.",
-    ),
+    ))(), loaderData?.cmsPage) ,
   component: HowItWorksPage,
 });
 

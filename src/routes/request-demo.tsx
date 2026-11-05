@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 /** Preserves catalogue context ("Request This Solution" links carry the slug). */
 const validateSearch = (search: Record<string, unknown>) => ({
@@ -10,7 +12,8 @@ const validateSearch = (search: Record<string, unknown>) => ({
 
 export const Route = createFileRoute("/request-demo")({
   validateSearch,
-  head: () => ({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "request-demo" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       { title: "Book an Operations Audit — AETHER-TRADE" },
       {
@@ -26,13 +29,14 @@ export const Route = createFileRoute("/request-demo")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: RequestDemoPage,
 });
 
 function RequestDemoPage() {
   const { automation } = Route.useSearch();
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><InquiryForm kind="demo" automation={automation}/></>
+    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><CmsPageSections page={cmsPage}/><InquiryForm kind="demo" automation={automation}/></>
   );
 }

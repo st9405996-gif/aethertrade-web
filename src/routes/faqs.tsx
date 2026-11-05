@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { FaqList, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { FAQS } from "@/content/site-content";
 
 export const Route = createFileRoute("/faqs")({
-  head: () => ({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "faqs" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     ...meta("FAQs", "Answers about AETHER-TRADE availability, AI and human review, document security and how engagements start."),
     scripts: [
       {
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/faqs")({
         }),
       },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: FaqsPage,
 });
 

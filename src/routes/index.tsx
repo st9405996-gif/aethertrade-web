@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import {
   ArrowRight,
   FolderX,
@@ -38,7 +39,8 @@ import {
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       {
         title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
@@ -56,7 +58,7 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: HomePage,
 });
 

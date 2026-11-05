@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { getPublishedInsights } from "@/lib/public-insights.functions";
 
 export const Route = createFileRoute("/insights")({
-  loader: () => getPublishedInsights(),
-  head: () => ({
+  loader: async () => ({ articles: await getPublishedInsights(), cmsPage: await getPublishedCmsPage({ data: { slug: "insights" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       { title: "Insights — AETHER-TRADE" },
       {
@@ -15,12 +16,12 @@ export const Route = createFileRoute("/insights")({
       },
       { property: "og:type", content: "website" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: InsightsPage,
 });
 
 function InsightsPage() {
-  const articles = Route.useLoaderData();
+  const { articles } = Route.useLoaderData();
 
   return (
     <>

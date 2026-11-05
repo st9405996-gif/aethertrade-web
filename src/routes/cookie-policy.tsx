@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const Route = createFileRoute("/cookie-policy")({
-  head: () => meta("Cookie Policy", "How the AETHER-TRADE website uses cookies and browser storage."),
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "cookie-policy" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() => meta("Cookie Policy", "How the AETHER-TRADE website uses cookies and browser storage."))(), loaderData?.cmsPage) ,
   component: CookiePolicyPage,
 });
 

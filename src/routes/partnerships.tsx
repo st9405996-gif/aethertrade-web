@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { CardGrid, meta, PlaceholderNote } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { PARTNERSHIP_TYPES } from "@/content/site-content";
 
 export const Route = createFileRoute("/partnerships")({
-  head: () =>
-    meta("Partnerships", "Partner with AETHER-TRADE as a technology provider, implementation partner or industry association."),
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "partnerships" } }) }),
+  head:  ({ loaderData }) => mergeCmsHead((() =>
+    meta("Partnerships", "Partner with AETHER-TRADE as a technology provider, implementation partner or industry association."))(), loaderData?.cmsPage) ,
   component: PartnershipsPage,
 });
 
