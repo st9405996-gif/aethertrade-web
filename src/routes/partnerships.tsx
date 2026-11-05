@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
 import { CardGrid, meta, PlaceholderNote } from "@/components/site/blocks";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/partnerships")({
   component: PartnershipsPage,
 });
 function PartnershipsPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const cards = items.length ? items.map(item => ({ title: item.title, body: item.body })) : PARTNERSHIP_TYPES;
   return <>
     <PageHero eyebrow="Partnerships" title="Build Better Trade Operations Together." description="We're open to working with organizations that serve importers, exporters and logistics businesses." />
@@ -23,6 +24,7 @@ function PartnershipsPage() {
       <CardGrid items={cards} />
       <PlaceholderNote>No partnerships are announced yet — we'll list partners here only once agreed</PlaceholderNote>
     </section>
-    <CtaBand title="Interested in partnering?" description="Get in touch and tell us how you'd like to work together." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Interested in partnering?" description="Get in touch and tell us how you'd like to work together." />
   </>;
 }
