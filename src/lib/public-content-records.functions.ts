@@ -56,7 +56,7 @@ export const getPublishedContentRecords = createServerFn({ method: "GET" })
   })
   .handler(async ({ data }) => {
     const env = readServerEnv();
-    const baseUrl = env["SUPABASE_URL"]?.replace(/\\/$/, "");
+    const baseUrl = env["SUPABASE_URL"]?.replace(/\/+$/, "");
     const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
     if (!baseUrl || !publishableKey) throw new Error("Public content connection is not configured.");
     const url = new URL(baseUrl + "/rest/v1/content_records");
