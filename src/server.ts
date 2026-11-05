@@ -69,9 +69,10 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   const target = adminProxyTarget(requestUrl.pathname, requestUrl.search);
   if (!target) return new Response("Not found", {status:404});
   const storage = target.startsWith("/storage/v1/object/public/");
-  const publicAuth = target.startsWith("/auth/v1/token") || target.startsWith("/auth/v1/recover");
-  const rest = target.startsWith("/rest/v1/");
-  const auth = ((target.startsWith("/auth/v1/token") || target === "/auth/v1/recover" || target === "/auth/v1/logout") && request.method === "POST") || (target === "/auth/v1/user" && ["GET","PUT"].includes(request.method));
+  const targetPath = target.split("?")[0];
+  const publicAuth = targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover";
+  const rest = targetPath.startsWith("/rest/v1/");
+  const auth = ((targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover" || targetPath === "/auth/v1/logout") && request.method === "POST") || (targetPath === "/auth/v1/user" && ["GET","PUT"].includes(request.method));
   if (!(storage && request.method === "GET") && !(rest && ["GET","POST","PATCH","DELETE"].includes(request.method)) && !auth) return new Response("Method not allowed", {status:405});
   const authorization = request.headers.get("authorization");
   if (!storage && !publicAuth && !authorization?.startsWith("Bearer ")) return new Response(JSON.stringify({message:"Authentication required."}), {status:401,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
