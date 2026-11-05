@@ -13,6 +13,7 @@ export default function ResetPage() {
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
   const [recoveryValid, setRecoveryValid] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -34,6 +35,7 @@ export default function ResetPage() {
     try {
       await updatePassword(password);
       setMessage("Password updated. You can now sign in.");
+      setCompleted(true);
       setRecoveryValid(false);
       setTimeout(() => void navigate({ to: "/auth" }), 900);
     } catch (x) {
@@ -51,6 +53,8 @@ export default function ResetPage() {
         <p className="mt-6 text-sm text-muted-foreground" role="status">
           Verifying your recovery link…
         </p>
+      ) : completed ? (
+        <p className="mt-6 text-sm text-success" role="status">{message}</p>
       ) : !recoveryValid ? (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-destructive" role="alert">
