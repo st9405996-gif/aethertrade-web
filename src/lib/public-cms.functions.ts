@@ -97,7 +97,11 @@ export const getPublishedCmsPage = createServerFn({ method: "GET" })
     return parsePage(payload[0]) ?? null;
   });
 
-export function mergeCmsHead(base: any, page?: PublishedCmsPage | null): any {
+type CmsMeta = { title?: string; name?: string; property?: string; content?: string; [key: string]: unknown };
+type CmsLink = { rel?: string; href?: string; [key: string]: unknown };
+type CmsHeadBase = { meta?: CmsMeta[]; links?: CmsLink[]; [key: string]: unknown };
+
+export function mergeCmsHead<T extends CmsHeadBase>(base: T, page?: PublishedCmsPage | null): T {
   if (!page) return base;
   const hasContent = page.body.trim().length > 0 || page.sections.length > 0;
   const hasSeo = Boolean(page.seoTitle || page.seoDescription || page.canonical);
@@ -109,7 +113,7 @@ export function mergeCmsHead(base: any, page?: PublishedCmsPage | null): any {
     ? "https://aethertrade.cloud" + (page.slug === "home" ? "/" : "/" + page.slug)
     : "");
 
-  const meta = (base.meta || []).filter((item: any) => {
+  const meta = (base.meta || []).filter((item) => {
     if (title && (item.title || item.property === "og:title" || item.name === "twitter:title")) return false;
     if (description && (item.name === "description" || item.property === "og:description" || item.name === "twitter:description")) return false;
     if (canonical && item.property === "og:url") return false;
@@ -121,7 +125,7 @@ export function mergeCmsHead(base: any, page?: PublishedCmsPage | null): any {
   if (page.noindex) meta.push({ name: "robots", content: "noindex, nofollow" });
   if (canonical) meta.push({ property: "og:url", content: canonical });
 
-  const links = (base.links || []).filter((item: any) => item.rel !== "canonical");
+  const links = (base.links || []).filter((item) => item.rel !== "canonical");
   if (canonical) links.push({ rel: "canonical", href: canonical });
-  return { ...base, meta, links };
+  return { ...base, meta, links } as T;
 }
