@@ -5,6 +5,7 @@ import { readServerEnv } from "./lib/server-env.server";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { withSecurityHeaders } from "./lib/security-headers";
+import { buildRuntimeLlms, buildRuntimeSitemap } from "./lib/seo-runtime";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -82,6 +83,8 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const requestUrl = new URL(request.url);
     if (requestUrl.pathname.startsWith("/api/admin-supabase/")) return withSecurityHeaders(await proxyAdminSupabase(request));
+    const seoDocument = await dynamicSeoDocument(requestUrl.pathname, readServerEnv());
+    if (seoDocument) return withSecurityHeaders(seoDocument);
     if (requestUrl.pathname === "/api/admin-config") {
       if (request.method !== "GET") {
         return withSecurityHeaders(new Response("Method not allowed", { status: 405, headers: { "allow": "GET" } }));
