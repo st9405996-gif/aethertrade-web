@@ -41,7 +41,7 @@ export function Footer() {
           {email && <p className="text-sm text-muted-foreground"><a href={"mailto:" + email} className="hover:text-foreground">{email}</a></p>}
           {phone && <p className="text-sm text-muted-foreground"><a href={"tel:" + phone.replace(/[^+0-9]/g, "")} className="hover:text-foreground">{phone}</a></p>}
           {address && <p className="max-w-xs whitespace-pre-wrap text-sm text-muted-foreground">{address}</p>}
-          {socialLinks.length > 0 && <div className="flex flex-wrap gap-3">{socialLinks.map(url => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground underline-offset-4 hover:underline">{new URL(url).hostname.replace(/^www\\./, "")}</a>)}</div>}
+          {socialLinks.length > 0 && <div className="flex flex-wrap gap-3">{socialLinks.map((url, index) => <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground underline-offset-4 hover:underline">Social link {index + 1}</a>)}</div>}
         </div>
         {columns.map(col => <nav key={col.heading} aria-label={col.heading} className="space-y-3"><h3 className="eyebrow">{col.heading}</h3><ul className="space-y-2.5">
           {col.links.map(link => <li key={link.label}><Link to={link.to as never} className="text-sm text-muted-foreground transition-colors hover:text-foreground">{link.label}</Link></li>)}
