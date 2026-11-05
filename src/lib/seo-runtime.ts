@@ -38,8 +38,8 @@ export function buildRuntimeLlms(records: RuntimeSeoRecord[], siteName: string, 
   const articles = records.filter(record => record.module === "insights" && record.slug && record.title);
   const lines = [
     "# " + siteName, "", "> " + description, "", "## Key pages", "",
-    ...pages.map(record => "- [" + record.title.replace(/[\[\]]/g, "") + "](" + canonicalOrPath(record, origin) + ")"),
-    ...(articles.length ? ["", "## Latest insights", "", ...articles.map(record => "- [" + record.title.replace(/[\[\]]/g, "") + "](" + canonicalOrPath(record, origin) + ")") ] : []),
+    ...pages.map(record => "- [" + record.title.replaceAll("[", "").replaceAll("]", "") + "](" + canonicalOrPath(record, origin) + ")"),
+    ...(articles.length ? ["", "## Latest insights", "", ...articles.map(record => "- [" + record.title.replaceAll("[", "").replaceAll("]", "") + "](" + canonicalOrPath(record, origin) + ")") ] : []),
     "", "## Notes for AI systems", "",
     "- Only published, indexable CMS records are listed.",
     "- Capability availability labels on the website define whether a service is live, custom-built or planned.",
