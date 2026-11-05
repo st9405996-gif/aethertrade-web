@@ -3,10 +3,10 @@ import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision
 import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
-type Config={configured:true};
+type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
-  await getAdminPublicConfig();
-  return { configured: true };
+  const publicConfig = await getAdminPublicConfig();
+  return { configured: true, url: publicConfig.url.replace(/\\/$/, "") };
 }
 type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
 type JsonRow = Record<string, unknown>;
@@ -102,7 +102,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const revisionRows=Array.isArray(vs)?vs.map(row):[];
   const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
   const mediaRows=Array.isArray(ms)?ms.map(row):[];
-  const media:MediaRecord[]=mediaRows.map(m=>({id:text(m,"id"),name:text(m,"filename"),type:text(m,"content_type"),size:numeric(m,"file_size"),alt:text(m,"alt_text"),bucketId:text(m,"bucket_id"),objectPath:text(m,"object_path"),url:m.is_public===true?location.origin+"/api/admin-supabase/storage/v1/object/public/"+text(m,"bucket_id")+"/"+text(m,"object_path"):""}));
+  const media:MediaRecord[]=mediaRows.map(m=>({id:text(m,"id"),name:text(m,"filename"),type:text(m,"content_type"),size:numeric(m,"file_size"),alt:text(m,"alt_text"),bucketId:text(m,"bucket_id"),objectPath:text(m,"object_path"),url:m.is_public===true?cfg.url+"/storage/v1/object/public/"+text(m,"bucket_id")+"/"+text(m,"object_path"):""}));
   const analyticsRows=Array.isArray(es)?es.map(row):[];
   const analytics:AnalyticsEvent[]=analyticsRows.map(e=>({id:text(e,"id"),eventType:text(e,"event_type"),pagePath:text(e,"page_path"),automationSlug:text(e,"automation_slug"),consent:true,createdAt:text(e,"created_at")}));
   const subscriberRows=Array.isArray(subs)?subs.map(row):[];
@@ -151,7 +151,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   try{
    const rows=await call(cfg,s.access_token,"/rest/v1/media_assets","POST",{bucket_id:"website-media",object_path:objectPath,filename:file.name,content_type:file.type,file_size:file.size,alt_text:altText.trim().slice(0,500),owner_id:user.id,is_public:true});
    const row=Array.isArray(rows)?rows[0]:rows;if(!row?.id)throw Error("Image uploaded but media metadata was not returned.");
-   const media:MediaRecord={id:row.id,name:row.filename,type:row.content_type,size:Number(row.file_size),alt:row.alt_text||"",bucketId:row.bucket_id,objectPath:row.object_path,url:location.origin+"/api/admin-supabase/storage/v1/object/public/"+row.bucket_id+"/"+row.object_path};
+   const media:MediaRecord={id:row.id,name:row.filename,type:row.content_type,size:Number(row.file_size),alt:row.alt_text||"",bucketId:row.bucket_id,objectPath:row.object_path,url:cfg.url+"/storage/v1/object/public/"+row.bucket_id+"/"+row.object_path};
    setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
   }catch(e){
    await fetch("/api/admin-supabase/storage/v1/object/website-media",{method:"DELETE",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify({prefixes:[objectPath]})}).catch(()=>null);
