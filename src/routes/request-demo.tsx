@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/section";
-import { InquiryForm } from "@/components/site/inquiry-form";
+import { InquiryForm } from "@/components/site/inquiry-form";\nimport { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 /** Preserves catalogue context ("Request This Solution" links carry the slug). */
 const validateSearch = (search: Record<string, unknown>) => ({
@@ -33,6 +33,6 @@ export const Route = createFileRoute("/request-demo")({
 function RequestDemoPage() {
   const { automation } = Route.useSearch();
   return (
-    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><InquiryForm kind="demo" automation={automation}/></>
+    <><PageHero eyebrow="Book an operations audit" title="AETHER-TRADE for your operations." description="Tell us about your business and the workflow you want to improve. No account required."/><CmsPageSections slug="request-demo"/><InquiryForm kind="demo" automation={automation}/></>
   );
 }
