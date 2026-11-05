@@ -1,22 +1,55 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision, Audit, AnalyticsEvent, Subscriber } from "@/lib/workspace-model";
 type Config={configured:true}; type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
+type JsonRow = Record<string, unknown>;
+const row = (value: unknown): JsonRow => value !== null && typeof value === "object" && !Array.isArray(value) ? value as JsonRow : {};
+const text = (source: JsonRow, key: string, fallback = ""): string => typeof source[key] === "string" ? source[key] as string : fallback;
+const numeric = (source: JsonRow, key: string, fallback = 0): number => typeof source[key] === "number" ? source[key] as number : Number(source[key]) || fallback;
 const KEY="aether-admin-session-v1", empty=():DemoWorkspace=>({records:[],inquiries:[],media:[],revisions:[],audit:[],analytics:[],subscribers:[]});
 const uuid=(s:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
-const err=(x:any)=>String(x?.message||x?.msg||x?.error_description||x?.error||"Supabase request failed");
-async function getConfig():Promise<Config>{
- const r=await fetch("/api/admin-config",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
- const payload=await r.json().catch(()=>null);
- if(!r.ok)throw Error(typeof payload?.message==="string"?payload.message:"Admin configuration request failed with status "+r.status+".");
- if(payload?.configured!==true||typeof payload?.url!=="string")throw Error("Admin configuration response is incomplete. Check the Cloudflare Supabase bindings.");
- return {configured:true};
+const err=(value:unknown)=>{const x=row(value);return String(x.message??x.msg??x.error_description??x.error??"Supabase request failed");};
+function mapRecord(source:JsonRow):ContentRecord {
+ const fields=row(source.fields);
+ return {
+  id:text(source,"id"),
+  module:text(source,"module") as ContentRecord["module"],
+  slug:text(source,"slug"),
+  title:text(source,"title"),
+  body:text(source,"body"),
+  category:text(source,"category"),
+  publication:text(source,"publication") as ContentRecord["publication"],
+  availability:text(source,"availability") as ContentRecord["availability"],
+  position:numeric(source,"position"),
+  scheduledAt:text(source,"scheduled_at"),
+  seoTitle:text(source,"seo_title"),
+  seoDescription:text(source,"seo_description"),
+  canonical:text(source,"canonical"),
+  noindex:source.noindex===true,
+  updatedAt:text(source,"updated_at"),
+  fields:Object.fromEntries(Object.entries(fields).map(([key,value])=>[key,typeof value==="string"?value:JSON.stringify(value)??""])),
+ };
 }
-async function call(_c:Config,t:string,path:string,method="GET",body?:unknown){
- const r=await fetch("/api/admin-supabase"+path,{method,headers:{Authorization:"Bearer "+t,"Content-Type":"application/json",...(method!=="GET"?{Prefer:"return=representation"}:{})},body:body===undefined?undefined:JSON.stringify(body)});
- const data=r.status===204?null:await r.json().catch(()=>null);if(!r.ok)throw Error(err(data));return data;
+function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
+ return {
+  id:text(source,"id"),
+  reference:text(source,"reference"),
+  kind:text(source,"kind")==="demo"?"demo":"contact",
+  name:text(source,"contact_name"),
+  email:text(source,"email"),
+  company:text(source,"company"),
+  country:text(source,"country"),
+  category:text(source,"category"),
+  automation:text(source,"automation_slug"),
+  message:text(source,"message"),
+  requirements:text(source,"requirements"),
+  consent:true,
+  status:text(source,"status") as Inquiry["status"],
+  createdAt:text(source,"created_at"),
+  notes:notes.filter(note=>note.inquiry_id===source.id).map(note=>({text:text(note,"body"),at:text(note,"created_at")})),
+  assignedTo:text(source,"assigned_to"),
+  followUp:text(source,"follow_up"),
+ };
 }
-function mapRecord(r:any):ContentRecord{return{id:r.id,module:r.module,slug:r.slug,title:r.title,body:r.body||"",category:r.category||"",publication:r.publication,availability:r.availability,position:r.position||0,scheduledAt:r.scheduled_at||"",seoTitle:r.seo_title||"",seoDescription:r.seo_description||"",canonical:r.canonical||"",noindex:!!r.noindex,updatedAt:r.updated_at||"",fields:Object.fromEntries(Object.entries(r.fields||{}).map(([k,v])=>[k,typeof v==="string"?v:JSON.stringify(v)]))};}
-function mapInquiry(r:any,notes:any[]=[]):Inquiry{return{id:r.id,reference:r.reference,kind:r.kind==="demo"?"demo":"contact",name:r.contact_name,email:r.email,company:r.company,country:r.country,category:r.category||"",automation:r.automation_slug||"",message:r.message,requirements:r.requirements||"",consent:true,status:r.status,createdAt:r.created_at,notes:notes.filter(n=>n.inquiry_id===r.id).map(n=>({text:n.body,at:n.created_at})),assignedTo:r.assigned_to||"",followUp:r.follow_up||""};}
 type Ctx={data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
@@ -35,11 +68,19 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
    call(c,s.access_token,"/rest/v1/analytics_events?select=*&order=created_at.desc&limit=500").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/newsletter_subscribers?select=*&order=created_at.desc").catch(()=>[])
   ]);
-  const revisions:Revision[]=(vs||[]).map((v:any)=>{const snap=v.snapshot?.record||v.snapshot||{};return{id:v.id,record:snap.module?mapRecord(snap):{id:v.record_id,module:v.module,slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:v.created_at,action:v.action==="DELETE"?"Deleted version":"Updated version"};});
-  const media:MediaRecord[]=(ms||[]).map((m:any)=>({id:m.id,name:m.filename,type:m.content_type,size:Number(m.file_size),alt:m.alt_text||"",bucketId:m.bucket_id,objectPath:m.object_path,url:m.is_public?location.origin+"/api/admin-supabase/storage/v1/object/public/"+m.bucket_id+"/"+m.object_path:""}));
-  const analytics:AnalyticsEvent[]=(es||[]).map((e:any)=>({id:e.id,eventType:e.event_type,pagePath:e.page_path,automationSlug:e.automation_slug||"",consent:true,createdAt:e.created_at}));
-  const subscribers:Subscriber[]=(subs||[]).map((s:any)=>({id:s.id,email:s.email,status:s.status,consent:true,consentAt:s.consent_at,source:s.source||"admin",createdAt:s.created_at}));
-  setData({records:(rs||[]).map(mapRecord),inquiries:(is||[]).map((i:any)=>mapInquiry(i,ns||[])),media,revisions,audit:(as||[]).map((a:any)=>({id:a.id,action:a.action,title:a.module||a.record_id||"Content update",at:a.created_at,changedFields:Array.isArray(a.details?.changed_fields)?a.details.changed_fields:[]})),analytics,subscribers});
+  const revisionRows=Array.isArray(vs)?vs.map(row):[];
+  const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
+  const mediaRows=Array.isArray(ms)?ms.map(row):[];
+  const media:MediaRecord[]=mediaRows.map(m=>({id:text(m,"id"),name:text(m,"filename"),type:text(m,"content_type"),size:numeric(m,"file_size"),alt:text(m,"alt_text"),bucketId:text(m,"bucket_id"),objectPath:text(m,"object_path"),url:m.is_public===true?location.origin+"/api/admin-supabase/storage/v1/object/public/"+text(m,"bucket_id")+"/"+text(m,"object_path"):""}));
+  const analyticsRows=Array.isArray(es)?es.map(row):[];
+  const analytics:AnalyticsEvent[]=analyticsRows.map(e=>({id:text(e,"id"),eventType:text(e,"event_type"),pagePath:text(e,"page_path"),automationSlug:text(e,"automation_slug"),consent:true,createdAt:text(e,"created_at")}));
+  const subscriberRows=Array.isArray(subs)?subs.map(row):[];
+  const subscribers:Subscriber[]=subscriberRows.map(s=>({id:text(s,"id"),email:text(s,"email"),status:text(s,"status") as Subscriber["status"],consent:true,consentAt:text(s,"consent_at"),source:text(s,"source","admin"),createdAt:text(s,"created_at")}));
+  const recordRows=Array.isArray(rs)?rs.map(row):[];
+  const inquiryRows=Array.isArray(is)?is.map(row):[];
+  const noteRows=Array.isArray(ns)?ns.map(row):[];
+  const auditRows=Array.isArray(as)?as.map(row):[];
+  setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
   setAuthenticated(true);setStorageError("");
  }
  async function adminRole(c:Config,s:Session){const u=await call(c,s.access_token,"/auth/v1/user");const rows=await call(c,s.access_token,"/rest/v1/user_roles?select=role&user_id=eq."+encodeURIComponent(u.id));if(!rows?.length)throw Error("This account has no AETHER-TRADE administrator role.");return rows[0].role as Role;}
