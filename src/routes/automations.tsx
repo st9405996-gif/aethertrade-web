@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/automations")({
   component: AutomationsPage,
 });
 function AutomationsPage() {
-  const { items: records } = Route.useLoaderData();
+  const { items: records, cmsPage } = Route.useLoaderData();
   const items = records.length ? records.map(item => ({
     slug: item.slug, name: item.title, category: item.category,
     problem: item.fields.problem || "", whatItDoes: item.body,
@@ -49,6 +50,7 @@ function AutomationsPage() {
         </article>)}
       </div>
     </section>
-    <CtaBand title="Need something not listed?" description="Custom automations and AI agents are built to your workflow." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Need something not listed?" description="Custom automations and AI agents are built to your workflow." />
   </>;
 }
