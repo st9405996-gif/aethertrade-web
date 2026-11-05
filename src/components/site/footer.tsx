@@ -28,7 +28,6 @@ export function Footer() {
     try { const url = new URL(value); return url.protocol === "https:" ? [url.toString()] : []; }
     catch { return []; }
   });
-    .filter(value => /^https:\\/\\/[A-Za-z0-9.-]+(?:\\/[^\\s]*)?$/.test(value));
   const footerItems = data?.filter(item => item.category.toLowerCase() === "footer" && item.fields.visible !== "false")
     .map(item => ({ label: item.title, to: item.body.trim(), heading: item.fields.group || "Company" }))
     .filter(item => item.to.startsWith("/") && !item.to.startsWith("//"));
