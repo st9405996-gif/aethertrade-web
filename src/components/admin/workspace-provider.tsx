@@ -1,7 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision, Audit, AnalyticsEvent, Subscriber } from "@/lib/workspace-model";
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
-type Config={configured:true}; type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
+import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
+type Config={configured:true};
+async function getConfig(): Promise<Config> {
+  await getAdminPublicConfig();
+  return { configured: true };
+}
+type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
 type JsonRow = Record<string, unknown>;
 const row = (value: unknown): JsonRow => value !== null && typeof value === "object" && !Array.isArray(value) ? value as JsonRow : {};
 const text = (source: JsonRow, key: string, fallback = ""): string => typeof source[key] === "string" ? source[key] as string : fallback;
