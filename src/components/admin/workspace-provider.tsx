@@ -76,8 +76,30 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  }
  async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");await write("/rest/v1/media_assets?id=eq."+r.id,"PATCH",{filename:r.name,alt_text:r.alt});setData(old=>({...old,media:old.media.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
  async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const row=data.media.find(x=>x.id===id);if(!row||row.bucketId!=="website-media"||!row.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();const deleted=await fetch("/api/admin-supabase/storage/v1/object/website-media",{method:"DELETE",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify({prefixes:[row.objectPath]})});const payload=await deleted.json().catch(()=>null);if(!deleted.ok)throw Error(err(payload));await call(cfg!,s.access_token,"/rest/v1/media_assets?id=eq."+id,"DELETE");setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));void refreshAfterWrite();}
+ async function addSubscriber(email:string,consentConfirmed:boolean){
+  const normalized=email.trim().toLowerCase();
+  if(!consentConfirmed)throw Error("Confirm that the email owner gave permission before adding them.");
+  if(normalized.length<5||normalized.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error("Enter a valid email address.");
+  const s=await fresh();const user=await call(cfg!,s.access_token,"/auth/v1/user");
+  const existing=await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?select=id,status,email&email=eq."+encodeURIComponent(normalized));
+  if(Array.isArray(existing)&&existing.length){
+   if(existing[0].status==="subscribed")throw Error("This email is already subscribed.");
+   await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?id=eq."+existing[0].id,"PATCH",{status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id,updated_at:new Date().toISOString()});
+  }else{
+   await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers","POST",{email:normalized,status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id});
+  }
+  setData(old=>({...old,subscribers:[{id:Array.isArray(existing)&&existing.length?existing[0].id:crypto.randomUUID(),email:normalized,status:"subscribed",consent:true,consentAt:new Date().toISOString(),source:"admin",createdAt:new Date().toISOString()},...old.subscribers.filter(x=>x.email!==normalized)]}));
+  void refreshAfterWrite();
+ }
+ async function updateSubscriberStatus(id:string,status:"subscribed"|"unsubscribed"){
+  if(!uuid(id))throw Error("Invalid subscriber record.");
+  if(status!=="unsubscribed")throw Error("Re-subscribing requires confirming fresh consent through the add-subscriber form.");
+  await write("/rest/v1/newsletter_subscribers?id=eq."+id,"PATCH",{status:"unsubscribed",updated_at:new Date().toISOString()});
+  setData(old=>({...old,subscribers:old.subscribers.map(x=>x.id===id?{...x,status:"unsubscribed"}:x)}));
+  void refreshAfterWrite();
+ }
  async function reset(){throw Error("Live CMS data cannot be reset from this panel.");}
- const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
+ const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWorkspace(){const c=useContext(Context);if(!c)throw new Error("Workspace provider is missing");return c;}
