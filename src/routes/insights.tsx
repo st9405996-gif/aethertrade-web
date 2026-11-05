@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { getPublishedInsights } from "@/lib/public-insights.functions";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/insights")({
 });
 
 function InsightsPage() {
-  const { articles } = Route.useLoaderData();
+  const { articles, cmsPage } = Route.useLoaderData();
 
   return (
     <>
@@ -71,6 +72,7 @@ function InsightsPage() {
           </div>
         )}
       </section>
+      <CmsPageSections page={cmsPage} />
       <CtaBand
         title="Have a question we should write about?"
         description="Tell us what your team is wrestling with."
