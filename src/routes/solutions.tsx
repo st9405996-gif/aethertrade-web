@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
@@ -8,11 +8,11 @@ import { SOLUTIONS } from "@/content/site-content";
 
 export const Route = createFileRoute("/solutions")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "solutions" } }) }),
-  head: () =>
+  head:  ({ loaderData }) => mergeCmsHead((() =>
     meta(
       "Solutions",
       "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
-    ),
+    ))(), loaderData?.cmsPage) ,
   component: SolutionsPage,
 });
 
