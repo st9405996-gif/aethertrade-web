@@ -17,6 +17,8 @@ const rolePermissions: Record<Role, Permission[]> = {
 };
 // UI gating only. Supabase Row Level Security is the actual authorization layer.
 export function roleCan(role: Role, permission: Permission) { return rolePermissions[role].includes(permission); }
+/** Backward-compatible name retained for existing workspace model tests. */
+export const demoCan = roleCan;
 export const modules = [
   ["overview", "Overview", "Workspace"], ["pages", "Pages & sections", "Content"],
   ["platform", "Platform", "Content"], ["automations", "Automations", "Content"],
