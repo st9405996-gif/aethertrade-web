@@ -235,6 +235,15 @@ function MediaLibrary() {
     }
   }
 
+  async function copyPublicUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Public image URL copied");
+    } catch {
+      setError("Could not copy URL. Select and copy it from the URL field.");
+    }
+  }
+
   const rows = workspace.data.media.filter(r => (r.name + " " + r.alt).toLowerCase().includes(search.toLowerCase()));
   return <>
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
@@ -246,7 +255,7 @@ function MediaLibrary() {
     </div>
     <p className="mb-5 text-xs text-muted-foreground">Persistent Supabase Storage · public website-media bucket · JPG / PNG / WebP · 2 MB maximum. Files are stored under your authenticated user folder.</p>
     {error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
-    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><p className="mt-1 text-xs text-muted-foreground">{r.alt || "Alt text not set"}</p><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={"Delete " + r.name} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Upload a JPG, PNG or WebP image to add a persistent asset to the website media library."/>}
+    {rows.length ? <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(r => <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card"><img src={r.url} alt={r.alt} className="aspect-[4/3] w-full object-contain bg-muted"/><div className="p-4"><p className="truncate text-sm font-medium">{r.name}</p><p className="mt-1 text-xs text-muted-foreground">{Math.round(r.size / 1024)} KB · {r.type}</p><p className="mt-1 text-xs text-muted-foreground">{r.alt || "Alt text not set"}</p><div className="mt-3 grid gap-2"><label className="grid gap-1 text-xs text-muted-foreground">Public image URL<input aria-label={"Public URL for " + r.name} readOnly value={r.url} onFocus={e => e.currentTarget.select()} className="w-full rounded-md border border-input bg-background px-2 py-2 font-mono text-xs text-foreground"/></label><Button variant="outline" size="sm" onClick={() => void copyPublicUrl(r.url)}>Copy public URL</Button></div><div className="mt-3 flex gap-2"><Button variant="outline" size="sm" disabled={!demoCan(workspace.role, "draft")} onClick={() => setEdit(r)}><Pencil/>Metadata</Button><Button size="icon" variant="ghost" aria-label={"Delete " + r.name} disabled={!demoCan(workspace.role, "draft")} onClick={() => setRemove(r.id)}><Trash2/></Button></div></div></div>)}</div> : <Empty icon={Image} title="No uploaded media" body="Upload a JPG, PNG or WebP image to add a persistent asset to the website media library."/>}
     <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent><DialogHeader><DialogTitle>Media metadata</DialogTitle><DialogDescription>Changes are saved to the media catalogue.</DialogDescription></DialogHeader>{edit && <><label className="grid gap-2 text-sm">File name<Input value={edit.name} onChange={e => setEdit({ ...edit, name: e.target.value })} maxLength={255}/></label><label className="grid gap-2 text-sm">Alt text<Textarea value={edit.alt} onChange={e => setEdit({ ...edit, alt: e.target.value })} maxLength={500}/></label><Button onClick={async () => { try { await workspace.updateMedia(edit); setEdit(null); toast.success("Media metadata saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save metadata"); } }}><Save/>Save</Button></>}</DialogContent></Dialog>
     <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the object from Supabase Storage and deletes its catalogue record.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={async () => { if (!remove) return; try { await workspace.removeMedia(remove); setRemove(null); toast.success("Media item deleted"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not delete media item"); } }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
