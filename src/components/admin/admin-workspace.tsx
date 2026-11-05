@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Logo } from "@/components/site/logo";
 import { useWorkspace } from "@/components/admin/workspace-provider";
 import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
+import { inviteAdminUser, listAdminUsers, updateAdminUserRole, removeAdminUser } from "@/lib/admin-users.functions";
 import { modules, makeRecord, availabilityValues, publicationValues, inquiryValues, roles, demoCan, contentSchema, isPublic, safeCsvCell, type ModuleId, type ContentRecord, type Inquiry, type Role } from "@/lib/workspace-model";
 
 const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity };
@@ -249,9 +250,101 @@ function MediaLibrary() {
     <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete media item?</DialogTitle><DialogDescription>{workspace.data.media.find(r => r.id === remove)?.name}. This removes the object from Supabase Storage and deletes its catalogue record.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={async () => { if (!remove) return; try { await workspace.removeMedia(remove); setRemove(null); toast.success("Media item deleted"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not delete media item"); } }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
+type AssignableRole = "Administrator" | "Content Editor" | "Sales Manager" | "Viewer";
 function Users() {
-  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth is connected, but the current database authorization is owner-only (Super Admin). This matrix is reference-only; administrator invitations stay disabled until the server-side role assignment and policy model is fully implemented and tested.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
+  const workspace = useWorkspace();
+  const listUsers = useServerFn(listAdminUsers);
+  const inviteUser = useServerFn(inviteAdminUser);
+  const updateRole = useServerFn(updateAdminUserRole);
+  const revokeUser = useServerFn(removeAdminUser);
+  const { data: adminUsers = [], isLoading, error, refetch } = useQuery({
+    queryKey: ["admin-users", workspace.authenticated, workspace.role],
+    queryFn: async () => listUsers({ data: { accessToken: await workspace.getAccessToken() } }),
+    enabled: workspace.authenticated && demoCan(workspace.role, "users"),
+    staleTime: 30_000,
+  });
+  const [email, setEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<AssignableRole>("Viewer");
+  const [selectedRoles, setSelectedRoles] = useState<Record<string, AssignableRole>>({});
+  const [busy, setBusy] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<string | null>(null);
+
+  async function sendInvite() {
+    setBusy(true);
+    try {
+      const accessToken = await workspace.getAccessToken();
+      const result = await inviteUser({ data: { email, role: inviteRole, accessToken } });
+      toast.success("Administrator invitation sent to " + result.email);
+      setEmail("");
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send administrator invitation");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function saveRole(userId: string, currentRole: string) {
+    const nextRole = selectedRoles[userId];
+    if (!nextRole || nextRole === currentRole || currentRole === "Super Admin") return;
+    setBusy(true);
+    try {
+      const accessToken = await workspace.getAccessToken();
+      await updateRole({ data: { accessToken, targetUserId: userId, role: nextRole } });
+      toast.success("Administrator role updated");
+      setSelectedRoles(old => { const next = { ...old }; delete next[userId]; return next; });
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update role");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function confirmRemove() {
+    if (!pendingRemove) return;
+    setBusy(true);
+    try {
+      const accessToken = await workspace.getAccessToken();
+      await revokeUser({ data: { accessToken, targetUserId: pendingRemove } });
+      toast.success("Administrator access revoked");
+      setPendingRemove(null);
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not revoke administrator access");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!demoCan(workspace.role, "users")) {
+    return <Empty icon={ShieldCheck} title="Owner-only access" body="Only the account owner can invite administrators, change roles or revoke access." />;
+  }
+
+  return <div className="space-y-8">
+    <section className="rounded-md border border-border bg-card p-5">
+      <h2 className="text-lg font-semibold">Invite administrator</h2>
+      <p className="mt-2 text-sm text-muted-foreground">The invitee receives an email link to confirm the account and set a password. Roles are enforced by Supabase Row Level Security. The owner account cannot be reassigned.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px_auto]">
+        <Input type="email" aria-label="Administrator email" placeholder="name@company.com" value={email} onChange={e => setEmail(e.target.value)} maxLength={254}/>
+        <select className={selectClass} aria-label="Administrator role" value={inviteRole} onChange={e => setInviteRole(e.target.value as AssignableRole)}>
+          {(["Administrator","Content Editor","Sales Manager","Viewer"] as const).map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <Button disabled={busy || !email.trim() || !demoCan(workspace.role, "users")} onClick={sendInvite}><Plus/>{busy ? "Processing…" : "Send invite"}</Button>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Invitations are limited to five per hour. A role assignment and audit entry are created atomically; if assignment fails, the invited Auth user is revoked.</p>
+    </section>
+
+    <section>
+      <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Administrator accounts ({adminUsers.length})</h2><Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isLoading}><RefreshCw/>Refresh</Button></div>
+      {isLoading ? <p className="py-6 text-sm text-muted-foreground" role="status">Loading administrator accounts…</p> : error ? <p className="py-6 text-sm text-destructive" role="alert">{error instanceof Error ? error.message : "Could not load administrators."}</p> : adminUsers.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[820px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Account</th><th>Current role</th><th>Change role</th><th>Added</th><th className="text-right">Actions</th></tr></thead><tbody>{adminUsers.map(user => { const isOwner = user.role === "Super Admin"; const chosen = selectedRoles[user.userId] || (isOwner ? "Viewer" : user.role as AssignableRole); return <tr key={user.userId} className="border-t border-border"><td className="py-4"><p className="font-medium">{user.displayName}</p><p className="mt-1 text-xs text-muted-foreground">{user.email}</p></td><td><Status value={user.role}/></td><td><select className={selectClass} aria-label={"Change role for "+user.email} disabled={isOwner || busy} value={chosen} onChange={e => setSelectedRoles(old => ({...old,[user.userId]:e.target.value as AssignableRole}))}>{(["Administrator","Content Editor","Sales Manager","Viewer"] as const).map(r=><option key={r} value={r}>{r}</option>)}</select></td><td className="text-xs text-muted-foreground">{user.createdAt ? date(user.createdAt) : "—"}</td><td className="text-right"><div className="inline-flex gap-2"><Button size="sm" variant="outline" disabled={isOwner || busy || chosen===user.role} onClick={()=>void saveRole(user.userId,user.role)}><Save/>Update</Button><Button size="icon" variant="ghost" aria-label={"Revoke admin access for "+user.email} disabled={isOwner || busy} onClick={()=>setPendingRemove(user.userId)}><Trash2/></Button></div></td></tr>;})}</tbody></table></div> : <Empty icon={UsersRound} title="No administrator accounts" body="Invite a team member to add their account to the role-protected workspace."/>}
+    </section>
+
+    <section><h2 className="mb-4 text-lg font-semibold">Role permissions</h2><p className="mb-4 text-sm text-muted-foreground">This matrix mirrors the configured database role_permissions table. Row Level Security is the enforcement layer; UI controls are only a convenience.</p><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[760px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Draft</th><th>Publish</th><th>Inquiries</th><th>Export</th><th>Reports</th><th>Settings</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft","publish","inquiries","export","report","settings","users"] as const).map(p => <td key={p}>{demoCan(r,p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div></section>
+
+    <Dialog open={!!pendingRemove} onOpenChange={open => !open && setPendingRemove(null)}><DialogContent><DialogHeader><DialogTitle>Revoke administrator access?</DialogTitle><DialogDescription>{adminUsers.find(user=>user.userId===pendingRemove)?.email}. This removes the database role immediately but leaves the Auth account intact.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setPendingRemove(null)}>Cancel</Button><Button variant="destructive" disabled={busy} onClick={()=>void confirmRemove()}><Trash2/>Revoke access</Button></div></DialogContent></Dialog>
+    <div><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div>
+  </div>;
 }
+
 function Connections() {
   const { authenticated, role } = useWorkspace();
   const readMode = useServerFn(getInquiryDeliveryMode);
