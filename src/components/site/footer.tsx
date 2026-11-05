@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/site/logo";
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
+import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
 
 const COLUMNS: { heading: string; links: { label: string; to: string }[] }[] = [
   { heading: "Platform", links: [{ label: "Platform", to: "/platform" }, { label: "How It Works", to: "/how-it-works" }, { label: "Solutions", to: "/solutions" }, { label: "Industries", to: "/industries" }] },
@@ -16,6 +17,10 @@ export function Footer() {
     queryKey: ["public-footer-navigation"],
     queryFn: () => getPublishedContentRecords({ data: { module: "navigation" } }),
   });
+  const { data: siteSettings } = useQuery({
+    queryKey: ["public-website-settings"],
+    queryFn: () => getPublicWebsiteSettings(),
+  });
   const { data: brandRecords } = useQuery({
     queryKey: ["public-branding"],
     queryFn: () => getPublishedContentRecords({ data: { module: "branding" } }),
@@ -25,7 +30,7 @@ export function Footer() {
   const phone = brand?.fields.phone?.trim() || "";
   const address = brand?.fields.address?.trim() || "";
   const socialLinks = (brand?.fields.social || "").split("\n").map(value => value.trim()).filter(value => value.startsWith("https://"));
-  const footerItems = data?.filter(item => item.category.toLowerCase() === "footer" && item.fields.visible !== "false")
+  const footerItems = data?.filter(item => item.category.toLowerCase() === "footer" && item.fields.visible !== "false" && (item.title !== "Careers" || siteSettings?.careersEnabled === true))
     .map(item => ({ label: item.title, to: item.body.trim(), heading: item.fields.group || "Company" }))
     .filter(item => item.to.startsWith("/") && !item.to.startsWith("//"));
   const columns = footerItems?.length
