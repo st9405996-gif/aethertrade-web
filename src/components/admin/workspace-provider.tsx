@@ -6,7 +6,7 @@ import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
 type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
   const publicConfig = await getAdminPublicConfig();
-  return { configured: true, url: publicConfig.url.replace(/\\/$/, "") };
+  return { configured: true, url: publicConfig.url.replace(/\/$/, "") };
 }
 type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
 type JsonRow = Record<string, unknown>;
