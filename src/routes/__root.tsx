@@ -213,7 +213,8 @@ function RootComponent() {
     staleTime: 60_000,
   });
   const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
-  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));\n  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
+  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
+  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
 
   useEffect(() => {
     if (!cmsPage || !cmsSlug || !hasCmsContent) return;
