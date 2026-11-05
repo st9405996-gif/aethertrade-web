@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/site/section";
-import { InquiryForm } from "@/components/site/inquiry-form";
+import { InquiryForm } from "@/components/site/inquiry-form";\nimport { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -25,6 +25,6 @@ export const Route = createFileRoute("/contact")({
 
 function ContactPage() {
   return (
-    <><PageHero eyebrow="Contact" title="Talk to AETHER-TRADE." description="Trade operations, automation and custom solutions — start a focused conversation."/><InquiryForm kind="contact"/></>
+    <><PageHero eyebrow="Contact" title="Talk to AETHER-TRADE." description="Trade operations, automation and custom solutions — start a focused conversation."/><CmsPageSections slug="contact"/><InquiryForm kind="contact"/></>
   );
 }
