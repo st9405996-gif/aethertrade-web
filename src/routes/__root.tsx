@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -18,7 +18,7 @@ import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { WorkspaceProvider } from "@/components/admin/workspace-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
 
@@ -207,12 +207,8 @@ function RootComponent() {
     "/cookie-policy": "cookie-policy",
   };
   const cmsSlug = pageSlugs[pathname] ?? null;
-  const { data: cmsPage } = useQuery({
-    queryKey: ["published-cms-page", cmsSlug],
-    queryFn: () => getPublishedCmsPage({ data: { slug: cmsSlug! } }),
-    enabled: Boolean(cmsSlug) && !bareAuthPage,
-    staleTime: 60_000,
-  });
+  const leafMatch = router.state.matches[router.state.matches.length - 1] as unknown as { loaderData?: { cmsPage?: PublishedCmsPage | null } } | undefined;
+  const cmsPage = leafMatch?.loaderData?.cmsPage ?? null;
   const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
   const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
   const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
