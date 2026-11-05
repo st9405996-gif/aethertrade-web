@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { readServerEnv } from "@/lib/server-env.server";
 
 const eventSchema = z.object({
   eventType: z.enum(["page_view", "cta_click", "demo_conversion", "contact_conversion", "automation_interest"]),
@@ -30,6 +29,7 @@ export const trackAnalyticsEvent = createServerFn({ method: "POST" })
     const { consumeAnalyticsRateLimit } = await import("@/lib/analytics-rate-limit.server");
     if (!consumeAnalyticsRateLimit(clientKey)) return { accepted: false as const };
 
+    const { readServerEnv } = await import("@/lib/server-env.server");
     const env = readServerEnv();
     const baseUrl = env["SUPABASE_URL"]?.replace(/\/$/, "");
     const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
