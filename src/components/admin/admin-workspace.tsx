@@ -126,6 +126,12 @@ function Subscribers() {
 function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string; body: string }) { return <div className="flex min-h-64 flex-col items-center justify-center border-y border-border px-5 py-10 text-center"><Icon className="mb-5 size-8 text-muted-foreground"/><h2 className="text-lg font-medium">{title}</h2><p className="mt-2 max-w-lg text-sm text-muted-foreground">{body}</p></div>; }
 function Overview() {
   const { data, role, authenticated } = useWorkspace();
+  const readMode = useServerFn(getInquiryDeliveryMode);
+  const { data: delivery } = useQuery({
+    queryKey: ["inquiry-delivery-mode"],
+    queryFn: () => readMode(),
+    staleTime: Infinity,
+  });
   const permitted = demoCan(role, "inquiries");
   const stats = [
     { label: "Inquiries", value: permitted ? data.inquiries.length : "Restricted", icon: MessageSquare },
@@ -133,11 +139,16 @@ function Overview() {
     { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files },
     { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen },
   ];
+  const deliveryStatus = delivery === undefined
+    ? "Checking"
+    : delivery.mode === "live"
+      ? "Configured · not tested"
+      : "Unavailable";
   const connectionRows = [
     ["Supabase CMS & inquiry database", authenticated ? "Connected" : "Disconnected"],
     ["Administrator authentication", authenticated ? "Connected" : "Disconnected"],
-    ["Website media storage", "Provisioned"],
-    ["Inquiry email delivery", "Not verified"],
+    ["Website media storage", data.media.length ? "Available" : "No media assets"],
+    ["Inquiry email delivery", deliveryStatus],
     ["Cloudflare Worker", "Production active"],
   ];
   return <>
@@ -146,7 +157,7 @@ function Overview() {
       <section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "Your database role does not allow inquiry access."}/>}</section>
       <section><h2 className="mb-4 text-lg font-semibold">Connection readiness</h2><div className="divide-y divide-border border-y border-border">{connectionRows.map(([name,state]) => <div key={name} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{name}</span><Status value={state}/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section>
     </div>
-    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{data.records.filter(r => r.module === id).length} database records</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
+    <section className="mt-10 border-t border-border pt-7"><h2 className="mb-5 text-lg font-semibold">Content workspace</h2><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["pages", "Pages & sections", Files], ["automations", "Automation catalogue", Workflow], ["insights", "Insights & articles", BookOpen], ["media", "Media library", Image]].map(([id, label, Icon]) => { const I = Icon as typeof Files; return <Link key={id as string} to="/admin/$module" params={{ module: id as string }} className="group flex items-center gap-4 rounded-md border border-border bg-card p-5 hover:border-primary/40"><I className="size-5 text-primary"/><div><p className="text-sm font-medium">{label as string}</p><p className="mt-1 text-xs text-muted-foreground">{id === "media" ? data.media.length : data.records.filter(r => r.module === id).length} {id === "media" ? "media assets" : "database records"}</p></div><ArrowUpRight className="ml-auto size-4 text-muted-foreground"/></Link>; })}</div></section>
   </>;
 }
 function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly?: boolean }) {
