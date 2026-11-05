@@ -188,12 +188,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <WorkspaceProvider>
         <div className="flex min-h-screen flex-col">
-          {!admin && <Header />}
+          {!bareAuthPage && <Header />}
           <main className="flex-1">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
           </main>
-          {!admin && <Footer />}
+          {!bareAuthPage && <Footer />}
         </div>
         <Toaster />
       </WorkspaceProvider>
