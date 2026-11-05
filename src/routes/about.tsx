@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { StubPage } from "@/components/site/stub-page";
 
 export const Route = createFileRoute("/about")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "about" } }) }),
   head: () => ({
     meta: [
       { title: "About — AETHER-TRADE" },
