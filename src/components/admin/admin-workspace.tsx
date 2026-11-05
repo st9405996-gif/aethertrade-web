@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { LayoutDashboard, Files, Workflow, BriefcaseBusiness, BookOpen, MessageSquare, Image, Settings2, Shield, ArrowUpRight, Plus, Search, Pencil, Trash2, Eye, Save, X, Download, RotateCcw, ChevronRight, Globe, Plug, Menu, ArrowUp, ArrowDown, CheckCircle2, CircleDashed, Upload, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Logo } from "@/components/site/logo";
 import { useWorkspace } from "@/components/admin/workspace-provider";
+import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import { modules, makeRecord, availabilityValues, publicationValues, inquiryValues, roles, demoCan, contentSchema, isPublic, safeCsvCell, type ModuleId, type ContentRecord, type Inquiry, type Role } from "@/lib/workspace-model";
 
 const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity };
@@ -247,22 +250,34 @@ function MediaLibrary() {
   </>;
 }
 function Users() {
-  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth and database roles are connected. The matrix below is a reference only; verify each role’s server-side policies before granting team access.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
+  return <><div className="mb-6 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-sm text-muted-foreground">Supabase Auth is connected, but the current database authorization is owner-only (Super Admin). This matrix is reference-only; administrator invitations stay disabled until the server-side role assignment and policy model is fully implemented and tested.</p><Button disabled><Plus/>Invite administrator</Button></div><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[550px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Role</th><th>Drafts</th><th>Publish</th><th>Leads</th><th>Users</th></tr></thead><tbody>{roles.map(r => <tr key={r} className="border-t border-border"><td className="py-4 font-medium">{r}</td>{(["draft", "publish", "inquiries", "users"] as const).map(p => <td key={p}>{demoCan(r, p) ? <CheckCircle2 className="size-4 text-success"/> : <span className="text-muted-foreground">—</span>}</td>)}</tr>)}</tbody></table></div><div className="mt-6"><Link to="/auth" className="inline-flex items-center gap-2 text-sm text-primary">Review administrator sign-in <ArrowUpRight className="size-4"/></Link></div></>;
 }
 function Connections() {
   const { authenticated, role } = useWorkspace();
+  const readMode = useServerFn(getInquiryDeliveryMode);
+  const { data: delivery } = useQuery({
+    queryKey: ["inquiry-delivery-mode"],
+    queryFn: () => readMode(),
+    staleTime: Infinity,
+  });
+  const deliveryStatus = delivery === undefined ? "Checking" : delivery.mode === "live" ? "Configured" : "Unavailable";
+  const deliveryDescription = delivery === undefined
+    ? "Checking the server-side inquiry delivery configuration."
+    : delivery.mode === "live"
+      ? "Server configuration reports live mode. Actual email deliverability has not been verified with a test message."
+      : "The inquiry service is not configured for live delivery; the public form will not claim that submissions are sent.";
   const items = [
-    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions and audit history use the configured Supabase project."],
+    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions, audit history and consented analytics use the configured Supabase project."],
     ["Administrator authentication", authenticated ? "Connected" : "Disconnected", "This workspace requires a verified Supabase session and an assigned database role."],
-    ["Cloudflare Worker", "Runtime configured", "The website is served by the existing Cloudflare Worker deployment."],
-    ["Media storage", "Not configured", "The database media catalogue is available, but an upload bucket has not yet been provisioned."],
-    ["Inquiry email delivery", "Disabled pending live test", "Inquiry delivery remains controlled by the existing server configuration."],
+    ["Cloudflare Worker", "Production active", "The website is served by the existing Cloudflare Worker deployment."],
+    ["Media storage", "Provisioned", "website-media (public images) and internal-media (private) buckets are provisioned with image MIME and 2 MB limits."],
+    ["Inquiry email delivery", deliveryStatus, deliveryDescription],
   ];
   return <div className="divide-y divide-border border-y border-border">
     {items.map(([name,state,description]) => <section key={name} className="py-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-medium">{name}</h2><Status value={state}/></div>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{description}</p>
     </section>)}
-    <p className="py-4 text-xs text-muted-foreground">Signed-in role: {role}. Database permissions are enforced by Supabase Row Level Security.</p>
+    <p className="py-4 text-xs text-muted-foreground">Signed-in role: {role}. Database permissions are enforced by Supabase Row Level Security; this page reports configuration, not a full penetration test.</p>
   </div>;
 }
