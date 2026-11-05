@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
@@ -15,11 +16,12 @@ export const Route = createFileRoute("/industries")({
   component: IndustriesPage,
 });
 function IndustriesPage() {
-  const { items } = Route.useLoaderData();
+  const { items, cmsPage } = Route.useLoaderData();
   const cards = items.length ? items.map(item => ({ title: item.title, body: item.body })) : INDUSTRIES;
   return <>
     <PageHero eyebrow="Industries" title="Every Sector Trades Differently." description="The documents and exceptions vary by industry. These are the patterns we design around." />
     <section className="container-page section-pad"><CardGrid items={cards} /></section>
-    <CtaBand title="Tell us about your sector." description="We'll map your document and exception patterns." />
+    <CmsPageSections page={cmsPage} />
+      <CtaBand title="Tell us about your sector." description="We'll map your document and exception patterns." />
   </>;
 }
