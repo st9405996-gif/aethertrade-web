@@ -57,6 +57,24 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
   followUp:text(source,"follow_up"),
  };
 }
+async function call(_config: Config, accessToken: string, path: string, method = "GET", body?: unknown): Promise<any> {
+ const response = await fetch("/api/admin-supabase" + path, {
+  method,
+  headers: {
+   Authorization: "Bearer " + accessToken,
+   ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+   ...(method === "POST" || method === "PATCH" || method === "DELETE" ? { Prefer: "return=representation" } : {}),
+  },
+  body: body === undefined ? undefined : JSON.stringify(body),
+ });
+ const raw = await response.text();
+ let payload: unknown = null;
+ if (raw) {
+  try { payload = JSON.parse(raw); } catch { payload = { message: raw }; }
+ }
+ if (!response.ok) throw Error(err(payload));
+ return payload;
+}
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
 type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
