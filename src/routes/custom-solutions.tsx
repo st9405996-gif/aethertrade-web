@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/custom-solutions")({
 });
 
 function CustomSolutionsPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
     <>
       <PageHero
@@ -133,6 +135,7 @@ function CustomSolutionsPage() {
         </div>
       </section>
 
+      <CmsPageSections page={cmsPage} />
       <CtaBand
         title="Tell us which workflow is slowing your team down."
         description="We can assess one process, propose a focused pilot and define what a successful automation should achieve."
