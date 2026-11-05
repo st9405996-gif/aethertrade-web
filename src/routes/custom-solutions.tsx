@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ const DELIVERY_STEPS = [
 
 export const Route = createFileRoute("/custom-solutions")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "custom-solutions" } }) }),
-  head: () => ({
+  head:  ({ loaderData }) => mergeCmsHead((() => ({
     meta: [
       { title: "Custom Automation, Workflows & AI Agents — AETHER-TRADE" },
       {
@@ -57,7 +57,7 @@ export const Route = createFileRoute("/custom-solutions")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-  }),
+  }))(), loaderData?.cmsPage) ,
   component: CustomSolutionsPage,
 });
 
