@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
 
@@ -10,8 +11,10 @@ export const Route = createFileRoute("/terms")({
 });
 
 function TermsPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <LegalPage title="Terms of Use." intro="These terms cover use of this website. Any services or implementation work would be governed by a separate written agreement.">
+    <>
+      <LegalPage title="Terms of Use." intro="These terms cover use of this website. Any services or implementation work would be governed by a separate written agreement.">
       <h2>About this website</h2>
       <p>
         This website describes AETHER-TRADE's platform and services. Each capability is labelled Available, In Development,
@@ -47,6 +50,8 @@ function TermsPage() {
       </p>
       <h2>Changes</h2>
       <p>These terms may be updated as the website and services change. The latest version will be published on this page.</p>
-    </LegalPage>
+      </LegalPage>
+      <CmsPageSections page={cmsPage} />
+    </>
   );
 }
