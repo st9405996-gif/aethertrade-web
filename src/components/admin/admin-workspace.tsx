@@ -11,10 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Logo } from "@/components/site/logo";
 import { useWorkspace } from "@/components/admin/workspace-provider";
+import { GlobalSeoPanel } from "@/components/admin/global-seo-panel";
 import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import { modules, makeRecord, availabilityValues, publicationValues, inquiryValues, roles, demoCan, contentSchema, isPublic, safeCsvCell, type ModuleId, type ContentRecord, type Inquiry, type Role } from "@/lib/workspace-model";
 
-const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity };
+const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity, "global-seo": Globe };
 const selectClass = "h-9 min-w-0 rounded-md border border-input bg-background px-3 text-sm";
 async function attempt(fn: () => void | Promise<void>, message: string) { try { await fn(); toast.success(message); } catch (e) { toast.error(e instanceof Error ? e.message : "Change could not be saved"); } }
 function download(name: string, text: string, type = "application/json") { const url = URL.createObjectURL(new Blob([text], { type })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url); }
@@ -25,7 +26,7 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
   const { data, role, ready } = workspace;
   const [mobileOpen, setMobileOpen] = useState(false);
   const title = modules.find(m => m[0] === module)?.[1] || "Overview";
-  const contentModule = !["overview", "inquiries", "media", "seo", "users", "revisions", "audit", "analytics", "connections", "subscribers"].includes(module);
+  const contentModule = !["overview", "inquiries", "media", "seo", "users", "revisions", "audit", "analytics", "connections", "subscribers", "global-seo"].includes(module);
   return <div className="min-h-screen bg-background lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
     <aside className={`${mobileOpen ? "block" : "hidden"} border-r border-border bg-card lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto`}>
       <div className="flex h-20 items-center justify-between border-b border-border px-6"><Logo/><Button className="lg:hidden" size="icon" variant="ghost" aria-label="Close admin navigation" onClick={() => setMobileOpen(false)}><X/></Button></div>
@@ -44,6 +45,7 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
           {module === "inquiries" && <Inquiries/>}
           {module === "media" && <MediaLibrary/>}
           {module === "seo" && <ContentManager module="pages" seoOnly/>}
+          {module === "global-seo" && <GlobalSeoPanel/>}
           {module === "connections" && <Connections/>}
           {module === "users" && <Users/>}
           {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}

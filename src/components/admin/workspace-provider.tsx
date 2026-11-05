@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision, Audit, AnalyticsEvent, Subscriber } from "@/lib/workspace-model";
+import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
 type Config={configured:true};
@@ -78,7 +79,7 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
 }
 
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
-type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
+type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
@@ -86,7 +87,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function refresh(c:Config,s:Session){const r=await fetch("/api/admin-supabase/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});const x=await r.json();if(!r.ok)throw Error(err(x));const n={access_token:x.access_token,refresh_token:x.refresh_token,expires_at:Math.floor(Date.now()/1000)+Number(x.expires_in||3600),user:x.user};store(n);return n;}
  async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return session.expires_at<Math.floor(Date.now()/1000)+60?refresh(cfg,session):session;}
  async function load(c:Config,s:Session){
-  const [rs,is,ns,ms,vs,as,es,subs]=await Promise.all([
+  const [rs,is,ns,ms,vs,as,es,subs,seoRows]=await Promise.all([
    call(c,s.access_token,"/rest/v1/content_records?select=*&order=position.asc"),
    call(c,s.access_token,"/rest/v1/inquiries?select=*&order=created_at.desc"),
    call(c,s.access_token,"/rest/v1/inquiry_notes?select=*&order=created_at.asc").catch(()=>[]),
@@ -94,7 +95,8 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
    call(c,s.access_token,"/rest/v1/content_revisions?select=*&order=created_at.desc").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/audit_logs?select=*&order=created_at.desc&limit=100").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/analytics_events?select=*&order=created_at.desc&limit=500").catch(()=>[]),
-   call(c,s.access_token,"/rest/v1/newsletter_subscribers?select=*&order=created_at.desc").catch(()=>[])
+   call(c,s.access_token,"/rest/v1/newsletter_subscribers?select=*&order=created_at.desc").catch(()=>[]),
+   call(c,s.access_token,"/rest/v1/global_seo_settings?select=settings,is_published&id=eq.1").catch(()=>[])
   ]);
   const revisionRows=Array.isArray(vs)?vs.map(row):[];
   const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
@@ -109,6 +111,12 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const noteRows=Array.isArray(ns)?ns.map(row):[];
   const auditRows=Array.isArray(as)?as.map(row):[];
   setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
+  const seoRow=Array.isArray(seoRows)?row(seoRows[0]):{};
+  if (Object.keys(seoRow).length) {
+   const saved=row(seoRow.settings);
+   setGlobalSeo({...DEFAULT_GLOBAL_SEO,...saved,sameAs:Array.isArray(saved.sameAs)?saved.sameAs.filter((item):item is string=>typeof item==="string"):[]});
+   setGlobalSeoPublished(seoRow.is_published===true);
+  }
   setAuthenticated(true);setStorageError("");
  }
  async function adminRole(c:Config,s:Session){const u=await call(c,s.access_token,"/auth/v1/user");const rows=await call(c,s.access_token,"/rest/v1/user_roles?select=role&user_id=eq."+encodeURIComponent(u.id));if(!rows?.length)throw Error("This account has no AETHER-TRADE administrator role.");return rows[0].role as Role;}
@@ -121,6 +129,12 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function write(path:string,method:string,body?:unknown){const s=await fresh();return call(cfg!,s.access_token,path,method,body);}
  async function refreshAfterWrite(){try{const s=await fresh();await load(cfg!,s);}catch(e){setStorageError("Your change was saved, but the workspace could not refresh: "+err(e));}}
  async function save(r:ContentRecord){const id=uuid(r.id)?r.id:crypto.randomUUID();const row={id,module:r.module,slug:r.slug,title:r.title,body:r.body,category:r.category,fields:r.fields,publication:r.publication,availability:r.availability,position:r.position,scheduled_at:r.scheduledAt||null,seo_title:r.seoTitle,seo_description:r.seoDescription,canonical:r.canonical,noindex:r.noindex};await write(data.records.some(x=>x.id===id)?"/rest/v1/content_records?id=eq."+id:"/rest/v1/content_records",data.records.some(x=>x.id===id)?"PATCH":"POST",row);setData(old=>({...old,records:[...old.records.filter(x=>x.id!==id),{...r,id,updatedAt:new Date().toISOString()}]}));void refreshAfterWrite();}
+ async function saveGlobalSeoSettings(settings:GlobalSeoSettings,published:boolean){
+  const s=await fresh();
+  const result=await call(cfg!,s.access_token,"/rest/v1/global_seo_settings?id=eq.1","PATCH",{settings,is_published:published,updated_at:new Date().toISOString(),updated_by:s.user.id});
+  if(!Array.isArray(result)||result.length!==1)throw Error("Global SEO settings were not updated. Check your settings permission.");
+  setGlobalSeo(settings);setGlobalSeoPublished(published);
+ }
  async function remove(id:string){if(!uuid(id))throw Error("Invalid database record.");await write("/rest/v1/content_records?id=eq."+id,"DELETE");setData(old=>({...old,records:old.records.filter(x=>x.id!==id)}));void refreshAfterWrite();}
  async function restore(id:string){const v=data.revisions.find(x=>x.id===id);if(!v)throw Error("Revision not found.");await save({...v.record,publication:"Draft"});}
  async function addInquiry(_r:Inquiry){throw Error("Inquiries are created through the public website forms.");}
@@ -172,7 +186,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function changeUserRole(userId:string,adminRole:AssignableAdminRole){const s=await fresh();await updateAdminUserRole({data:{targetUserId:userId,role:adminRole,accessToken:s.access_token}});}
  async function revokeUser(userId:string){const s=await fresh();await removeAdminUser({data:{targetUserId:userId,accessToken:s.access_token}});}
  async function reset(){throw Error("Live CMS data cannot be reset from this panel.");}
- const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
+ const value=useMemo(()=>({data,globalSeo,globalSeoPublished,saveGlobalSeoSettings,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,globalSeo,globalSeoPublished,ready,authenticated,role,authError,storageError,session,cfg]);
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWorkspace(){const c=useContext(Context);if(!c)throw new Error("Workspace provider is missing");return c;}
