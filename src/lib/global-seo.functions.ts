@@ -1,35 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { readServerEnv } from "@/lib/server-env.server";
 
-export interface GlobalSeoSettings {
-  siteName: string;
-  siteUrl: string;
-  defaultTitle: string;
-  defaultDescription: string;
-  defaultOgImage: string;
-  googleVerification: string;
-  bingVerification: string;
-  organizationName: string;
-  organizationUrl: string;
-  organizationDescription: string;
-  organizationLogo: string;
-  sameAs: string[];
-}
-
-export const DEFAULT_GLOBAL_SEO: GlobalSeoSettings = {
-  siteName: "AETHER-TRADE",
-  siteUrl: "https://aethertrade.cloud",
-  defaultTitle: "AETHER-TRADE — Trade Automation Engineering",
-  defaultDescription: "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
-  defaultOgImage: "",
-  googleVerification: "",
-  bingVerification: "",
-  organizationName: "AETHER-TRADE",
-  organizationUrl: "https://aethertrade.cloud",
-  organizationDescription: "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
-  organizationLogo: "",
-  sameAs: [],
-};
+import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
+export { DEFAULT_GLOBAL_SEO } from "@/lib/global-seo.model";
+export type { GlobalSeoSettings } from "@/lib/global-seo.model";
 
 function safeText(value: unknown, fallback: string, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : fallback;
