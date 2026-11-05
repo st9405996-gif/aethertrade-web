@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 export const Route = createFileRoute("/contact")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "contact" } }) }),
   head: () => ({
     meta: [
       { title: "Contact — AETHER-TRADE" },
@@ -25,7 +27,8 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
-    <><PageHero eyebrow="Contact" title="Talk to AETHER-TRADE." description="Trade operations, automation and custom solutions — start a focused conversation."/><CmsPageSections slug="contact"/><InquiryForm kind="contact"/></>
+    <><PageHero eyebrow="Contact" title="Talk to AETHER-TRADE." description="Trade operations, automation and custom solutions — start a focused conversation."/><CmsPageSections page={cmsPage}/><InquiryForm kind="contact"/></>
   );
 }
