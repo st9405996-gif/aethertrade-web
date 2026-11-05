@@ -259,9 +259,9 @@ function MediaLibrary() {
   return <>
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
       <Input className="w-full" placeholder="Search media…" aria-label="Search media" value={search} onChange={e => setSearch(e.target.value)}/>
-      <Input className="w-full" placeholder="Default alt text for new image" aria-label="Default alt text for new images" value={altText} onChange={e => setAltText(e.target.value)} maxLength={500}/>
+      <Input className="w-full" placeholder="Required: describe this image" aria-label="Required alt text for new images" value={altText} onChange={e => setAltText(e.target.value)} maxLength={500} required/>
       <Button asChild disabled={busy || !demoCan(workspace.role, "draft")}>
-        <label><Upload/>{busy ? "Uploading…" : "Upload image"}<input type="file" className="sr-only" aria-label="Upload image" accept="image/jpeg,image/png,image/webp" disabled={busy || !demoCan(workspace.role, "draft")} onChange={upload}/></label>
+        <label><Upload/>{busy ? "Uploading…" : "Upload image"}<input type="file" className="sr-only" aria-label="Upload image" accept="image/jpeg,image/png,image/webp" disabled={busy || !demoCan(workspace.role, "draft") || !altText.trim()} onChange={upload}/></label>
       </Button>
     </div>
     <p className="mb-5 text-xs text-muted-foreground">Persistent Supabase Storage · public website-media bucket · JPG / PNG / WebP · 2 MB maximum. Files are stored under your authenticated user folder.</p>
