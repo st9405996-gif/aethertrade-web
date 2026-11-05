@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";\nimport { getPublishedCmsPage, type PublishedCmsPage } from "@/lib/public-cms.functions";
+import { useQuery } from "@tanstack/react-query";
+import { getPublishedCmsPage, type PublishedCmsPage } from "@/lib/public-cms.functions";
 
 export function CmsPageSections({ slug }: { slug: string }) {
   const { data: page } = useQuery({
