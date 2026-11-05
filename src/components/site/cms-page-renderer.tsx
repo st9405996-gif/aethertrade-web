@@ -1,12 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedCmsPage, type PublishedCmsPage } from "@/lib/public-cms.functions";
 
-export function CmsPageSections({ slug }: { slug: string }) {
-  const { data: page } = useQuery({
-    queryKey: ["published-cms-page", slug],
-    queryFn: () => getPublishedCmsPage({ data: { slug } }),
-    staleTime: 60_000,
-  });
+export function CmsPageSections({ page }: { page: PublishedCmsPage | null }) {
   if (!page || (!page.body.trim() && !page.sections.length)) return null;
   return <CmsPageRenderer page={page} showTitle={false} />;
 }
