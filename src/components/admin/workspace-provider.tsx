@@ -34,6 +34,49 @@ async function call(_config: Config, accessToken: string, path: string, method =
  if (!response.ok) throw Error(err(payload));
  return payload;
 }
+function mapRecord(source:JsonRow):ContentRecord {
+ const fields=row(source.fields);
+ return {
+  id:text(source,"id"),
+  module:text(source,"module") as ContentRecord["module"],
+  slug:text(source,"slug"),
+  title:text(source,"title"),
+  body:text(source,"body"),
+  category:text(source,"category"),
+  publication:text(source,"publication") as ContentRecord["publication"],
+  availability:text(source,"availability") as ContentRecord["availability"],
+  position:numeric(source,"position"),
+  scheduledAt:text(source,"scheduled_at"),
+  seoTitle:text(source,"seo_title"),
+  seoDescription:text(source,"seo_description"),
+  canonical:text(source,"canonical"),
+  noindex:source.noindex===true,
+  updatedAt:text(source,"updated_at"),
+  fields:Object.fromEntries(Object.entries(fields).map(([key,value])=>[key,typeof value==="string"?value:JSON.stringify(value)??""])),
+ };
+}
+function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
+ return {
+  id:text(source,"id"),
+  reference:text(source,"reference"),
+  kind:text(source,"kind")==="demo"?"demo":"contact",
+  name:text(source,"contact_name"),
+  email:text(source,"email"),
+  company:text(source,"company"),
+  country:text(source,"country"),
+  category:text(source,"category"),
+  automation:text(source,"automation_slug"),
+  message:text(source,"message"),
+  requirements:text(source,"requirements"),
+  consent:true,
+  status:text(source,"status") as Inquiry["status"],
+  createdAt:text(source,"created_at"),
+  notes:notes.filter(note=>note.inquiry_id===source.id).map(note=>({text:text(note,"body"),at:text(note,"created_at")})),
+  assignedTo:text(source,"assigned_to"),
+  followUp:text(source,"follow_up"),
+ };
+}
+
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
 type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
