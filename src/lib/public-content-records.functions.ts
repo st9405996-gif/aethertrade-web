@@ -46,7 +46,7 @@ function parseRecord(value: unknown, now = Date.now()): PublicContentRecord | nu
 }
 
 const inputSchema = z.object({
-  module: z.enum(["platform", "services", "solutions", "industries", "navigation", "branding"]),
+  module: z.enum(["platform", "services", "solutions", "industries", "navigation", "branding", "automations", "faqs", "partnerships"]),
 });
 export const getPublishedContentRecords = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => {
