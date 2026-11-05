@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getPublishedCmsPage } from "@/lib/public-cms.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const DELIVERY_STEPS = [
 ];
 
 export const Route = createFileRoute("/custom-solutions")({
+  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "custom-solutions" } }) }),
   head: () => ({
     meta: [
       { title: "Custom Automation, Workflows & AI Agents — AETHER-TRADE" },
