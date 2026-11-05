@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useWorkspace } from "@/components/admin/workspace-provider";
-import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.functions";
+import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
 import { demoCan } from "@/lib/workspace-model";
 
 function Field({ label, value, onChange, maxLength = 500, hint }: {
