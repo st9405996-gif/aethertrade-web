@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { GlobalSeoSettings } from "@/lib/global-seo.model";
 import { PLATFORM_MODULES, SERVICES, SOLUTIONS, INDUSTRIES, FAQS, INSIGHTS, PARTNERSHIP_TYPES } from "@/content/site-content";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
@@ -23,7 +24,7 @@ export const modules = [
   ["services", "Services", "Content"], ["solutions", "Solutions", "Content"],
   ["industries", "Industries", "Content"], ["insights", "Insights", "Content"],
   ["faqs", "FAQs", "Content"], ["media", "Media library", "Content"],
-  ["navigation", "Navigation & footer", "Website"], ["seo", "SEO", "Website"],
+  ["navigation", "Navigation & footer", "Website"], ["seo", "SEO", "Website"], ["global-seo", "Global SEO", "Website"],
   ["branding", "Branding & contact", "Website"], ["settings", "Website settings", "Website"],
   ["inquiries", "Inquiries", "Operations"], ["partnerships", "Partnerships", "Operations"],
   ["careers", "Careers", "Operations"], ["subscribers", "Subscribers", "Operations"],
