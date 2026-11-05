@@ -65,7 +65,7 @@ export function GlobalSeoPanel() {
       <p className="mt-2 text-sm text-muted-foreground">These values provide site-wide defaults. Individual page SEO fields keep priority when they contain their own values.</p>
       <div className="mt-5 grid gap-4">
         <Field label="Website / brand name" value={settings.siteName} maxLength={120} onChange={value => update("siteName", value)}/>
-        <Field label="Canonical website URL" value={settings.siteUrl} maxLength={300} hint="HTTPS URL for aethertrade.cloud. This is used as the organization website address." onChange={value => update("siteUrl", value)}/>
+        <Field label="Website base URL" value={settings.siteUrl} maxLength={300} hint="HTTPS website URL used by the Organization and WebSite structured data." onChange={value => update("siteUrl", value)}/>
         <Field label="Default SEO title" value={settings.defaultTitle} maxLength={160} onChange={value => update("defaultTitle", value)}/>
         <label className="grid gap-2 text-sm">Default meta description<Textarea rows={3} maxLength={320} value={settings.defaultDescription} onChange={event => update("defaultDescription", event.target.value)}/><span className="text-xs text-muted-foreground">{settings.defaultDescription.length}/320 characters</span></label>
       </div>
