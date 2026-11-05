@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -261,13 +261,13 @@ function Users() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [pendingRemove, setPendingRemove] = useState<string | null>(null);
-  async function refreshUsers() {
+  const refreshUsers = useCallback(async () => {
     setLoading(true);
     try { setUsers(await workspace.listAdminUsers()); setError(""); }
     catch (e) { setError(e instanceof Error ? e.message : "Administrator list could not be loaded."); }
     finally { setLoading(false); }
-  }
-  useEffect(() => { void refreshUsers(); }, [workspace.listAdminUsers]);
+  }, [workspace.listAdminUsers]);
+  useEffect(() => { void refreshUsers(); }, [refreshUsers]);
   async function invite() {
     setSaving(true); setError("");
     try {
