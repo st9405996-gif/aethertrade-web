@@ -85,13 +85,8 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
   followUp:text(source,"follow_up"),
  };
 }
-<<<<<<< HEAD
-type Ctx={data:DemoWorkspace;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;getAccessToken:()=>Promise<string>;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
-=======
-
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
 type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
->>>>>>> origin/main
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
@@ -123,17 +118,13 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const inquiryRows=Array.isArray(is)?is.map(row):[];
   const noteRows=Array.isArray(ns)?ns.map(row):[];
   const auditRows=Array.isArray(as)?as.map(row):[];
-<<<<<<< HEAD
   setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];const operation=text(details,"operation");const title=operation==="INVITE"?"Administrator invited":operation==="ROLE_UPDATE"?"Administrator role updated":operation==="ROLE_REVOKE"?"Administrator access revoked":text(a,"module")||text(a,"record_id")||"Content update";return{id:text(a,"id"),action:text(a,"action"),title,at:text(a,"created_at"),changedFields};}),analytics,subscribers});
-=======
-  setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
   const seoRow=Array.isArray(seoRows)?row(seoRows[0]):{};
   if (Object.keys(seoRow).length) {
    const saved=row(seoRow.settings);
    setGlobalSeo({...DEFAULT_GLOBAL_SEO,...saved,sameAs:Array.isArray(saved.sameAs)?saved.sameAs.filter((item):item is string=>typeof item==="string"):[]});
    setGlobalSeoPublished(seoRow.is_published===true);
   }
->>>>>>> origin/main
   setAuthenticated(true);setStorageError("");
  }
  async function adminRole(c:Config,s:Session){const u=await call(c,s.access_token,"/auth/v1/user");const rows=await call(c,s.access_token,"/rest/v1/user_roles?select=role&user_id=eq."+encodeURIComponent(u.id));if(!rows?.length)throw Error("This account has no AETHER-TRADE administrator role.");return rows[0].role as Role;}
@@ -240,11 +231,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function changeUserRole(userId:string,adminRole:AssignableAdminRole){const s=await fresh();await updateAdminUserRole({data:{targetUserId:userId,role:adminRole,accessToken:s.access_token}});}
  async function revokeUser(userId:string){const s=await fresh();await removeAdminUser({data:{targetUserId:userId,accessToken:s.access_token}});}
  async function reset(){throw Error("Live CMS data cannot be reset from this panel.");}
-<<<<<<< HEAD
- const value=useMemo(()=>({data,ready,authenticated,role,authError,storageError,getAccessToken,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,reset}),[data,ready,authenticated,role,authError,storageError,session,cfg]);
-=======
  const value=useMemo(()=>({data,globalSeo,globalSeoPublished,saveGlobalSeoSettings,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,globalSeo,globalSeoPublished,ready,authenticated,role,authError,storageError,session,cfg]);
->>>>>>> origin/main
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWorkspace(){const c=useContext(Context);if(!c)throw new Error("Workspace provider is missing");return c;}

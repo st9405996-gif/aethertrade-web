@@ -70,18 +70,7 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 
 ## Deployment state
 
-<<<<<<< HEAD
 The feature is on a separate branch and draft PR. Production has not been deployed from this branch. Merge/deploy should happen only after current CI/preview checks and the manual checks above are reconciled.
-=======
-- Run lint, TypeScript, unit tests and production build in a clean environment.
-- Test CMS create/edit/delete, draft/publish, slug uniqueness, and rollback.
-- Confirm public page output reflects intended published CMS data and not drafts.
-- Test roles against Supabase RLS with separate accounts (not just UI gating).
-- Test inquiry submission and status change; confirm audit/history records.
-- Test Media Storage permissions with anonymous and authenticated users.
-- Check SEO output, sitemap, robots, canonical and noindex.
-- Verify backups, secrets, error logging and deploy rollback.
-
 
 ## Production incident verification — 2026-11-06
 
@@ -97,4 +86,3 @@ The feature is on a separate branch and draft PR. Production has not been deploy
 ### Broader audit boundaries
 
 The existing pre-launch audit remains valid for its stated scope. Source review and database schema checks are not equivalent to browser-driven end-to-end testing. Admin modules requiring external account/provider setup or controlled live actions remain marked blocked/not tested until those checks are completed. No live email, destructive reset, user invitation, or public inquiry has been sent as part of this incident investigation.
->>>>>>> origin/main
