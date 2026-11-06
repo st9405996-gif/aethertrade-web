@@ -11,6 +11,7 @@ import {
   writeAdminRecord,
 } from "@/lib/admin-mutations";
 import { mapAdminMediaRecord } from "@/lib/admin-media";
+import { readAuditRows } from "@/lib/admin-audit";
 import { restoreRevisionAsDraft } from "@/lib/revision-restore";
 import {
   parseExistingSubscriberLookup,
@@ -103,28 +104,29 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
 }
 
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
-type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
+type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;auditError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
- const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
+ const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState(""),[auditError,setAuditError]=useState("");
  const [globalSeo,setGlobalSeo]=useState<GlobalSeoSettings>(DEFAULT_GLOBAL_SEO),[globalSeoPublished,setGlobalSeoPublished]=useState(false);
  const store=(s:Session)=>{localStorage.setItem(KEY,JSON.stringify(s));setSession(s);};
  async function refresh(s:Session){const n=await refreshAdminSession(s);store(n);return n;}
  async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return needsAdminSessionRefresh(session)?refresh(session):session;}
  async function load(c:Config,s:Session){
-  const [rs,is,ns,ms,vs,as,es,subs,seoRows]=await Promise.all([
+  const [rs,is,ns,ms,vs,auditResult,es,subs,seoRows]=await Promise.all([
    call(c,s.access_token,"/rest/v1/content_records?select=*&order=position.asc"),
    call(c,s.access_token,"/rest/v1/inquiries?select=*&order=created_at.desc"),
    call(c,s.access_token,"/rest/v1/inquiry_notes?select=*&order=created_at.asc").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/media_assets?select=*&order=filename.asc"),
    call(c,s.access_token,"/rest/v1/content_revisions?select=*&order=created_at.desc").catch(()=>[]),
-   call(c,s.access_token,"/rest/v1/audit_logs?select=*&order=created_at.desc&limit=100").catch(()=>[]),
+   readAuditRows(()=>call(c,s.access_token,"/rest/v1/audit_logs?select=*&order=created_at.desc&limit=100")),
    call(c,s.access_token,"/rest/v1/analytics_events?select=*&order=created_at.desc&limit=500").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/newsletter_subscribers?select=*&order=created_at.desc").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/global_seo_settings?select=settings,is_published&id=eq.1").catch(()=>[])
   ]);
   const revisionRows=Array.isArray(vs)?vs.map(row):[];
   const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
+  setAuditError(auditResult.error);
   const mediaRows=Array.isArray(ms)?ms.map(row):[];
   const media:MediaRecord[]=mediaRows.map(mapAdminMediaRecord);
   const analyticsRows=Array.isArray(es)?es.map(row):[];
@@ -134,7 +136,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const recordRows=Array.isArray(rs)?rs.map(row):[];
   const inquiryRows=Array.isArray(is)?is.map(row):[];
   const noteRows=Array.isArray(ns)?ns.map(row):[];
-  const auditRows=Array.isArray(as)?as.map(row):[];
+  const auditRows=auditResult.rows;
   setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
   const seoRow=Array.isArray(seoRows)?row(seoRows[0]):{};
   if (Object.keys(seoRow).length) {
@@ -245,7 +247,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function changeUserRole(userId:string,adminRole:AssignableAdminRole){const s=await fresh();await updateAdminUserRole({data:{targetUserId:userId,role:adminRole,accessToken:s.access_token}});}
  async function revokeUser(userId:string){const s=await fresh();await removeAdminUser({data:{targetUserId:userId,accessToken:s.access_token}});}
  async function reset(){throw Error("Live CMS data cannot be reset from this panel.");}
- const value=useMemo(()=>({data,globalSeo,globalSeoPublished,saveGlobalSeoSettings,ready,authenticated,role,authError,storageError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,globalSeo,globalSeoPublished,ready,authenticated,role,authError,storageError,session,cfg]);
+ const value=useMemo(()=>({data,globalSeo,globalSeoPublished,saveGlobalSeoSettings,ready,authenticated,role,authError,storageError,auditError,setRole,signIn,signOut,sendPasswordRecovery,validateRecoverySession,updatePassword,save,remove,restore,addInquiry,updateInquiry,addMedia,updateMedia,removeMedia,addSubscriber,updateSubscriberStatus,listAdminUsers:listUsers,inviteAdminUser:inviteUser,updateAdminUserRole:changeUserRole,removeAdminUser:revokeUser,reset}),[data,globalSeo,globalSeoPublished,ready,authenticated,role,authError,storageError,auditError,session,cfg]);
  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useWorkspace(){const c=useContext(Context);if(!c)throw new Error("Workspace provider is missing");return c;}
