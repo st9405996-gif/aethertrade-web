@@ -209,3 +209,69 @@ export async function deleteWebsiteMediaObject(
     throw new Error(`Storage object deletion failed with status ${response.status}.`);
   }
 }
+
+function containsMediaObjectPath(
+  value: unknown,
+  objectPath: string,
+  visited: Set<object>,
+): boolean {
+  if (typeof value === "string") {
+    if (value.includes(objectPath)) return true;
+    try {
+      return decodeURIComponent(value).includes(objectPath);
+    } catch {
+      return false;
+    }
+  }
+  if (value === null || typeof value !== "object" || visited.has(value)) return false;
+  visited.add(value);
+  return Object.values(value).some((entry) => containsMediaObjectPath(entry, objectPath, visited));
+}
+
+export function isWebsiteMediaReferenced(objectPath: string, records: unknown[]): boolean {
+  if (!isSafeStorageObjectPath(objectPath)) throw new Error("Invalid media object path.");
+  return records.some((record) => containsMediaObjectPath(record, objectPath, new Set()));
+}
+
+export async function deleteWebsiteMediaAsset(
+  input: {
+    accessToken: string;
+    id: string;
+    objectPath: string;
+    referenceRecords: unknown[];
+  },
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.id)
+  ) {
+    throw new Error("Invalid media record.");
+  }
+  if (!input.accessToken.trim()) throw new Error("Authentication required.");
+  if (!isSafeStorageObjectPath(input.objectPath)) throw new Error("Invalid media object path.");
+  if (isWebsiteMediaReferenced(input.objectPath, input.referenceRecords)) {
+    throw new Error(
+      "This media item is referenced by CMS content or a saved revision. Replace or remove those references before deleting it.",
+    );
+  }
+
+  await deleteWebsiteMediaObject(input.accessToken, input.objectPath, fetchImpl);
+  try {
+    await writeAdminRecord(
+      {
+        accessToken: input.accessToken,
+        path: "/rest/v1/media_assets?id=eq." + input.id,
+        method: "DELETE",
+        expectedId: input.id,
+        operation: "Media metadata deletion",
+      },
+      fetchImpl,
+    );
+  } catch (error) {
+    const detail =
+      error instanceof Error ? error.message : "The database response was unavailable.";
+    throw new Error(
+      `The storage object was deleted, but media metadata deletion could not be confirmed for ${input.id}. Reload and verify the media library before retrying. ${detail}`,
+    );
+  }
+}

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  deleteWebsiteMediaAsset,
   deleteWebsiteMediaObject,
+  isWebsiteMediaReferenced,
   uploadAndSaveWebsiteMedia,
   validateWebsiteMediaUpload,
   writeAdminRecord,
@@ -382,5 +384,95 @@ describe("website media object cleanup", () => {
     await expect(
       deleteWebsiteMediaObject("test-access-token", "user-id/image.webp", fetchImpl),
     ).rejects.toThrow("fetch failed");
+  });
+
+  it("detects media references in content and revision snapshots", () => {
+    expect(
+      isWebsiteMediaReferenced(objectPath, [
+        {
+          fields: {
+            sections: JSON.stringify([
+              {
+                imageUrl:
+                  "/api/admin-supabase/storage/v1/object/public/website-media/" + objectPath,
+              },
+            ]),
+          },
+        },
+        { snapshot: { record: { fields: { heroImage: encodeURIComponent(objectPath) } } } },
+      ]),
+    ).toBe(true);
+    expect(isWebsiteMediaReferenced(objectPath, [{ fields: { sections: "[]" } }])).toBe(false);
+  });
+
+  it("blocks deletion of referenced media before storage or metadata requests", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      deleteWebsiteMediaAsset(
+        {
+          accessToken: "test-access-token",
+          id: recordId,
+          objectPath,
+          referenceRecords: [{ fields: { image: objectPath } }],
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("referenced by CMS content or a saved revision");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("deletes the storage object before confirming metadata removal", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ id: recordId }]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).resolves.toBeUndefined();
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "/api/admin-supabase/storage/v1/object/website-media",
+    );
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe(
+      "/api/admin-supabase/rest/v1/media_assets?id=eq." + recordId,
+    );
+  });
+
+  it("preserves catalogue metadata when storage deletion is not confirmed", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 500 }));
+
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("Storage object deletion failed with status 500.");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports metadata deletion failure after successful storage cleanup", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response("[]", { status: 200 }));
+
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow(
+      "The storage object was deleted, but media metadata deletion could not be confirmed",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 });

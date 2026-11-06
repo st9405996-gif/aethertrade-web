@@ -4,6 +4,7 @@ import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.mod
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
 import {
+  deleteWebsiteMediaAsset,
   deleteWebsiteMediaObject,
   uploadAndSaveWebsiteMedia,
   validateWebsiteMediaUpload,
@@ -158,7 +159,46 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
  }
  async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");if(!r.alt.trim())throw Error("Alt text is required for public images.");const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/media_assets?id=eq."+r.id,method:"PATCH",body:{filename:r.name,alt_text:r.alt.trim()},expectedId:r.id,operation:"Media metadata update"});const updated={...r,name:text(saved,"filename",r.name),alt:text(saved,"alt_text",r.alt.trim())};setData(old=>({...old,media:old.media.map(x=>x.id===r.id?updated:x)}));void refreshAfterWrite();}
- async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const media=data.media.find(x=>x.id===id);if(!media||media.bucketId!=="website-media"||!media.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets?id=eq."+id,method:"DELETE",expectedId:id,operation:"Media metadata deletion"});setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));try{await deleteWebsiteMediaObject(s.access_token,media.objectPath);}catch(e){void refreshAfterWrite();throw Error("Media metadata was deleted, but storage cleanup could not be confirmed for "+media.objectPath+": "+err(e));}void refreshAfterWrite();}
+ async function removeMedia(id: string) {
+   if (!uuid(id)) throw Error("Invalid media record.");
+   const media = data.media.find((x) => x.id === id);
+   if (!media || media.bucketId !== "website-media" || !media.objectPath)
+     throw Error("Media object reference is invalid.");
+   const s = await fresh();
+   async function readAll(path: string) {
+     const rows: unknown[] = [];
+     const pageSize = 1000;
+     for (let page = 0; page < 100; page++) {
+       const result = await call(
+         cfg!,
+         s.access_token,
+         path + "&limit=" + pageSize + "&offset=" + page * pageSize,
+       );
+       if (!Array.isArray(result))
+         throw Error("Could not verify CMS media references; deletion was cancelled.");
+       rows.push(...result);
+       if (result.length < pageSize) return rows;
+     }
+     throw Error("Could not verify all CMS media references; deletion was cancelled.");
+   }
+   const [records, revisions] = await Promise.all([
+     readAll("/rest/v1/content_records?select=id,fields&order=id.asc"),
+     readAll("/rest/v1/content_revisions?select=id,snapshot&order=id.asc"),
+   ]);
+   try {
+     await deleteWebsiteMediaAsset({
+       accessToken: s.access_token,
+       id,
+       objectPath: media.objectPath,
+       referenceRecords: [records, revisions],
+     });
+   } catch (e) {
+     void refreshAfterWrite();
+     throw e;
+   }
+   setData((old) => ({ ...old, media: old.media.filter((x) => x.id !== id) }));
+   void refreshAfterWrite();
+ }
  async function addSubscriber(email:string,consentConfirmed:boolean){
   const normalized=email.trim().toLowerCase();
   if(!consentConfirmed)throw Error("Confirm that the email owner gave permission before adding them.");
