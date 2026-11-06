@@ -4,10 +4,12 @@ import {
   mergeCmsHead,
   type PublishedCmsPage,
 } from "@/lib/public-cms.functions";
+import { writeAdminRecord } from "@/lib/admin-mutations";
 
 const now = Date.parse("2026-11-06T12:00:00.000Z");
 const baseUrl = "https://supabase.example.test";
 const publishableKey = "public-test-key";
+const recordId = "6a86e6f4-4bdc-4c79-b8ac-3b94d6b7e531";
 
 function pageRecord(overrides: Record<string, unknown> = {}) {
   return {
@@ -108,6 +110,43 @@ describe("public CMS page reader", () => {
         { id: "unsafe-path", imageUrl: "" },
       ],
     });
+  });
+
+  it("preserves selected media URL and alt text through save and public reload", async () => {
+    const section = {
+      id: "shipment-documents",
+      title: "Shipment documents",
+      body: "Review the uploaded document.",
+      imageUrl: "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
+      imageAlt: "Bill of lading",
+    };
+    const savedRecord = pageRecord({
+      id: recordId,
+      fields: { sections: JSON.stringify([section]) },
+    });
+    const saveFetch = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse([savedRecord]));
+
+    await writeAdminRecord(
+      {
+        accessToken: "test-access-token",
+        path: "/rest/v1/content_records?id=eq." + recordId,
+        method: "PATCH",
+        body: { fields: savedRecord["fields"] },
+        expectedId: recordId,
+        operation: "Content save",
+      },
+      saveFetch,
+    );
+
+    const sentBody = JSON.parse(String(saveFetch.mock.calls[0]?.[1]?.body)) as {
+      fields: { sections: string };
+    };
+    expect(JSON.parse(sentBody.fields.sections)).toEqual([section]);
+
+    const reloadFetch = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse([savedRecord]));
+    await expect(
+      fetchPublishedCmsPage(baseUrl, publishableKey, "custom-page", reloadFetch, now),
+    ).resolves.toMatchObject({ sections: [section] });
   });
 
   it("rejects malformed slugs before making a request", async () => {
