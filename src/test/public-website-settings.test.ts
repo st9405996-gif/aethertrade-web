@@ -46,6 +46,17 @@ describe("readPublicWebsiteSettings", () => {
     });
   });
 
+  it("reports a malformed settings row as unavailable rather than missing", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse([{ careers_enabled: "false" }]));
+
+    await expect(readPublicWebsiteSettings(baseUrl, publishableKey, fetchImpl)).resolves.toEqual({
+      status: "unavailable",
+      careersEnabled: false,
+    });
+  });
+
   it("fails closed when settings connection configuration is missing", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
 
