@@ -205,9 +205,3 @@ export const PARTNERSHIP_TYPES = [
   { title: "Implementation partners", body: "Consultancies and integrators who support trade and logistics businesses." },
   { title: "Industry associations", body: "Organizations that help members modernize operations and could co-host education." },
 ];
-
-/** Careers publishing state — flipped by the CMS in Milestone 4. */
-export const CAREERS = {
-  published: false,
-  openings: [] as { title: string; location: string; type: string }[],
-};
