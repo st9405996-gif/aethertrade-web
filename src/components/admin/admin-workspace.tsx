@@ -14,6 +14,10 @@ import { useWorkspace } from "@/components/admin/workspace-provider";
 import { GlobalSeoPanel } from "@/components/admin/global-seo-panel";
 import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import {
+  getConnectionReadiness,
+  getInquiryDeliveryReadiness,
+} from "@/lib/connection-readiness";
+import {
   modules,
   makeRecord,
   availabilityValues,
@@ -144,7 +148,7 @@ function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string;
 function Overview() {
   const { data, role, authenticated } = useWorkspace();
   const readMode = useServerFn(getInquiryDeliveryMode);
-  const { data: delivery } = useQuery({
+  const { data: delivery, isError: deliveryError } = useQuery({
     queryKey: ["inquiry-delivery-mode"],
     queryFn: () => readMode(),
     staleTime: Infinity,
@@ -156,20 +160,18 @@ function Overview() {
     { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files },
     { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen },
   ];
-  const deliveryStatus = delivery === undefined
-    ? "Checking"
-    : delivery.mode === "live"
-      ? "Configured · not tested"
-      : "Unavailable";
+  const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
+  const deliveryStatus = deliveryReadiness.status;
+  const readiness = getConnectionReadiness(authenticated);
   const connectionRows = [
-    ["Supabase CMS & inquiry database", authenticated ? "Connected" : "Disconnected"],
-    ["Administrator authentication", authenticated ? "Connected" : "Disconnected"],
-    ["Website media storage", data.media.length ? "Available" : "No media assets"],
+    ["Supabase CMS & inquiry database", readiness.database],
+    ["Administrator authentication", readiness.authentication],
+    ["Website media storage", readiness.mediaStorage],
     ["Inquiry email delivery", deliveryStatus],
-    ["Cloudflare Worker", "Production active"],
+    ["Cloudflare Worker", readiness.worker],
   ];
   return <>
-    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Live records from the connected database</p></div>)}</div>
+    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Loaded records in the current workspace session</p></div>)}</div>
     <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]">
       <section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "Your database role does not allow inquiry access."}/>}</section>
       <section><h2 className="mb-4 text-lg font-semibold">Connection readiness</h2><div className="divide-y divide-border border-y border-border">{connectionRows.map(([name,state]) => <div key={name} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{name}</span><Status value={state}/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section>
@@ -362,24 +364,20 @@ function Users() {
 }
 function Connections() {
   const { authenticated, role } = useWorkspace();
+  const readiness = getConnectionReadiness(authenticated);
   const readMode = useServerFn(getInquiryDeliveryMode);
-  const { data: delivery } = useQuery({
+  const { data: delivery, isError: deliveryError } = useQuery({
     queryKey: ["inquiry-delivery-mode"],
     queryFn: () => readMode(),
     staleTime: Infinity,
   });
-  const deliveryStatus = delivery === undefined ? "Checking" : delivery.mode === "live" ? "Configured" : "Unavailable";
-  const deliveryDescription = delivery === undefined
-    ? "Checking the server-side inquiry delivery configuration."
-    : delivery.mode === "live"
-      ? "Server configuration reports live mode. Actual email deliverability has not been verified with a test message."
-      : "The inquiry service is not configured for live delivery; the public form will not claim that submissions are sent.";
+  const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
   const items = [
-    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions, audit history and consented analytics use the configured Supabase project."],
-    ["Administrator authentication", authenticated ? "Connected" : "Disconnected", "This workspace requires a verified Supabase session and an assigned database role."],
-    ["Cloudflare Worker", "Production active", "The website is served by the existing Cloudflare Worker deployment."],
-    ["Media storage", "Provisioned", "website-media (public images) and internal-media (private) buckets are provisioned with image MIME and 2 MB limits."],
-    ["Inquiry email delivery", deliveryStatus, deliveryDescription],
+    ["Supabase database", readiness.database, "Workspace data loaded successfully during this session. This is not a continuous health check."],
+    ["Administrator authentication", readiness.authentication, "The session and assigned database role were verified during workspace load."],
+    ["Cloudflare Worker", readiness.worker, "This page does not verify deployment status or current Worker health."],
+    ["Media storage", readiness.mediaStorage, "Bucket availability and storage policies are not probed from this page; live upload/read/delete verification requires staging access."],
+    ["Inquiry email delivery", deliveryReadiness.status, deliveryReadiness.description],
   ];
   return <div className="divide-y divide-border border-y border-border">
     {items.map(([name,state,description]) => <section key={name} className="py-5">
