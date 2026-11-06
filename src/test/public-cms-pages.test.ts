@@ -58,6 +58,58 @@ describe("public CMS page reader", () => {
     expect(requestHeaders.get("accept")).toBe("application/json");
   });
 
+  it("uses the same-origin media proxy and rejects arbitrary external image origins", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse([
+        pageRecord({
+          fields: {
+            sections: [
+              {
+                id: "legacy-storage",
+                title: "Legacy Storage URL",
+                imageUrl:
+                  "https://supabase.example.test/storage/v1/object/public/website-media/user-1/photo.png",
+              },
+              {
+                id: "proxy-path",
+                title: "Proxy Path",
+                imageUrl:
+                  "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
+              },
+              {
+                id: "external-origin",
+                title: "External Origin",
+                imageUrl: "https://images.example.test/photo.png",
+              },
+              {
+                id: "unsafe-path",
+                title: "Unsafe Path",
+                imageUrl: "/api/admin-supabase/storage/v1/object/public/website-media/../secret",
+              },
+            ],
+          },
+        }),
+      ]),
+    );
+
+    await expect(
+      fetchPublishedCmsPage(baseUrl, publishableKey, "custom-page", fetchImpl, now),
+    ).resolves.toMatchObject({
+      sections: [
+        {
+          id: "legacy-storage",
+          imageUrl: "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
+        },
+        {
+          id: "proxy-path",
+          imageUrl: "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
+        },
+        { id: "external-origin", imageUrl: "" },
+        { id: "unsafe-path", imageUrl: "" },
+      ],
+    });
+  });
+
   it("rejects malformed slugs before making a request", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
 

@@ -38,7 +38,11 @@ describe("content security policy for the production architecture", () => {
     expect(csp).toContain("frame-src https://challenges.cloudflare.com");
     expect(csp).toContain("connect-src 'self' https://challenges.cloudflare.com");
     const directives = Object.fromEntries(csp.split(";").map((d) => d.trim().split(" ")));
-    expect(directives["img-src"]).not.toMatch(/https?:/);
+    const imgSrcDirective = csp
+      .split(";")
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith("img-src "));
+    expect(imgSrcDirective).toBe("img-src 'self' data: blob:");
     expect(directives["form-action"]).toBe("'self'");
   });
 });

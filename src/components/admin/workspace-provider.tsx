@@ -4,6 +4,7 @@ import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.mod
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
 import { deleteWebsiteMediaObject, writeAdminRecord } from "@/lib/admin-mutations";
+import { publicMediaProxyUrl } from "@/lib/admin-proxy";
 type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
   const publicConfig = await getAdminPublicConfig();
@@ -103,7 +104,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const revisionRows=Array.isArray(vs)?vs.map(row):[];
   const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
   const mediaRows=Array.isArray(ms)?ms.map(row):[];
-  const media:MediaRecord[]=mediaRows.map(m=>({id:text(m,"id"),name:text(m,"filename"),type:text(m,"content_type"),size:numeric(m,"file_size"),alt:text(m,"alt_text"),bucketId:text(m,"bucket_id"),objectPath:text(m,"object_path"),url:m.is_public===true?cfg.url+"/storage/v1/object/public/"+text(m,"bucket_id")+"/"+text(m,"object_path"):""}));
+  const media:MediaRecord[]=mediaRows.map(m=>({id:text(m,"id"),name:text(m,"filename"),type:text(m,"content_type"),size:numeric(m,"file_size"),alt:text(m,"alt_text"),bucketId:text(m,"bucket_id"),objectPath:text(m,"object_path"),url:m.is_public===true?publicMediaProxyUrl(text(m,"bucket_id"),text(m,"object_path")):""}));
   const analyticsRows=Array.isArray(es)?es.map(row):[];
   const analytics:AnalyticsEvent[]=analyticsRows.map(e=>({id:text(e,"id"),eventType:text(e,"event_type"),pagePath:text(e,"page_path"),automationSlug:text(e,"automation_slug"),consent:true,createdAt:text(e,"created_at")}));
   const subscriberRows=Array.isArray(subs)?subs.map(row):[];
@@ -153,7 +154,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   try{
    const saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets",method:"POST",body:{bucket_id:"website-media",object_path:objectPath,filename:file.name,content_type:file.type,file_size:file.size,alt_text:altText.trim().slice(0,500),owner_id:user.id,is_public:true},operation:"Media metadata save"});
    const id=text(saved,"id");if(!uuid(id))throw Error("Image uploaded but valid media metadata was not returned.");
-   const media:MediaRecord={id,name:text(saved,"filename"),type:text(saved,"content_type"),size:numeric(saved,"file_size"),alt:text(saved,"alt_text"),bucketId:text(saved,"bucket_id"),objectPath:text(saved,"object_path"),url:cfg.url+"/storage/v1/object/public/"+text(saved,"bucket_id")+"/"+text(saved,"object_path")};
+   const media:MediaRecord={id,name:text(saved,"filename"),type:text(saved,"content_type"),size:numeric(saved,"file_size"),alt:text(saved,"alt_text"),bucketId:text(saved,"bucket_id"),objectPath:text(saved,"object_path"),url:publicMediaProxyUrl(text(saved,"bucket_id"),text(saved,"object_path"))};
    setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
   }catch(e){
    try{await deleteWebsiteMediaObject(s.access_token,objectPath);}catch(cleanupError){throw Error(err(e)+" Uploaded object cleanup failed for "+objectPath+": "+err(cleanupError));}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { readServerEnv } from "@/lib/server-env.server";
 import { isPublicAt } from "@/lib/publication";
 import { isValidCmsPageSlug } from "@/lib/cms-page-routing";
+import { publicMediaProxyUrl } from "@/lib/admin-proxy";
 
 export interface CmsPageSection {
   id: string;
@@ -31,19 +32,29 @@ function asRecord(value: unknown): JsonRecord | null {
 function asText(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
-function safeImageUrl(value: unknown): string {
+function safeImageUrl(value: unknown, baseUrl: string): string {
   const url = asText(value).trim();
-  if (url.startsWith("/api/admin-supabase/storage/v1/object/public/website-media/"))
-    return url.slice(0, 500);
-  if (
-    /^https:\/\/[A-Za-z0-9.-]+(?::\d{1,5})?(?:\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]*)?(?:\?[A-Za-z0-9._~!$&'()*+,;=:@%/?-]*)?$/.test(
-      url,
+  const proxyPrefix = "/api/admin-supabase/storage/v1/object/public/website-media/";
+  if (url.startsWith(proxyPrefix))
+    return publicMediaProxyUrl("website-media", url.slice(proxyPrefix.length));
+
+  try {
+    const candidate = new URL(url);
+    const supabase = new URL(baseUrl);
+    const storagePrefix = "/storage/v1/object/public/website-media/";
+    if (
+      candidate.origin !== supabase.origin ||
+      candidate.search ||
+      candidate.hash ||
+      !candidate.pathname.startsWith(storagePrefix)
     )
-  )
-    return url.slice(0, 500);
-  return "";
+      return "";
+    return publicMediaProxyUrl("website-media", candidate.pathname.slice(storagePrefix.length));
+  } catch {
+    return "";
+  }
 }
-function parseSections(value: unknown): CmsPageSection[] {
+function parseSections(value: unknown, baseUrl: string): CmsPageSection[] {
   let entries: unknown = value;
   if (typeof entries === "string") {
     try {
@@ -58,7 +69,7 @@ function parseSections(value: unknown): CmsPageSection[] {
     if (!item) return [];
     const title = asText(item["title"]).trim().slice(0, 160);
     const body = asText(item["body"]).trim().slice(0, 10000);
-    const imageUrl = safeImageUrl(item["imageUrl"]);
+    const imageUrl = safeImageUrl(item["imageUrl"], baseUrl);
     const imageAlt = asText(item["imageAlt"]).trim().slice(0, 500) || title;
     if (!title && !body && !imageUrl) return [];
     return [
@@ -72,7 +83,7 @@ function parseSections(value: unknown): CmsPageSection[] {
     ];
   });
 }
-function parsePage(value: unknown, now = Date.now()): PublishedCmsPage | null {
+function parsePage(value: unknown, baseUrl: string, now = Date.now()): PublishedCmsPage | null {
   const row = asRecord(value);
   if (!row || !isPublicAt(row["publication"], row["scheduled_at"], now)) return null;
   const slug = asText(row["slug"]);
@@ -87,7 +98,7 @@ function parsePage(value: unknown, now = Date.now()): PublishedCmsPage | null {
     seoDescription: asText(row["seo_description"]).trim().slice(0, 320),
     canonical: asText(row["canonical"]).trim().slice(0, 500),
     noindex: row["noindex"] === true,
-    sections: parseSections(fields?.["sections"]),
+    sections: parseSections(fields?.["sections"], baseUrl),
   };
 }
 
@@ -138,7 +149,7 @@ export async function fetchPublishedCmsPage(
 
   const payload: unknown = await response.json();
   if (!Array.isArray(payload)) throw new Error("Published CMS page response was not a list.");
-  const page = parsePage(payload[0], now);
+  const page = parsePage(payload[0], normalizedBaseUrl, now);
   return page?.slug === slug ? page : null;
 }
 

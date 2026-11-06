@@ -247,8 +247,12 @@ function MediaLibrary() {
   }
 
   async function copyPublicUrl(url: string) {
+    if (!url) {
+      toast.error("This media item has no valid public URL");
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(new URL(url, window.location.origin).toString());
       toast.success("Public image URL copied");
     } catch {
       setError("Could not copy URL. Select and copy it from the URL field.");
