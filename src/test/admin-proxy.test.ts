@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { adminProxyTarget, publicMediaProxyUrl } from "@/lib/admin-proxy";
+import {
+  adminProxyTarget,
+  isSafeStorageObjectPath,
+  isSafeWebsiteMediaDeletePayload,
+  publicMediaProxyUrl,
+  websiteMediaUploadProxyUrl,
+} from "@/lib/admin-proxy";
 
 describe("admin Supabase proxy allowlist", () => {
   it("allows Global SEO reads and updates through PostgREST", () => {
@@ -40,11 +46,25 @@ describe("admin Supabase proxy allowlist", () => {
   });
 
   it("allows only safe media object paths and supported methods", () => {
+    expect(isSafeStorageObjectPath("user-1/photo.png")).toBe(true);
+    expect(isSafeStorageObjectPath("../secret")).toBe(false);
     expect(publicMediaProxyUrl("website-media", "user-1/photo.png")).toBe(
       "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
     );
     expect(publicMediaProxyUrl("other-bucket", "user-1/photo.png")).toBe("");
     expect(publicMediaProxyUrl("website-media", "../secret")).toBe("");
+    expect(websiteMediaUploadProxyUrl("user-1/photo.png")).toBe(
+      "/api/admin-supabase/storage/v1/object/website-media/user-1/photo.png",
+    );
+    expect(websiteMediaUploadProxyUrl("../secret")).toBe("");
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: ["user-1/photo.png"] })).toBe(true);
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: [""] })).toBe(false);
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: ["user-1/", "user-2/"] })).toBe(false);
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: ["../secret"] })).toBe(false);
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: [] })).toBe(false);
+    expect(isSafeWebsiteMediaDeletePayload({ prefixes: ["user-1/photo.png"], extra: true })).toBe(
+      false,
+    );
     expect(
       adminProxyTarget(
         "/api/admin-supabase/storage/v1/object/website-media/user-1/photo.png",

@@ -3,7 +3,12 @@ import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision
 import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
-import { deleteWebsiteMediaObject, writeAdminRecord } from "@/lib/admin-mutations";
+import {
+  deleteWebsiteMediaObject,
+  uploadAndSaveWebsiteMedia,
+  validateWebsiteMediaUpload,
+  writeAdminRecord,
+} from "@/lib/admin-mutations";
 import { publicMediaProxyUrl } from "@/lib/admin-proxy";
 type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
@@ -144,22 +149,13 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function updateInquiry(r:Inquiry){if(!uuid(r.id))throw Error("Invalid inquiry.");const previous=data.inquiries.find(x=>x.id===r.id);const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/inquiries?id=eq."+r.id,method:"PATCH",body:{status:r.status,assigned_to:uuid(r.assignedTo)?r.assignedTo:null,follow_up:r.followUp||null},expectedId:r.id,operation:"Inquiry update"});const added=(r.notes||[]).slice(previous?.notes.length||0);try{for(const note of added)await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/inquiry_notes",method:"POST",body:{inquiry_id:r.id,body:note.text},operation:"Inquiry note save"});}catch(e){await refreshAfterWrite();throw Error("Inquiry status was saved, but one or more notes could not be confirmed; earlier notes may already have been saved. "+err(e));}const updated={...r,status:text(saved,"status",r.status) as Inquiry["status"],assignedTo:text(saved,"assigned_to"),followUp:text(saved,"follow_up")};setData(old=>({...old,inquiries:old.inquiries.map(x=>x.id===r.id?updated:x)}));void refreshAfterWrite();}
  async function addMedia(file:File,altText=""){
   if(!session||!cfg)throw Error("Please sign in.");
-  if(!altText.trim())throw Error("Add descriptive alt text before uploading this image.");
-  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size<=0||file.size>2097152)throw Error("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+  validateWebsiteMediaUpload(file,altText);
   const s=await fresh();const user=await call(cfg,s.access_token,"/auth/v1/user");
   const safeName=file.name.normalize("NFKD").replace(/[^A-Za-z0-9._~-]+/g,"-").replace(/-+/g,"-").replace(/^[-.]+|[-.]+$/g,"").slice(0,100)||"image";
   const objectPath=user.id+"/"+crypto.randomUUID()+"-"+safeName;
-  const upload=await fetch("/api/admin-supabase/storage/v1/object/website-media/"+objectPath,{method:"POST",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":file.type,"x-upsert":"false"},body:file});
-  const uploaded=await upload.json().catch(()=>null);if(!upload.ok)throw Error(err(uploaded));
-  try{
-   const saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets",method:"POST",body:{bucket_id:"website-media",object_path:objectPath,filename:file.name,content_type:file.type,file_size:file.size,alt_text:altText.trim().slice(0,500),owner_id:user.id,is_public:true},operation:"Media metadata save"});
-   const id=text(saved,"id");if(!uuid(id))throw Error("Image uploaded but valid media metadata was not returned.");
-   const media:MediaRecord={id,name:text(saved,"filename"),type:text(saved,"content_type"),size:numeric(saved,"file_size"),alt:text(saved,"alt_text"),bucketId:text(saved,"bucket_id"),objectPath:text(saved,"object_path"),url:publicMediaProxyUrl(text(saved,"bucket_id"),text(saved,"object_path"))};
-   setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
-  }catch(e){
-   try{await deleteWebsiteMediaObject(s.access_token,objectPath);}catch(cleanupError){throw Error(err(e)+" Uploaded object cleanup failed for "+objectPath+": "+err(cleanupError));}
-   throw e;
-  }
+  const saved=await uploadAndSaveWebsiteMedia({accessToken:s.access_token,ownerId:user.id,objectPath,file,altText});
+  const media:MediaRecord={id:text(saved,"id"),name:text(saved,"filename"),type:text(saved,"content_type"),size:numeric(saved,"file_size"),alt:text(saved,"alt_text"),bucketId:text(saved,"bucket_id"),objectPath:text(saved,"object_path"),url:publicMediaProxyUrl(text(saved,"bucket_id"),text(saved,"object_path"))};
+  setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
  }
  async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");if(!r.alt.trim())throw Error("Alt text is required for public images.");const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/media_assets?id=eq."+r.id,method:"PATCH",body:{filename:r.name,alt_text:r.alt.trim()},expectedId:r.id,operation:"Media metadata update"});const updated={...r,name:text(saved,"filename",r.name),alt:text(saved,"alt_text",r.alt.trim())};setData(old=>({...old,media:old.media.map(x=>x.id===r.id?updated:x)}));void refreshAfterWrite();}
  async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const media=data.media.find(x=>x.id===id);if(!media||media.bucketId!=="website-media"||!media.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets?id=eq."+id,method:"DELETE",expectedId:id,operation:"Media metadata deletion"});setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));try{await deleteWebsiteMediaObject(s.access_token,media.objectPath);}catch(e){void refreshAfterWrite();throw Error("Media metadata was deleted, but storage cleanup could not be confirmed for "+media.objectPath+": "+err(e));}void refreshAfterWrite();}

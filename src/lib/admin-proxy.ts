@@ -14,7 +14,7 @@ const ADMIN_TABLES = new Set([
 const PUBLIC_MEDIA_PREFIX = "/storage/v1/object/public/website-media/";
 const UPLOAD_MEDIA_PREFIX = "/storage/v1/object/website-media/";
 
-function safeStorageObjectPath(value: string): boolean {
+export function isSafeStorageObjectPath(value: string): boolean {
   return (
     value.length > 0 &&
     value
@@ -23,10 +23,29 @@ function safeStorageObjectPath(value: string): boolean {
   );
 }
 
+export function websiteMediaUploadProxyUrl(objectPath: string): string {
+  if (!isSafeStorageObjectPath(objectPath)) return "";
+  const url = ADMIN_PROXY_PREFIX + UPLOAD_MEDIA_PREFIX + objectPath;
+  return url.length <= 500 ? url : "";
+}
+
 export function publicMediaProxyUrl(bucketId: string, objectPath: string): string {
-  if (bucketId !== "website-media" || !safeStorageObjectPath(objectPath)) return "";
+  if (bucketId !== "website-media" || !isSafeStorageObjectPath(objectPath)) return "";
   const url = ADMIN_PROXY_PREFIX + PUBLIC_MEDIA_PREFIX + objectPath;
   return url.length <= 500 ? url : "";
+}
+
+export function isSafeWebsiteMediaDeletePayload(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Object.keys(value);
+  if (keys.length !== 1 || keys[0] !== "prefixes") return false;
+  const prefixes = (value as Record<string, unknown>)["prefixes"];
+  return (
+    Array.isArray(prefixes) &&
+    prefixes.length === 1 &&
+    typeof prefixes[0] === "string" &&
+    isSafeStorageObjectPath(prefixes[0])
+  );
 }
 
 /** Return only explicitly allowlisted Supabase paths for the same-origin admin proxy. */
@@ -50,14 +69,14 @@ export function adminProxyTarget(pathname: string, search: string, method: strin
   if (
     method === "GET" &&
     path.startsWith(PUBLIC_MEDIA_PREFIX) &&
-    safeStorageObjectPath(path.slice(PUBLIC_MEDIA_PREFIX.length))
+    isSafeStorageObjectPath(path.slice(PUBLIC_MEDIA_PREFIX.length))
   )
     return path + search;
 
   if (
     ["POST", "PUT"].includes(method) &&
     path.startsWith(UPLOAD_MEDIA_PREFIX) &&
-    safeStorageObjectPath(path.slice(UPLOAD_MEDIA_PREFIX.length))
+    isSafeStorageObjectPath(path.slice(UPLOAD_MEDIA_PREFIX.length))
   )
     return path + search;
 

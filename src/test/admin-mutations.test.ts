@@ -1,7 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { deleteWebsiteMediaObject, writeAdminRecord } from "@/lib/admin-mutations";
+import {
+  deleteWebsiteMediaObject,
+  uploadAndSaveWebsiteMedia,
+  validateWebsiteMediaUpload,
+  writeAdminRecord,
+} from "@/lib/admin-mutations";
 
 const recordId = "6a86e6f4-4bdc-4c79-b8ac-3b94d6b7e531";
+const objectPath = recordId + "/photo.png";
+
+function imageFile(type = "image/png", size = 1): File {
+  return new File([new Uint8Array(size)], "photo.png", { type });
+}
 
 function request(fetchImpl: typeof fetch) {
   return writeAdminRecord(
@@ -119,6 +129,230 @@ describe("admin CMS mutation response", () => {
 });
 
 describe("website media object cleanup", () => {
+  it("validates MIME type, nonempty size, maximum size, and required alt text", () => {
+    expect(() => validateWebsiteMediaUpload(imageFile(), "A shipment document")).not.toThrow();
+    expect(() =>
+      validateWebsiteMediaUpload(imageFile("image/png", 2_097_152), "A shipment document"),
+    ).not.toThrow();
+    expect(() => validateWebsiteMediaUpload(imageFile("image/gif"), "A shipment document")).toThrow(
+      "Only JPG, PNG or WebP images up to 2 MB are accepted.",
+    );
+    expect(() =>
+      validateWebsiteMediaUpload(imageFile("image/png", 0), "A shipment document"),
+    ).toThrow("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+    expect(() =>
+      validateWebsiteMediaUpload(imageFile("image/png", 2_097_153), "A shipment document"),
+    ).toThrow("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+    expect(() => validateWebsiteMediaUpload(imageFile(), "   ")).toThrow(
+      "Add descriptive alt text before uploading this image.",
+    );
+  });
+
+  it("uploads with authorization and saves metadata only after a successful storage response", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ Key: "website-media/" + objectPath })))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              id: recordId,
+              bucket_id: "website-media",
+              object_path: objectPath,
+              owner_id: recordId,
+            },
+          ]),
+          {
+            status: 201,
+          },
+        ),
+      );
+
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "  Shipment document  ",
+        },
+        fetchImpl,
+      ),
+    ).resolves.toMatchObject({
+      id: recordId,
+      bucket_id: "website-media",
+      object_path: objectPath,
+      owner_id: recordId,
+    });
+
+    const uploadCall = fetchImpl.mock.calls[0];
+    expect(uploadCall?.[0]).toBe(
+      "/api/admin-supabase/storage/v1/object/website-media/" + objectPath,
+    );
+    expect(uploadCall?.[1]).toMatchObject({
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-access-token",
+        "Content-Type": "image/png",
+        "x-upsert": "false",
+      },
+    });
+    const metadataBody = JSON.parse(String(fetchImpl.mock.calls[1]?.[1]?.body)) as {
+      object_path: string;
+      alt_text: string;
+      owner_id: string;
+    };
+    expect(metadataBody).toMatchObject({
+      object_path: objectPath,
+      alt_text: "Shipment document",
+      owner_id: recordId,
+    });
+  });
+
+  it("reports storage upload errors and does not attempt metadata creation", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ message: "Storage rejected the upload." }), { status: 413 }),
+      );
+
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "Shipment document",
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("Storage rejected the upload.");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["missing authentication", { accessToken: "" }],
+    ["unsafe path", { objectPath: "../photo.png" }],
+    ["path outside the authenticated user's folder", { objectPath: "other-user/photo.png" }],
+  ])("rejects %s before making a storage request", async (_label, overrides) => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "Shipment document",
+          ...overrides,
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("cleans up an uploaded object if metadata creation fails", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ Key: "website-media/" + objectPath })))
+      .mockResolvedValueOnce(new Response("[]", { status: 201 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "Shipment document",
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("expected one affected record");
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl.mock.calls[2]?.[0]).toBe(
+      "/api/admin-supabase/storage/v1/object/website-media",
+    );
+    expect(fetchImpl.mock.calls[2]?.[1]?.body).toBe(JSON.stringify({ prefixes: [objectPath] }));
+  });
+
+  it("cleans up when the returned metadata does not match the uploaded object", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ Key: "website-media/" + objectPath })))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              id: recordId,
+              bucket_id: "website-media",
+              object_path: "another-user/other.png",
+              owner_id: recordId,
+            },
+          ]),
+          { status: 201 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "Shipment document",
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("Media metadata did not match the uploaded object.");
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it("reports the uploaded object path if metadata failure cleanup also fails", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ Key: "website-media/" + objectPath })))
+      .mockResolvedValueOnce(new Response("[]", { status: 201 }))
+      .mockResolvedValueOnce(new Response(null, { status: 500 }));
+
+    await expect(
+      uploadAndSaveWebsiteMedia(
+        {
+          accessToken: "test-access-token",
+          ownerId: recordId,
+          objectPath,
+          file: imageFile(),
+          altText: "Shipment document",
+        },
+        fetchImpl,
+      ),
+    ).rejects.toThrow(
+      `Uploaded object cleanup failed for ${objectPath}: Storage object deletion failed with status 500.`,
+    );
+  });
+
+  it("rejects unsafe cleanup paths without issuing a request", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(
+      deleteWebsiteMediaObject("test-access-token", "../secret", fetchImpl),
+    ).rejects.toThrow("Invalid media object path.");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("rejects missing cleanup authentication without issuing a request", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(deleteWebsiteMediaObject("", objectPath, fetchImpl)).rejects.toThrow(
+      "Authentication required.",
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("deletes only the requested object prefix through the admin proxy", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
 

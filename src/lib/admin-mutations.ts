@@ -1,3 +1,5 @@
+import { isSafeStorageObjectPath, websiteMediaUploadProxyUrl } from "@/lib/admin-proxy";
+
 type MutationMethod = "POST" | "PATCH" | "DELETE";
 type JsonRecord = Record<string, unknown>;
 
@@ -21,6 +23,121 @@ function errorMessage(value: unknown): string | null {
     if (typeof message === "string" && message) return message;
   }
   return null;
+}
+
+export function validateWebsiteMediaUpload(
+  file: Pick<File, "type" | "size">,
+  altText: string,
+): void {
+  if (!altText.trim()) throw new Error("Add descriptive alt text before uploading this image.");
+  if (
+    !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+    file.size <= 0 ||
+    file.size > 2_097_152
+  ) {
+    throw new Error("Only JPG, PNG or WebP images up to 2 MB are accepted.");
+  }
+}
+
+export async function uploadAndSaveWebsiteMedia(
+  input: {
+    accessToken: string;
+    ownerId: string;
+    objectPath: string;
+    file: File;
+    altText: string;
+  },
+  fetchImpl: typeof fetch = fetch,
+): Promise<JsonRecord> {
+  validateWebsiteMediaUpload(input.file, input.altText);
+  if (!input.accessToken.trim()) throw new Error("Authentication required.");
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      input.ownerId,
+    )
+  ) {
+    throw new Error("Authenticated user identity is invalid.");
+  }
+  if (
+    !isSafeStorageObjectPath(input.objectPath) ||
+    input.objectPath.split("/")[0] !== input.ownerId
+  ) {
+    throw new Error("Invalid media object path.");
+  }
+  const uploadUrl = websiteMediaUploadProxyUrl(input.objectPath);
+  if (!uploadUrl) throw new Error("Invalid media object path.");
+
+  const upload = await fetchImpl(uploadUrl, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + input.accessToken,
+      "Content-Type": input.file.type,
+      "x-upsert": "false",
+    },
+    body: input.file,
+  });
+  if (!upload.ok) {
+    const raw = await upload.text();
+    let payload: unknown = null;
+    if (raw) {
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = { message: raw };
+      }
+    }
+    throw new Error(errorMessage(payload) ?? `Storage upload failed with status ${upload.status}.`);
+  }
+
+  try {
+    const saved = await writeAdminRecord(
+      {
+        accessToken: input.accessToken,
+        path: "/rest/v1/media_assets",
+        method: "POST",
+        body: {
+          bucket_id: "website-media",
+          object_path: input.objectPath,
+          filename: input.file.name,
+          content_type: input.file.type,
+          file_size: input.file.size,
+          alt_text: input.altText.trim().slice(0, 500),
+          owner_id: input.ownerId,
+          is_public: true,
+        },
+        operation: "Media metadata save",
+      },
+      fetchImpl,
+    );
+    if (
+      typeof saved["id"] !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        saved["id"],
+      )
+    ) {
+      throw new Error("Image uploaded but valid media metadata was not returned.");
+    }
+    if (
+      saved["bucket_id"] !== "website-media" ||
+      saved["object_path"] !== input.objectPath ||
+      saved["owner_id"] !== input.ownerId
+    ) {
+      throw new Error("Media metadata did not match the uploaded object.");
+    }
+    return saved;
+  } catch (error) {
+    try {
+      await deleteWebsiteMediaObject(input.accessToken, input.objectPath, fetchImpl);
+    } catch (cleanupError) {
+      const saveMessage = error instanceof Error ? error.message : "Media metadata save failed.";
+      const cleanupMessage =
+        cleanupError instanceof Error ? cleanupError.message : "Storage cleanup failed.";
+      throw new Error(
+        `${saveMessage} Uploaded object cleanup failed for ${input.objectPath}: ${cleanupMessage}`,
+      );
+    }
+    throw error;
+  }
 }
 
 export async function writeAdminRecord(
@@ -78,6 +195,8 @@ export async function deleteWebsiteMediaObject(
   objectPath: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
+  if (!accessToken.trim()) throw new Error("Authentication required.");
+  if (!isSafeStorageObjectPath(objectPath)) throw new Error("Invalid media object path.");
   const response = await fetchImpl("/api/admin-supabase/storage/v1/object/website-media", {
     method: "DELETE",
     headers: {

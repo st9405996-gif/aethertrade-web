@@ -1,5 +1,5 @@
 import "./lib/error-capture";
-import { adminProxyTarget } from "./lib/admin-proxy";
+import { adminProxyTarget, isSafeWebsiteMediaDeletePayload } from "./lib/admin-proxy";
 import { readServerEnv } from "./lib/server-env.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -59,7 +59,7 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   if (!base || !key) return new Response(JSON.stringify({message:"Supabase server connection settings are missing."}), {status:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
   const target = adminProxyTarget(requestUrl.pathname, requestUrl.search, request.method);
   if (!target) return new Response("Not found", {status:404});
-  const targetPath = target.split("?")[0];
+  const targetPath = target.split("?")[0] ?? "";
   const storage = targetPath.startsWith("/storage/v1/object/");
   const publicStorageRead = targetPath.startsWith("/storage/v1/object/public/website-media/") && request.method === "GET";
   const publicAuth = targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover";
@@ -72,7 +72,37 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   const headers = new Headers({apikey:key});
   for (const name of ["accept","content-type","prefer","range","x-upsert","cache-control"]) { const value=request.headers.get(name); if(value) headers.set(name,value); }
   if (authorization) headers.set("authorization",authorization);
-  const upstream = await fetch(new URL(target,base), {method:request.method,headers,body:["GET","HEAD"].includes(request.method)?undefined:await request.arrayBuffer(),redirect:"manual"});
+  const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
+  if (request.method === "DELETE" && targetPath === "/storage/v1/object/website-media") {
+    let deletion: unknown;
+    try {
+      deletion = JSON.parse(new TextDecoder().decode(body ?? new ArrayBuffer(0)));
+    } catch {
+      return new Response(JSON.stringify({ message: "Invalid media object deletion request." }), {
+        status: 400,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+        },
+      });
+    }
+    if (!isSafeWebsiteMediaDeletePayload(deletion)) {
+      return new Response(JSON.stringify({ message: "Invalid media object deletion request." }), {
+        status: 400,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+        },
+      });
+    }
+  }
+  const upstreamRequest: RequestInit = {
+    method: request.method,
+    headers,
+    redirect: "manual",
+  };
+  if (body !== undefined) upstreamRequest.body = body;
+  const upstream = await fetch(new URL(target, base), upstreamRequest);
   const outHeaders = new Headers();
   for (const name of ["content-type","content-range","accept-ranges","etag","last-modified"]) { const value=upstream.headers.get(name); if(value) outHeaders.set(name,value); }
   outHeaders.set("cache-control",publicStorageRead?"public, max-age=300":"no-store");
