@@ -28,6 +28,7 @@ import {
   contentSchema,
   isPublic,
   canExportRows,
+  filterContentRecords,
   filterInquiries,
   serializeCsv,
   type ModuleId,
@@ -184,7 +185,7 @@ function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly
   const [search, setSearch] = useState(""); const [status, setStatus] = useState("All"); const [category, setCategory] = useState("All");
   const [edit, setEdit] = useState<ContentRecord | null>(null); const [preview, setPreview] = useState<ContentRecord | null>(null); const [remove, setRemove] = useState<ContentRecord | null>(null);
   const records = data.records.filter(r => r.module === module).sort((a, b) => a.position - b.position);
-  const filtered = records.filter(r => `${r.title} ${r.body} ${r.category}`.toLowerCase().includes(search.toLowerCase()) && (status === "All" || r.publication === status) && (category === "All" || r.category === category));
+  const filtered = filterContentRecords(records, { search, status, category });
   const writable = demoCan(role, ["branding", "settings", "navigation"].includes(module) ? "settings" : "draft");
   return <><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-2"><div className="relative"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground"/><Input aria-label="Search records" className="w-64 pl-9" placeholder="Search records…" value={search} onChange={e => setSearch(e.target.value)}/></div><select aria-label="Publication filter" className={selectClass} value={status} onChange={e => setStatus(e.target.value)}><option value="All">All states</option>{publicationValues.map(v => <option key={v}>{v}</option>)}</select><select aria-label="Category filter" className={selectClass} value={category} onChange={e => setCategory(e.target.value)}><option value="All">All categories</option>{[...new Set(records.map(r => r.category).filter(Boolean))].map(v => <option key={v}>{v}</option>)}</select></div>{!seoOnly && <Button disabled={!writable} onClick={() => setEdit({ ...makeRecord(module), id: crypto.randomUUID(), position: records.length })}><Plus/>New record</Button>}</div>
     <p className="mb-4 text-xs text-muted-foreground">{filtered.length} records · changes are saved to the connected CMS database</p>

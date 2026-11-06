@@ -96,6 +96,18 @@ export function filterInquiries(
       (filters.kind === "All" || r.kind === filters.kind),
   );
 }
+export function filterContentRecords(
+  records: ContentRecord[],
+  filters: { search: string; status: string; category: string },
+) {
+  const search = filters.search.trim().toLowerCase();
+  return records.filter(
+    (record) =>
+      `${record.title} ${record.body} ${record.category}`.toLowerCase().includes(search) &&
+      (filters.status === "All" || record.publication === filters.status) &&
+      (filters.category === "All" || record.category === filters.category),
+  );
+}
 export function makeRecord(module: string, title = "Untitled", body = "", position = 0): ContentRecord {
   return { id: `${module}-${position}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, module, title,
     slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "untitled",

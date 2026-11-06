@@ -9,6 +9,7 @@ import {
   safeCsvCell,
   serializeCsv,
   canExportRows,
+  filterContentRecords,
   filterInquiries,
   availabilityValues,
   inquiryValues,
@@ -135,6 +136,52 @@ describe("Disconnected workspace business rules", () => {
         ...filtered.map((row) => [row.reference, row.company, row.kind, row.status]),
       ]),
     ).toBe('"Reference","Company","Type","Status"\n"AT-001","Acme","demo","New"');
+  });
+  it("applies content search, publication, and category filters together", () => {
+    const records = [
+      {
+        ...makeRecord("pages", "Trade Operations", "Coordinate trade workflows"),
+        category: "Operations",
+        publication: "Published" as const,
+      },
+      {
+        ...makeRecord("pages", "Trade Operations", "Coordinate trade workflows"),
+        category: "Operations",
+        publication: "Draft" as const,
+      },
+      {
+        ...makeRecord("pages", "Trade Operations", "Coordinate trade workflows"),
+        category: "Other",
+        publication: "Published" as const,
+      },
+      {
+        ...makeRecord("pages", "Unrelated", "Different content"),
+        category: "Operations",
+        publication: "Published" as const,
+      },
+    ];
+
+    expect(
+      filterContentRecords(records, {
+        search: "  TRADE ",
+        status: "Published",
+        category: "Operations",
+      }),
+    ).toEqual([records[0]]);
+  });
+  it("returns no content rows for unmatched filters and all rows when filters reset", () => {
+    const records = [makeRecord("pages", "About", "About the company")];
+
+    expect(
+      filterContentRecords(records, {
+        search: "missing",
+        status: "Published",
+        category: "All",
+      }),
+    ).toEqual([]);
+    expect(filterContentRecords(records, { search: "", status: "All", category: "All" })).toEqual(
+      records,
+    );
   });
   it("disables CSV export when there are no rows or the role lacks export permission", () => {
     expect(canExportRows("Sales Manager", 1)).toBe(true);
