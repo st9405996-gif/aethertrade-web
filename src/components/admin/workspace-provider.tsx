@@ -11,12 +11,22 @@ import {
   writeAdminRecord,
 } from "@/lib/admin-mutations";
 import { mapAdminMediaRecord } from "@/lib/admin-media";
+import { toast } from "sonner";
+import {
+  createAdminSession,
+  logoutAdminSession,
+  needsAdminSessionRefresh,
+  parseStoredAdminSession,
+  recoveryAccessToken,
+  refreshAdminSession,
+  type AdminSession,
+} from "@/lib/admin-session";
 type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
   const publicConfig = await getAdminPublicConfig();
   return { configured: true, url: publicConfig.url.replace(/\/$/, "") };
 }
-type Session={access_token:string;refresh_token:string;expires_at:number;user:{id:string}};
+type Session=AdminSession;
 type JsonRow = Record<string, unknown>;
 const row = (value: unknown): JsonRow => value !== null && typeof value === "object" && !Array.isArray(value) ? value as JsonRow : {};
 const text = (source: JsonRow, key: string, fallback = ""): string => typeof source[key] === "string" ? source[key] as string : fallback;
@@ -93,8 +103,8 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState("");
  const [globalSeo,setGlobalSeo]=useState<GlobalSeoSettings>(DEFAULT_GLOBAL_SEO),[globalSeoPublished,setGlobalSeoPublished]=useState(false);
  const store=(s:Session)=>{localStorage.setItem(KEY,JSON.stringify(s));setSession(s);};
- async function refresh(c:Config,s:Session){const r=await fetch("/api/admin-supabase/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({refresh_token:s.refresh_token})});const x=await r.json();if(!r.ok)throw Error(err(x));const n={access_token:x.access_token,refresh_token:x.refresh_token,expires_at:Math.floor(Date.now()/1000)+Number(x.expires_in||3600),user:x.user};store(n);return n;}
- async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return session.expires_at<Math.floor(Date.now()/1000)+60?refresh(cfg,session):session;}
+ async function refresh(s:Session){const n=await refreshAdminSession(s);store(n);return n;}
+ async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return needsAdminSessionRefresh(session)?refresh(session):session;}
  async function load(c:Config,s:Session){
   const [rs,is,ns,ms,vs,as,es,subs,seoRows]=await Promise.all([
    call(c,s.access_token,"/rest/v1/content_records?select=*&order=position.asc"),
@@ -129,12 +139,12 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   setAuthenticated(true);setStorageError("");
  }
  async function adminRole(c:Config,s:Session){const u=await call(c,s.access_token,"/auth/v1/user");const rows=await call(c,s.access_token,"/rest/v1/user_roles?select=role&user_id=eq."+encodeURIComponent(u.id));if(!rows?.length)throw Error("This account has no AETHER-TRADE administrator role.");return rows[0].role as Role;}
- useEffect(()=>{let active=true;(async()=>{try{const c=await getConfig();if(!active)return;setCfg(c);const raw=localStorage.getItem(KEY);if(!raw){setReady(true);return;}let s=JSON.parse(raw) as Session;if(s.expires_at<Math.floor(Date.now()/1000)+60)s=await refresh(c,s);const r=await adminRole(c,s);if(!active)return;setRole(r);await load(c,s);}catch(e){localStorage.removeItem(KEY);if(active){setAuthenticated(false);setAuthError(err(e));setStorageError(err(e));}}finally{if(active)setReady(true);}})();return()=>{active=false;};},[]);
- async function signIn(email:string,password:string){const c=cfg||await getConfig();setCfg(c);setAuthError("");const r=await fetch("/api/admin-supabase/auth/v1/token?grant_type=password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.trim(),password})});const x=await r.json();if(!r.ok)throw Error(err(x));const s:Session={access_token:x.access_token,refresh_token:x.refresh_token,expires_at:Math.floor(Date.now()/1000)+Number(x.expires_in||3600),user:x.user};store(s);try{setRole(await adminRole(c,s));await load(c,s);}catch(e){localStorage.removeItem(KEY);setSession(null);setAuthenticated(false);throw e;}}
- async function signOut(){if(cfg&&session)await call(cfg,session.access_token,"/auth/v1/logout","POST").catch(()=>null);localStorage.removeItem(KEY);setSession(null);setAuthenticated(false);setData(empty());setRole("Viewer");}
+ useEffect(()=>{let active=true;(async()=>{try{const c=await getConfig();if(!active)return;setCfg(c);const raw=localStorage.getItem(KEY);if(!raw){setReady(true);return;}let s=parseStoredAdminSession(raw);store(s);if(needsAdminSessionRefresh(s))s=await refresh(s);const r=await adminRole(c,s);if(!active)return;setRole(r);await load(c,s);}catch(e){localStorage.removeItem(KEY);if(active){setAuthenticated(false);setAuthError(err(e));setStorageError(err(e));}}finally{if(active)setReady(true);}})();return()=>{active=false;};},[]);
+ async function signIn(email:string,password:string){const c=cfg||await getConfig();setCfg(c);setAuthError("");const r=await fetch("/api/admin-supabase/auth/v1/token?grant_type=password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.trim(),password})});const x=await r.json().catch(()=>null);if(!r.ok)throw Error(err(x));const s=createAdminSession(x);store(s);try{setRole(await adminRole(c,s));await load(c,s);}catch(e){localStorage.removeItem(KEY);setSession(null);setAuthenticated(false);throw e;}}
+ async function signOut(){const result=await logoutAdminSession(async()=>{if(cfg&&session)await call(cfg,session.access_token,"/auth/v1/logout","POST");},()=>{localStorage.removeItem(KEY);setSession(null);setAuthenticated(false);setData(empty());setRole("Viewer");});if(!result.revoked)toast.error("Signed out on this device, but server session revocation could not be confirmed.");}
  async function sendPasswordRecovery(email:string){const c=cfg||await getConfig();const r=await fetch("/api/admin-supabase/auth/v1/recover?redirect_to="+encodeURIComponent(location.origin+"/reset-password"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.trim()})});const x=await r.json().catch(()=>null);if(!r.ok)throw Error(err(x));}
- const validateRecoverySession=useCallback(async()=>{try{const hash=new URLSearchParams(window.location.hash.slice(1));const token=hash.get("access_token");if(!token||!["recovery","invite"].includes(hash.get("type")??""))return false;const c=await getConfig();await call(c,token,"/auth/v1/user");return true;}catch{return false;}},[]);
- async function updatePassword(password:string){if(password.length<8)throw Error("Use a password with at least 8 characters.");const hash=new URLSearchParams(window.location.hash.slice(1));const token=hash.get("access_token");if(!token||!["recovery","invite"].includes(hash.get("type")??""))throw Error("Account link is invalid or expired. Request a fresh invite or recovery link.");const c=cfg||await getConfig();await call(c,token,"/auth/v1/user");await call(c,token,"/auth/v1/user","PUT",{password});history.replaceState(null,"",location.pathname+location.search);}
+ const validateRecoverySession=useCallback(async()=>{try{const token=recoveryAccessToken(window.location.hash);if(!token)return false;const c=await getConfig();await call(c,token,"/auth/v1/user");return true;}catch{return false;}},[]);
+ async function updatePassword(password:string){if(password.length<8)throw Error("Use a password with at least 8 characters.");const token=recoveryAccessToken(window.location.hash);if(!token)throw Error("Account link is invalid or expired. Request a fresh invite or recovery link.");const c=cfg||await getConfig();await call(c,token,"/auth/v1/user");await call(c,token,"/auth/v1/user","PUT",{password});history.replaceState(null,"",location.pathname+location.search);}
  async function write(path:string,method:string,body?:unknown){const s=await fresh();return call(cfg!,s.access_token,path,method,body);}
  async function refreshAfterWrite(){try{const s=await fresh();await load(cfg!,s);}catch(e){setStorageError("Your change was saved, but the workspace could not refresh: "+err(e));}}
  async function save(r:ContentRecord){const id=uuid(r.id)?r.id:crypto.randomUUID();const existing=data.records.some(x=>x.id===id);const row={id,module:r.module,slug:r.slug,title:r.title,body:r.body,category:r.category,fields:r.fields,publication:r.publication,availability:r.availability,position:r.position,scheduled_at:r.scheduledAt||null,seo_title:r.seoTitle,seo_description:r.seoDescription,canonical:r.canonical,noindex:r.noindex};const s=await fresh();const saved=await writeAdminRecord({accessToken:s.access_token,path:existing?"/rest/v1/content_records?id=eq."+id:"/rest/v1/content_records",method:existing?"PATCH":"POST",body:row,expectedId:id,operation:"Content save"});const savedRecord=mapRecord(saved);setData(old=>({...old,records:[...old.records.filter(x=>x.id!==id),savedRecord]}));void refreshAfterWrite();}
