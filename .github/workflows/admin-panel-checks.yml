@@ -3,7 +3,8 @@ name: Admin Panel Checks
 on:
   push:
     branches:
-      - admin-panel-p0-p2-completion
+      - main
+      - admin-panel-final-hardening
   pull_request:
     branches:
       - main

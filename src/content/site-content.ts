@@ -1,7 +1,7 @@
 /**
- * Default public-site content. Milestone 3 moves this into the CMS database;
- * until then pages read from here. Every capability carries an availability
- * status and engagement scope are explicit.
+ * Static public-site fallback content and seed data for the demo workspace.
+ * Public routes use published CMS records when available and retain intentional
+ * route-specific static content.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
@@ -205,9 +205,3 @@ export const PARTNERSHIP_TYPES = [
   { title: "Implementation partners", body: "Consultancies and integrators who support trade and logistics businesses." },
   { title: "Industry associations", body: "Organizations that help members modernize operations and could co-host education." },
 ];
-
-/** Careers publishing state — flipped by the CMS in Milestone 4. */
-export const CAREERS = {
-  published: false,
-  openings: [] as { title: string; location: string; type: string }[],
-};

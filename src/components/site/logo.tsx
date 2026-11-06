@@ -19,14 +19,8 @@ export function Logo({ className }: { className?: string }) {
         aria-hidden="true"
         fill="none"
       >
-        <path
-          d="M22 4.5 5.5 38h8.1L22 21.1 30.4 38h8.1L22 4.5Z"
-          className="fill-foreground"
-        />
-        <path
-          d="M16.4 28.7h11.2l3.1 6.2H13.3l3.1-6.2Z"
-          className="fill-primary"
-        />
+        <path d="M22 4.5 5.5 38h8.1L22 21.1 30.4 38h8.1L22 4.5Z" className="fill-foreground" />
+        <path d="M16.4 28.7h11.2l3.1 6.2H13.3l3.1-6.2Z" className="fill-primary" />
         <ellipse
           cx="22"
           cy="22"

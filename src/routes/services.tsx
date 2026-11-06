@@ -1,22 +1,52 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
+import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CardGrid, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
 import { SERVICES } from "@/content/site-content";
+import { parseAvailabilityStatus } from "@/lib/availability-status";
 
 export const Route = createFileRoute("/services")({
-  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "services" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() =>
-    meta(
-      "Services",
-      "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
-    ))(), loaderData?.cmsPage) ,
+  loader: async () => ({
+    cmsPage: await getPublishedCmsPage({ data: { slug: "services" } }),
+    items: await getPublishedContentRecords({ data: { module: "services" } }),
+  }),
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      meta(
+        "Services",
+        "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
+      ),
+      loaderData?.cmsPage,
+    ),
   component: ServicesPage,
 });
-
 function ServicesPage() {
+  const { items, cmsPage } = Route.useLoaderData();
+  const cards = items.length
+    ? items.map((item) => {
+        const status =
+          parseAvailabilityStatus(item.availability) ??
+          (item.availability.trim() ? undefined : "Custom Build");
+        return {
+          title: item.title,
+          body: item.body,
+          ...(status ? { status } : {}),
+          points: (item.fields["deliverables"] || "")
+            .split("\n")
+            .map((x) => x.trim())
+            .filter(Boolean),
+        };
+      })
+    : SERVICES.map((item) => ({
+        title: item.title,
+        body: item.body,
+        status: item.status,
+        points: item.deliverables,
+      }));
   return (
     <>
       <PageHero
@@ -31,10 +61,14 @@ function ServicesPage() {
       <section className="container-page section-pad">
         <SectionHeader eyebrow="What we offer" title="Services" />
         <div className="mt-12">
-          <CardGrid items={SERVICES.map((s) => ({ title: s.title, body: s.body, status: s.status, points: s.deliverables }))} />
+          <CardGrid items={cards} />
         </div>
       </section>
-      <CtaBand title="Start with an operations assessment." description="A clear picture of where automation will — and won't — help." />
+      <CmsPageSections page={cmsPage} />
+      <CtaBand
+        title="Start with an operations assessment."
+        description="A clear picture of where automation will — and won't — help."
+      />
     </>
   );
 }

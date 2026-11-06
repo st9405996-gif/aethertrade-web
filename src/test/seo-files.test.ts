@@ -8,11 +8,19 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const sitemap = readFileSync(join(root, "public/sitemap.xml"), "utf8");
 const robots = readFileSync(join(root, "public/robots.txt"), "utf8");
+const llms = readFileSync(join(root, "public/llms.txt"), "utf8");
+const seoConfig: {
+  site: { url: string };
+  pages: Array<{ path: string; indexable: boolean; llmsLabel?: string }>;
+} = JSON.parse(readFileSync(join(root, "content/seo.json"), "utf8"));
 const routesDir = join(root, "src/routes");
 
 const sitemapPaths = [
   ...sitemap.matchAll(/<loc>https:\/\/aethertrade\.cloud(\/[^<]*)<\/loc>/g),
 ].map((m) => m[1]!);
+const llmsPaths = [...llms.matchAll(/\]\((https:\/\/aethertrade\.cloud[^)]*)\)/g)].map(
+  (match) => new URL(match[1]!).pathname,
+);
 
 /** Maps a route file to its URL path (index.tsx -> /, platform.tsx -> /platform). */
 function routePathOf(file: string): string {
@@ -43,6 +51,18 @@ describe("SEO files", () => {
   it("every sitemap path is an existing route file", () => {
     const files = new Set(readdirSync(routesDir).map(routePathOf));
     for (const path of sitemapPaths) {
+      expect(files.has(path), `missing route for ${path}`).toBe(true);
+    }
+  });
+
+  it("llms.txt lists only configured public pages with a route", () => {
+    const expectedPaths = seoConfig.pages
+      .filter((page) => page.indexable && page.llmsLabel)
+      .map((page) => page.path);
+    expect(llmsPaths).toEqual(expectedPaths);
+
+    const files = new Set(readdirSync(routesDir).map(routePathOf));
+    for (const path of llmsPaths) {
       expect(files.has(path), `missing route for ${path}`).toBe(true);
     }
   });

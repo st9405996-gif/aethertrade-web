@@ -21,6 +21,8 @@ import { Toaster } from "@/components/ui/sonner";
 import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
+import { ConsentedClarityTracker } from "@/components/site/consented-clarity-tracker";
+import { getGlobalSeoSettings } from "@/lib/global-seo.functions";
 
 // Enterprise typography — Inter-first system stack with bundled Geist fallback.
 import "@fontsource/geist-sans/400.css";
@@ -94,22 +96,22 @@ const SITE_URL = "https://aethertrade.cloud";
 const GOOGLE_ANALYTICS_ID = "G-JY6M0YJY1S";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: () => getGlobalSeoSettings(),
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AETHER-TRADE — Trade Automation Engineering" },
+      { title: loaderData?.defaultTitle || "AETHER-TRADE — Trade Automation Engineering" },
       {
         name: "description",
-        content:
-          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
+        content: loaderData?.defaultDescription || "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
       },
-      { name: "author", content: "AETHER-TRADE" },
-      { property: "og:title", content: "AETHER-TRADE" },
-      {
-        property: "og:description",
-        content: "Custom document intelligence and workflow automation for global trade.",
-      },
+      { name: "author", content: loaderData?.siteName || "AETHER-TRADE" },
+      { property: "og:title", content: loaderData?.defaultTitle || "AETHER-TRADE" },
+      { property: "og:description", content: loaderData?.defaultDescription || "Custom document intelligence and workflow automation for global trade." },
+      ...(loaderData?.defaultOgImage ? [{ property: "og:image", content: loaderData.defaultOgImage }, { name: "twitter:image", content: loaderData.defaultOgImage }] : []),
+      ...(loaderData?.googleVerification ? [{ name: "google-site-verification", content: loaderData.googleVerification }] : []),
+      ...(loaderData?.bingVerification ? [{ name: "msvalidate.01", content: loaderData.bingVerification }] : []),
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -137,18 +139,19 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
           {
             "@context": "https://schema.org",
             "@type": "Organization",
-            name: "AETHER-TRADE",
-            url: SITE_URL,
-            description:
-              "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
+            name: loaderData?.organizationName || "AETHER-TRADE",
+            url: loaderData?.organizationUrl || loaderData?.siteUrl || SITE_URL,
+            description: loaderData?.organizationDescription || "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
+            ...(loaderData?.organizationLogo ? { logo: loaderData.organizationLogo } : {}),
+            ...(loaderData?.sameAs?.length ? { sameAs: loaderData.sameAs } : {}),
           },
           {
             "@context": "https://schema.org",
             "@type": "WebSite",
-            name: "AETHER-TRADE",
-            url: SITE_URL,
+            name: loaderData?.siteName || "AETHER-TRADE",
+            url: loaderData?.siteUrl || SITE_URL,
           },
-        ]),
+        ]).replace(/</g, "\\u003c"),
       },
     ],
     links: [
@@ -211,7 +214,7 @@ function RootComponent() {
   const cmsPage = leafMatch?.loaderData?.cmsPage ?? null;
   const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
   const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
-  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo";
+  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo" || pathname.startsWith("/pages/");
 
   useEffect(() => {
     if (pathname !== "/") return;
@@ -270,6 +273,7 @@ function RootComponent() {
             {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
           </main>
           {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname}/>}
+          {!bareAuthPage && <ConsentedClarityTracker />}
           {!bareAuthPage && <Footer />}
         </div>
         <Toaster />

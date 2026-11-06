@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import {
   ArrowRight,
   FolderX,
@@ -199,6 +200,7 @@ const FAQS = [
 ];
 
 function HomePage() {
+  const { cmsPage } = Route.useLoaderData();
   return (
     <>
       <Hero />
@@ -211,6 +213,7 @@ function HomePage() {
       <CustomServices />
       <TrustGovernance />
       <FaqSection />
+      <CmsPageSections page={cmsPage} />
       <CtaBand
         title="Bring Your Trade Operations Into One Connected Workflow."
         description="Tell us about your business, your operational challenges and what you want to improve — we'll show you what a connected workflow could look like."

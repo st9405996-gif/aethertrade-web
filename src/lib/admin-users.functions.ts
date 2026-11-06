@@ -1,5 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+<<<<<<< HEAD
+=======
+import { attemptInvitedUserRevocation } from "@/lib/admin-user-compensation";
+import { readServerEnv } from "@/lib/server-env.server";
+>>>>>>> origin/main
 
 const OWNER_ID = "bfc5b3bb-aa5d-496a-ad0b-ac14834ea690";
 const roleSchema = z.enum(["Administrator", "Content Editor", "Sales Manager", "Viewer"]);
@@ -19,7 +24,7 @@ const removeSchema = z.object({ accessToken: accessTokenSchema, targetUserId: z.
 
 type AdminEnvironment = { baseUrl: string; publishableKey: string; serviceKey: string; siteUrl: string };
 type AuthUser = { id: string; email?: string; created_at?: string; user_metadata?: Record<string, unknown> };
-type RoleRow = { user_id: string; role: string; display_name?: string | null };
+type RoleRow = { user_id: string; role: string };
 export type AdminUserRecord = { userId: string; email: string; displayName: string; role: string; createdAt: string };
 
 async function getAdminEnvironment(): Promise<AdminEnvironment> {
@@ -87,7 +92,7 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
     if (!consumeInviteLimit()) throw new Error("Invitation limit reached. Try again later.");
 
     const inviteUrl = new URL(env.baseUrl + "/auth/v1/invite");
-    inviteUrl.searchParams.set("redirect_to", env.siteUrl + "/");
+    inviteUrl.searchParams.set("redirect_to", env.siteUrl + "/reset-password");
     const response = await fetch(inviteUrl, {
       method: "POST",
       headers: serviceHeaders(env),
@@ -110,11 +115,15 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
     });
     const rolePayload = await roleResponse.json().catch(() => null) as { success?: boolean } | null;
     if (!roleResponse.ok || rolePayload?.success !== true) {
-      await fetch(env.baseUrl + "/auth/v1/admin/users/" + invitedUserId, {
-        method: "DELETE",
-        headers: serviceHeaders(env),
-      }).catch(() => null);
-      throw new Error("The role assignment failed; the invitation was revoked.");
+      const revoked = await attemptInvitedUserRevocation(
+        env.baseUrl + "/auth/v1/admin/users/" + invitedUserId,
+        serviceHeaders(env),
+      );
+      throw new Error(
+        revoked
+          ? "The role assignment failed; the invitation was revoked."
+          : "The role assignment failed, but invitation revocation could not be confirmed. Contact the project owner before retrying.",
+      );
     }
     return { success: true as const, email: data.email, role: data.role };
   });
@@ -129,14 +138,14 @@ export const listAdminUsers = createServerFn({ method: "POST" })
     const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     const roleUrl = new URL(env.baseUrl + "/rest/v1/user_roles");
-    roleUrl.searchParams.set("select", "user_id,role,display_name");
+    roleUrl.searchParams.set("select", "user_id,role");
     roleUrl.searchParams.set("order", "role.asc");
     const [rolesResponse, usersResponse] = await Promise.all([
       fetch(roleUrl, { headers: serviceHeaders(env) }),
       fetch(env.baseUrl + "/auth/v1/admin/users?page=1&per_page=100", { headers: serviceHeaders(env) }),
     ]);
     if (!rolesResponse.ok || !usersResponse.ok) throw new Error("Administrator list could not be loaded.");
-    const roleRows = z.array(z.object({ user_id: z.uuid(), role: z.string(), display_name: z.string().nullable().optional() })).safeParse(await rolesResponse.json());
+    const roleRows = z.array(z.object({ user_id: z.uuid(), role: z.string() })).safeParse(await rolesResponse.json());
     const userPayload = await usersResponse.json() as { users?: AuthUser[] };
     if (!roleRows.success || !Array.isArray(userPayload.users)) throw new Error("Administrator list response was invalid.");
     return roleRows.data.map((row): AdminUserRecord => {
@@ -145,7 +154,7 @@ export const listAdminUsers = createServerFn({ method: "POST" })
       return {
         userId: row.user_id,
         email: user?.email ?? "Email unavailable",
-        displayName: row.display_name?.trim() || metadataName || user?.email || "Administrator",
+        displayName: metadataName || user?.email || "Administrator",
         role: row.role,
         createdAt: user?.created_at ?? "",
       };

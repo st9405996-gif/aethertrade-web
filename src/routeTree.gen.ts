@@ -34,6 +34,8 @@ import { Route as ThankYouRouteImport } from './routes/thank-you'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminModuleRouteImport } from './routes/admin.$module'
 import { Route as ApiInquiryHealthRouteImport } from './routes/api.inquiry-health'
+import { Route as InsightsSlugRouteImport } from './routes/insights.$slug'
+import { Route as PagesSlugRouteImport } from './routes/pages.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -160,6 +162,16 @@ const ApiInquiryHealthRoute = ApiInquiryHealthRouteImport.update({
   path: '/api/inquiry-health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsightsSlugRoute = InsightsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => InsightsRoute,
+} as any)
+const PagesSlugRoute = PagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,7 +186,7 @@ export interface FileRoutesByFullPath {
   '/faqs': typeof FaqsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
-  '/insights': typeof InsightsRoute
+  '/insights': typeof InsightsRouteWithChildren
   '/partnerships': typeof PartnershipsRoute
   '/platform': typeof PlatformRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -186,6 +198,8 @@ export interface FileRoutesByFullPath {
   '/thank-you': typeof ThankYouRoute
   '/admin/$module': typeof AdminModuleRoute
   '/api/inquiry-health': typeof ApiInquiryHealthRoute
+  '/insights/$slug': typeof InsightsSlugRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -200,7 +214,7 @@ export interface FileRoutesByTo {
   '/faqs': typeof FaqsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
-  '/insights': typeof InsightsRoute
+  '/insights': typeof InsightsRouteWithChildren
   '/partnerships': typeof PartnershipsRoute
   '/platform': typeof PlatformRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -212,6 +226,8 @@ export interface FileRoutesByTo {
   '/thank-you': typeof ThankYouRoute
   '/admin/$module': typeof AdminModuleRoute
   '/api/inquiry-health': typeof ApiInquiryHealthRoute
+  '/insights/$slug': typeof InsightsSlugRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -228,7 +244,7 @@ export interface FileRoutesById {
   '/faqs': typeof FaqsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
-  '/insights': typeof InsightsRoute
+  '/insights': typeof InsightsRouteWithChildren
   '/partnerships': typeof PartnershipsRoute
   '/platform': typeof PlatformRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -240,6 +256,8 @@ export interface FileRoutesById {
   '/thank-you': typeof ThankYouRoute
   '/admin/$module': typeof AdminModuleRoute
   '/api/inquiry-health': typeof ApiInquiryHealthRoute
+  '/insights/$slug': typeof InsightsSlugRoute
+  '/pages/$slug': typeof PagesSlugRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -269,6 +287,8 @@ export interface FileRouteTypes {
     | '/thank-you'
     | '/admin/$module'
     | '/api/inquiry-health'
+    | '/insights/$slug'
+    | '/pages/$slug'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -295,6 +315,8 @@ export interface FileRouteTypes {
     | '/thank-you'
     | '/admin/$module'
     | '/api/inquiry-health'
+    | '/insights/$slug'
+    | '/pages/$slug'
     | '/admin'
   id:
     | '__root__'
@@ -322,6 +344,8 @@ export interface FileRouteTypes {
     | '/thank-you'
     | '/admin/$module'
     | '/api/inquiry-health'
+    | '/insights/$slug'
+    | '/pages/$slug'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -338,7 +362,7 @@ export interface RootRouteChildren {
   FaqsRoute: typeof FaqsRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IndustriesRoute: typeof IndustriesRoute
-  InsightsRoute: typeof InsightsRoute
+  InsightsRoute: typeof InsightsRouteWithChildren
   PartnershipsRoute: typeof PartnershipsRoute
   PlatformRoute: typeof PlatformRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -349,6 +373,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ThankYouRoute: typeof ThankYouRoute
   ApiInquiryHealthRoute: typeof ApiInquiryHealthRoute
+  PagesSlugRoute: typeof PagesSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -528,6 +553,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInquiryHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insights/$slug': {
+      id: '/insights/$slug'
+      path: '/$slug'
+      fullPath: '/insights/$slug'
+      preLoaderRoute: typeof InsightsSlugRouteImport
+      parentRoute: typeof InsightsRoute
+    }
+    '/pages/$slug': {
+      id: '/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/pages/$slug'
+      preLoaderRoute: typeof PagesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -543,6 +582,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface InsightsRouteChildren {
+  InsightsSlugRoute: typeof InsightsSlugRoute
+}
+
+const InsightsRouteChildren: InsightsRouteChildren = {
+  InsightsSlugRoute: InsightsSlugRoute,
+}
+
+const InsightsRouteWithChildren = InsightsRoute._addFileChildren(
+  InsightsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -556,7 +607,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqsRoute: FaqsRoute,
   HowItWorksRoute: HowItWorksRoute,
   IndustriesRoute: IndustriesRoute,
-  InsightsRoute: InsightsRoute,
+  InsightsRoute: InsightsRouteWithChildren,
   PartnershipsRoute: PartnershipsRoute,
   PlatformRoute: PlatformRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -567,6 +618,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ThankYouRoute: ThankYouRoute,
   ApiInquiryHealthRoute: ApiInquiryHealthRoute,
+  PagesSlugRoute: PagesSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

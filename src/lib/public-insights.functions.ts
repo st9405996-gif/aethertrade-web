@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { readServerEnv } from "@/lib/server-env.server";
+import { isPublicAt } from "@/lib/publication";
 
 export interface AeoQuestion {
   question: string;
@@ -42,14 +43,14 @@ function parseAeoQuestions(value: unknown): AeoQuestion[] {
   });
 }
 
-function parsePublishedInsight(value: unknown): PublishedInsight | null {
+function parsePublishedInsight(value: unknown, now = Date.now()): PublishedInsight | null {
   const row = asRecord(value);
   if (!row) return null;
 
   const slug = asText(row.slug);
   const title = asText(row.title);
   const body = asText(row.body);
-  if (!slug || !title || !body.trim() || row.publication !== "Published" || row.noindex === true) {
+  if (!slug || !title || !body.trim() || !isPublicAt(row.publication, row.scheduled_at, now) || row.noindex === true) {
     return null;
   }
 
@@ -83,10 +84,10 @@ async function readPublishedInsights(slug?: string): Promise<PublishedInsight[]>
   const url = new URL(`${baseUrl}/rest/v1/content_records`);
   url.searchParams.set(
     "select",
-    "slug,title,body,category,publication,noindex,seo_title,seo_description,fields",
+    "slug,title,body,category,publication,scheduled_at,noindex,seo_title,seo_description,fields",
   );
   url.searchParams.set("module", "eq.insights");
-  url.searchParams.set("publication", "eq.Published");
+  url.searchParams.set("or", `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date().toISOString()}))`);
   url.searchParams.set("noindex", "eq.false");
   url.searchParams.set("order", "position.asc,slug.asc");
   url.searchParams.set("limit", "100");

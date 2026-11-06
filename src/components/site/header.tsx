@@ -11,6 +11,10 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
+import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
+import { filterCareersLinks } from "@/lib/careers-visibility";
 
 export const NAV_ITEMS = [
   { label: "Platform", to: "/platform" },
@@ -23,17 +27,31 @@ export const NAV_ITEMS = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const { data } = useQuery({
+    queryKey: ["public-navigation"],
+    queryFn: () => getPublishedContentRecords({ data: { module: "navigation" } }),
+  });
+  const { data: siteSettings } = useQuery({
+    queryKey: ["public-website-settings"],
+    queryFn: () => getPublicWebsiteSettings(),
+  });
+  const configured = data
+    ?.filter(
+      (item) => item.category.toLowerCase() === "header" && item.fields["visible"] !== "false",
+    )
+    .map((item) => ({ label: item.title, to: item.body.trim() }))
+    .filter((item) => item.to.startsWith("/") && !item.to.startsWith("//"));
+  const items = filterCareersLinks(configured?.length ? configured : NAV_ITEMS, siteSettings);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-md">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Logo />
-
         <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.to}
-              to={item.to}
+              to={item.to as never}
               className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               activeProps={{ className: "text-foreground bg-accent/60" }}
             >
@@ -41,7 +59,6 @@ export function Header() {
             </Link>
           ))}
         </nav>
-
         <div className="flex items-center gap-2">
           <Button variant="hero" size="sm" asChild className="hidden sm:inline-flex">
             <Link to="/request-demo" search={{ automation: undefined }}>
@@ -49,8 +66,6 @@ export function Header() {
               <ArrowRight />
             </Link>
           </Button>
-
-          {/* Mobile navigation */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
@@ -69,10 +84,10 @@ export function Header() {
                 </SheetTitle>
               </SheetHeader>
               <nav aria-label="Mobile" className="flex flex-col gap-1 px-4">
-                {NAV_ITEMS.map((item) => (
+                {items.map((item) => (
                   <SheetClose asChild key={item.to}>
                     <Link
-                      to={item.to}
+                      to={item.to as never}
                       className="rounded-md px-3 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       activeProps={{ className: "text-foreground bg-accent/60" }}
                     >
