@@ -6,7 +6,7 @@ interface AdminRecordMutation {
   path: string;
   method: MutationMethod;
   body?: unknown;
-  expectedId: string;
+  expectedId?: string;
   operation: string;
 }
 
@@ -61,11 +61,32 @@ export async function writeAdminRecord(
   }
 
   const [record] = payload;
-  if (!isRecord(record) || record["id"] !== mutation.expectedId) {
+  if (
+    !isRecord(record) ||
+    (mutation.expectedId !== undefined && record["id"] !== mutation.expectedId)
+  ) {
     throw new Error(
       `${mutation.operation} could not be confirmed: the returned record did not match.`,
     );
   }
 
   return record;
+}
+
+export async function deleteWebsiteMediaObject(
+  accessToken: string,
+  objectPath: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  const response = await fetchImpl("/api/admin-supabase/storage/v1/object/website-media", {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + accessToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prefixes: [objectPath] }),
+  });
+  if (!response.ok) {
+    throw new Error(`Storage object deletion failed with status ${response.status}.`);
+  }
 }

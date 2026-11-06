@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { writeAdminRecord } from "@/lib/admin-mutations";
+import { deleteWebsiteMediaObject, writeAdminRecord } from "@/lib/admin-mutations";
 
 const recordId = "6a86e6f4-4bdc-4c79-b8ac-3b94d6b7e531";
 
@@ -36,6 +36,25 @@ describe("admin CMS mutation response", () => {
       await expect(writeAdminRecord(mutation, fetchImpl)).resolves.toEqual({ id: recordId });
     },
   );
+
+  it("accepts a single inserted row when the database generates its ID", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(JSON.stringify([{ id: recordId }]), { status: 201 }));
+
+    await expect(
+      writeAdminRecord(
+        {
+          accessToken: "test-access-token",
+          path: "/rest/v1/inquiry_notes",
+          method: "POST",
+          body: { inquiry_id: recordId, body: "Follow-up" },
+          operation: "Inquiry note save",
+        },
+        fetchImpl,
+      ),
+    ).resolves.toEqual({ id: recordId });
+  });
 
   it("accepts exactly one returned record matching the requested ID", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
@@ -96,5 +115,38 @@ describe("admin CMS mutation response", () => {
       .mockResolvedValue(new Response(JSON.stringify([{ id: "another-record" }]), { status: 200 }));
 
     await expect(request(fetchImpl)).rejects.toThrow("returned record did not match");
+  });
+});
+
+describe("website media object cleanup", () => {
+  it("deletes only the requested object prefix through the admin proxy", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
+
+    await expect(
+      deleteWebsiteMediaObject("test-access-token", "user-id/image.webp", fetchImpl),
+    ).resolves.toBeUndefined();
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "/api/admin-supabase/storage/v1/object/website-media",
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ prefixes: ["user-id/image.webp"] }),
+      }),
+    );
+  });
+
+  it("reports an unsuccessful storage cleanup response", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 500 }));
+
+    await expect(
+      deleteWebsiteMediaObject("test-access-token", "user-id/image.webp", fetchImpl),
+    ).rejects.toThrow("status 500");
+  });
+
+  it("propagates network failures during storage cleanup", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("fetch failed"));
+
+    await expect(
+      deleteWebsiteMediaObject("test-access-token", "user-id/image.webp", fetchImpl),
+    ).rejects.toThrow("fetch failed");
   });
 });

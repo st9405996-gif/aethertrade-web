@@ -3,7 +3,7 @@ import type { DemoWorkspace, Role, ContentRecord, Inquiry, MediaRecord, Revision
 import { DEFAULT_GLOBAL_SEO, type GlobalSeoSettings } from "@/lib/global-seo.model";
 import { inviteAdminUser, listAdminUsers, removeAdminUser, updateAdminUserRole, type AdminUserRecord } from "@/lib/admin-users.functions";
 import { getAdminPublicConfig } from "@/lib/admin-auth.functions";
-import { writeAdminRecord } from "@/lib/admin-mutations";
+import { deleteWebsiteMediaObject, writeAdminRecord } from "@/lib/admin-mutations";
 type Config={configured:true;url:string};
 async function getConfig(): Promise<Config> {
   const publicConfig = await getAdminPublicConfig();
@@ -140,7 +140,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function remove(id:string){if(!uuid(id))throw Error("Invalid database record.");const s=await fresh();await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/content_records?id=eq."+id,method:"DELETE",expectedId:id,operation:"Content deletion"});setData(old=>({...old,records:old.records.filter(x=>x.id!==id)}));void refreshAfterWrite();}
  async function restore(id:string){const v=data.revisions.find(x=>x.id===id);if(!v)throw Error("Revision not found.");await save({...v.record,publication:"Draft"});}
  async function addInquiry(_r:Inquiry){throw Error("Inquiries are created through the public website forms.");}
- async function updateInquiry(r:Inquiry){if(!uuid(r.id))throw Error("Invalid inquiry.");const previous=data.inquiries.find(x=>x.id===r.id);await write("/rest/v1/inquiries?id=eq."+r.id,"PATCH",{status:r.status,assigned_to:uuid(r.assignedTo)?r.assignedTo:null,follow_up:r.followUp||null});const added=(r.notes||[]).slice(previous?.notes.length||0);for(const note of added)await write("/rest/v1/inquiry_notes","POST",{inquiry_id:r.id,body:note.text});setData(old=>({...old,inquiries:old.inquiries.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
+ async function updateInquiry(r:Inquiry){if(!uuid(r.id))throw Error("Invalid inquiry.");const previous=data.inquiries.find(x=>x.id===r.id);const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/inquiries?id=eq."+r.id,method:"PATCH",body:{status:r.status,assigned_to:uuid(r.assignedTo)?r.assignedTo:null,follow_up:r.followUp||null},expectedId:r.id,operation:"Inquiry update"});const added=(r.notes||[]).slice(previous?.notes.length||0);try{for(const note of added)await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/inquiry_notes",method:"POST",body:{inquiry_id:r.id,body:note.text},operation:"Inquiry note save"});}catch(e){await refreshAfterWrite();throw Error("Inquiry status was saved, but one or more notes could not be confirmed; earlier notes may already have been saved. "+err(e));}const updated={...r,status:text(saved,"status",r.status) as Inquiry["status"],assignedTo:text(saved,"assigned_to"),followUp:text(saved,"follow_up")};setData(old=>({...old,inquiries:old.inquiries.map(x=>x.id===r.id?updated:x)}));void refreshAfterWrite();}
  async function addMedia(file:File,altText=""){
   if(!session||!cfg)throw Error("Please sign in.");
   if(!altText.trim())throw Error("Add descriptive alt text before uploading this image.");
@@ -151,36 +151,41 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const upload=await fetch("/api/admin-supabase/storage/v1/object/website-media/"+objectPath,{method:"POST",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":file.type,"x-upsert":"false"},body:file});
   const uploaded=await upload.json().catch(()=>null);if(!upload.ok)throw Error(err(uploaded));
   try{
-   const rows=await call(cfg,s.access_token,"/rest/v1/media_assets","POST",{bucket_id:"website-media",object_path:objectPath,filename:file.name,content_type:file.type,file_size:file.size,alt_text:altText.trim().slice(0,500),owner_id:user.id,is_public:true});
-   const row=Array.isArray(rows)?rows[0]:rows;if(!row?.id)throw Error("Image uploaded but media metadata was not returned.");
-   const media:MediaRecord={id:row.id,name:row.filename,type:row.content_type,size:Number(row.file_size),alt:row.alt_text||"",bucketId:row.bucket_id,objectPath:row.object_path,url:cfg.url+"/storage/v1/object/public/"+row.bucket_id+"/"+row.object_path};
+   const saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets",method:"POST",body:{bucket_id:"website-media",object_path:objectPath,filename:file.name,content_type:file.type,file_size:file.size,alt_text:altText.trim().slice(0,500),owner_id:user.id,is_public:true},operation:"Media metadata save"});
+   const id=text(saved,"id");if(!uuid(id))throw Error("Image uploaded but valid media metadata was not returned.");
+   const media:MediaRecord={id,name:text(saved,"filename"),type:text(saved,"content_type"),size:numeric(saved,"file_size"),alt:text(saved,"alt_text"),bucketId:text(saved,"bucket_id"),objectPath:text(saved,"object_path"),url:cfg.url+"/storage/v1/object/public/"+text(saved,"bucket_id")+"/"+text(saved,"object_path")};
    setData(old=>({...old,media:[...old.media,media]}));void refreshAfterWrite();
   }catch(e){
-   await fetch("/api/admin-supabase/storage/v1/object/website-media",{method:"DELETE",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify({prefixes:[objectPath]})}).catch(()=>null);
+   try{await deleteWebsiteMediaObject(s.access_token,objectPath);}catch(cleanupError){throw Error(err(e)+" Uploaded object cleanup failed for "+objectPath+": "+err(cleanupError));}
    throw e;
   }
  }
- async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");if(!r.alt.trim())throw Error("Alt text is required for public images.");await write("/rest/v1/media_assets?id=eq."+r.id,"PATCH",{filename:r.name,alt_text:r.alt});setData(old=>({...old,media:old.media.map(x=>x.id===r.id?r:x)}));void refreshAfterWrite();}
- async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const row=data.media.find(x=>x.id===id);if(!row||row.bucketId!=="website-media"||!row.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();const deleted=await fetch("/api/admin-supabase/storage/v1/object/website-media",{method:"DELETE",headers:{Authorization:"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify({prefixes:[row.objectPath]})});const payload=await deleted.json().catch(()=>null);if(!deleted.ok)throw Error(err(payload));await call(cfg!,s.access_token,"/rest/v1/media_assets?id=eq."+id,"DELETE");setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));void refreshAfterWrite();}
+ async function updateMedia(r:MediaRecord){if(!uuid(r.id))throw Error("Invalid media record.");if(!r.alt.trim())throw Error("Alt text is required for public images.");const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/media_assets?id=eq."+r.id,method:"PATCH",body:{filename:r.name,alt_text:r.alt.trim()},expectedId:r.id,operation:"Media metadata update"});const updated={...r,name:text(saved,"filename",r.name),alt:text(saved,"alt_text",r.alt.trim())};setData(old=>({...old,media:old.media.map(x=>x.id===r.id?updated:x)}));void refreshAfterWrite();}
+ async function removeMedia(id:string){if(!uuid(id))throw Error("Invalid media record.");const media=data.media.find(x=>x.id===id);if(!media||media.bucketId!=="website-media"||!media.objectPath)throw Error("Media object reference is invalid.");const s=await fresh();await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/media_assets?id=eq."+id,method:"DELETE",expectedId:id,operation:"Media metadata deletion"});setData(old=>({...old,media:old.media.filter(x=>x.id!==id)}));try{await deleteWebsiteMediaObject(s.access_token,media.objectPath);}catch(e){void refreshAfterWrite();throw Error("Media metadata was deleted, but storage cleanup could not be confirmed for "+media.objectPath+": "+err(e));}void refreshAfterWrite();}
  async function addSubscriber(email:string,consentConfirmed:boolean){
   const normalized=email.trim().toLowerCase();
   if(!consentConfirmed)throw Error("Confirm that the email owner gave permission before adding them.");
   if(normalized.length<5||normalized.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error("Enter a valid email address.");
   const s=await fresh();const user=await call(cfg!,s.access_token,"/auth/v1/user");
   const existing=await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?select=id,status,email&email=eq."+encodeURIComponent(normalized));
-  if(Array.isArray(existing)&&existing.length){
-   if(existing[0].status==="subscribed")throw Error("This email is already subscribed.");
-   await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?id=eq."+existing[0].id,"PATCH",{status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id,updated_at:new Date().toISOString()});
+  const existingRow=Array.isArray(existing)&&existing.length?row(existing[0]):null;let saved:JsonRow;
+  if(existingRow){
+   const existingId=text(existingRow,"id");if(!uuid(existingId))throw Error("Subscriber lookup returned an invalid record.");
+   if(existingRow["status"]==="subscribed")throw Error("This email is already subscribed.");
+   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+existingId,method:"PATCH",body:{status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id,updated_at:new Date().toISOString()},expectedId:existingId,operation:"Subscriber re-subscription"});
   }else{
-   await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers","POST",{email:normalized,status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id});
+   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers",method:"POST",body:{email:normalized,status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id},operation:"Subscriber creation"});
   }
-  setData(old=>({...old,subscribers:[{id:Array.isArray(existing)&&existing.length?existing[0].id:crypto.randomUUID(),email:normalized,status:"subscribed",consent:true,consentAt:new Date().toISOString(),source:"admin",createdAt:new Date().toISOString()},...old.subscribers.filter(x=>x.email!==normalized)]}));
+  const subscriberId=text(saved,"id");if(!uuid(subscriberId)||text(saved,"email")!==normalized||saved["status"]!=="subscribed"||saved["consent"]!==true)throw Error("Subscriber write returned a record that did not match the confirmed consent.");
+  const subscriber:Subscriber={id:subscriberId,email:normalized,status:"subscribed",consent:true,consentAt:text(saved,"consent_at"),source:text(saved,"source","admin"),createdAt:text(saved,"created_at")};
+  setData(old=>({...old,subscribers:[subscriber,...old.subscribers.filter(x=>x.email!==normalized)]}));
   void refreshAfterWrite();
  }
  async function updateSubscriberStatus(id:string,status:"subscribed"|"unsubscribed"){
   if(!uuid(id))throw Error("Invalid subscriber record.");
   if(status!=="unsubscribed")throw Error("Re-subscribing requires confirming fresh consent through the add-subscriber form.");
-  await write("/rest/v1/newsletter_subscribers?id=eq."+id,"PATCH",{status:"unsubscribed",updated_at:new Date().toISOString()});
+  const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+id,method:"PATCH",body:{status:"unsubscribed",updated_at:new Date().toISOString()},expectedId:id,operation:"Subscriber unsubscribe"});
+  if(saved["status"]!=="unsubscribed")throw Error("Subscriber update returned an unexpected status.");
   setData(old=>({...old,subscribers:old.subscribers.map(x=>x.id===id?{...x,status:"unsubscribed"}:x)}));
   void refreshAfterWrite();
  }
