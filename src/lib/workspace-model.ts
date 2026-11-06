@@ -78,6 +78,24 @@ export function isPublic(record: ContentRecord, now = Date.now()) {
   return record.publication === "Published" || (record.publication === "Scheduled" && Date.parse(record.scheduledAt) <= now);
 }
 export function safeCsvCell(value: string) { return `"${(/^[\s]*[=+@-]/.test(value) ? "'" : "") + value.replaceAll('"', '""')}"`; }
+export function serializeCsv(rows: readonly (readonly string[])[]) {
+  return rows.map((row) => row.map(safeCsvCell).join(",")).join("\n");
+}
+export function canExportRows(role: Role, rowCount: number) {
+  return rowCount > 0 && demoCan(role, "export");
+}
+export function filterInquiries(
+  inquiries: Inquiry[],
+  filters: { search: string; status: string; kind: string },
+) {
+  const search = filters.search.toLowerCase();
+  return inquiries.filter(
+    (r) =>
+      `${r.name} ${r.company} ${r.reference} ${r.email}`.toLowerCase().includes(search) &&
+      (filters.status === "All" || r.status === filters.status) &&
+      (filters.kind === "All" || r.kind === filters.kind),
+  );
+}
 export function makeRecord(module: string, title = "Untitled", body = "", position = 0): ContentRecord {
   return { id: `${module}-${position}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, module, title,
     slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "untitled",

@@ -7,8 +7,12 @@ import {
   makeRecord,
   isPublic,
   safeCsvCell,
+  serializeCsv,
+  canExportRows,
+  filterInquiries,
   availabilityValues,
   inquiryValues,
+  type Inquiry,
 } from "@/lib/workspace-model";
 
 const valid = {
@@ -24,6 +28,26 @@ const valid = {
   consent: true,
   website: "",
 };
+const makeInquiry = (overrides: Partial<Inquiry>): Inquiry => ({
+  id: "inquiry-1",
+  reference: "AT-001",
+  kind: "contact",
+  name: "Test Reviewer",
+  email: "reviewer@example.com",
+  company: "Example Company",
+  country: "Pakistan",
+  category: "General inquiry",
+  automation: "",
+  message: "An illustrative inquiry message",
+  requirements: "",
+  consent: true,
+  status: "New",
+  createdAt: "2026-11-06T00:00:00Z",
+  notes: [],
+  assignedTo: "",
+  followUp: "",
+  ...overrides,
+});
 describe("Disconnected workspace business rules", () => {
   it("preserves the four requested availability states", () =>
     expect([...availabilityValues]).toEqual([
@@ -82,8 +106,39 @@ describe("Disconnected workspace business rules", () => {
   it("sales managers cannot provision users", () =>
     expect(demoCan("Sales Manager", "users")).toBe(false));
   it("viewers cannot access lead PII", () => expect(demoCan("Viewer", "inquiries")).toBe(false));
-  it("CSV export neutralizes spreadsheet formulas", () => {
+  it("CSV export quotes delimiters, quotes, line breaks and Unicode", () => {
+    expect(
+      serializeCsv([
+        ["Company", "Notes"],
+        ["Café, 東京", 'She said "hello"\nnext'],
+      ]),
+    ).toBe('"Company","Notes"\n"Café, 東京","She said ""hello""\nnext"');
+  });
+  it("CSV export neutralizes spreadsheet formulas after leading whitespace", () => {
     expect(safeCsvCell("=1+1")).toBe('"\'=1+1"');
+    expect(safeCsvCell(" \t@SUM(A1:A2)")).toBe('"\' \t@SUM(A1:A2)"');
+    expect(safeCsvCell("-1")).toBe('"\'-1"');
     expect(safeCsvCell("Regular company")).toBe('"Regular company"');
+  });
+  it("exports only inquiry rows matching the active combined filters", () => {
+    const inquiries = [
+      makeInquiry({ company: "Acme", kind: "demo", status: "New" }),
+      makeInquiry({ id: "inquiry-2", company: "Acme", kind: "contact", status: "New" }),
+      makeInquiry({ id: "inquiry-3", company: "Other", kind: "demo", status: "Closed" }),
+    ];
+    const filtered = filterInquiries(inquiries, { search: "acme", status: "New", kind: "demo" });
+
+    expect(filtered).toHaveLength(1);
+    expect(
+      serializeCsv([
+        ["Reference", "Company", "Type", "Status"],
+        ...filtered.map((row) => [row.reference, row.company, row.kind, row.status]),
+      ]),
+    ).toBe('"Reference","Company","Type","Status"\n"AT-001","Acme","demo","New"');
+  });
+  it("disables CSV export when there are no rows or the role lacks export permission", () => {
+    expect(canExportRows("Sales Manager", 1)).toBe(true);
+    expect(canExportRows("Content Editor", 1)).toBe(false);
+    expect(canExportRows("Super Admin", 0)).toBe(false);
   });
 });
