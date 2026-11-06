@@ -3,7 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { analyticsEventSchema, validateAnalyticsOrigin } from "@/lib/analytics-event";
 import { consumeAnalyticsRateLimit } from "@/lib/analytics-rate-limit.server";
-import { writeAnalyticsEvent } from "@/lib/analytics-write.server";
+import {
+  requireServerVerifiedAnalyticsConsent,
+  writeAnalyticsEvent,
+} from "@/lib/analytics-write.server";
 
 const foundationSql = readFileSync(
   join(process.cwd(), "docs", "database", "001-foundation.sql"),
@@ -51,12 +54,21 @@ describe("analytics write security contract", () => {
     expect(consumeAnalyticsRateLimit("client-after-expiry", now + 60_001)).toBe(true);
   });
 
+  it("fails closed when no server-verified analytics consent is available", () => {
+    expect(() => requireServerVerifiedAnalyticsConsent(undefined)).toThrow(
+      "Analytics event was not recorded because server-verifiable consent is unavailable.",
+    );
+    expect(() => requireServerVerifiedAnalyticsConsent(false)).toThrow();
+    expect(() => requireServerVerifiedAnalyticsConsent(true)).not.toThrow();
+  });
+
   it("uses the server-only role for the table that has no anonymous write grant", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
 
     await writeAnalyticsEvent(
       { supabaseUrl: "https://database.example/", serviceRoleKey: "server-only-test-key" },
       event,
+      true,
       fetchImpl,
     );
 
@@ -82,12 +94,29 @@ describe("analytics write security contract", () => {
     );
   });
 
+  it("does not make a database request without server-verified consent", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      writeAnalyticsEvent(
+        { supabaseUrl: "https://database.example", serviceRoleKey: "server-only-test-key" },
+        event,
+        undefined,
+        fetchImpl,
+      ),
+    ).rejects.toThrow(
+      "Analytics event was not recorded because server-verifiable consent is unavailable.",
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("surfaces database rejection instead of returning success", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 403 }));
     await expect(
       writeAnalyticsEvent(
         { supabaseUrl: "https://database.example", serviceRoleKey: "server-only-test-key" },
         event,
+        true,
         fetchImpl,
       ),
     ).rejects.toThrow("Analytics event was not accepted by the database.");

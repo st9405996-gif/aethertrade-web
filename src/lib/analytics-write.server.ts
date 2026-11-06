@@ -5,11 +5,24 @@ export interface AnalyticsDatabaseConfig {
   serviceRoleKey: string;
 }
 
+export function requireServerVerifiedAnalyticsConsent(
+  consent: boolean | undefined,
+): void {
+  if (consent !== true) {
+    throw new Error(
+      "Analytics event was not recorded because server-verifiable consent is unavailable.",
+    );
+  }
+}
+
 export async function writeAnalyticsEvent(
   config: AnalyticsDatabaseConfig,
   event: AnalyticsEvent,
+  serverVerifiedConsent: boolean | undefined,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
+  requireServerVerifiedAnalyticsConsent(serverVerifiedConsent);
+
   if (!config.supabaseUrl || !config.serviceRoleKey) {
     throw new Error("Analytics database connection is not configured.");
   }
