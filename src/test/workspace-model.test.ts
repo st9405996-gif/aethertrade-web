@@ -10,6 +10,7 @@ import {
   serializeCsv,
   canExportRows,
   filterContentRecords,
+  sortContentRecords,
   filterInquiries,
   availabilityValues,
   inquiryValues,
@@ -182,6 +183,17 @@ describe("Disconnected workspace business rules", () => {
     expect(filterContentRecords(records, { search: "", status: "All", category: "All" })).toEqual(
       records,
     );
+  });
+  it("orders content deterministically by position then ID without mutating input", () => {
+    const records = [
+      { ...makeRecord("pages", "Third", "", 2), id: "c" },
+      { ...makeRecord("pages", "Second", "", 1), id: "z" },
+      { ...makeRecord("pages", "First B", "", 1), id: "b" },
+      { ...makeRecord("pages", "First A", "", 1), id: "a" },
+    ];
+
+    expect(sortContentRecords(records).map((record) => record.id)).toEqual(["a", "b", "z", "c"]);
+    expect(records.map((record) => record.id)).toEqual(["c", "z", "b", "a"]);
   });
   it("disables CSV export when there are no rows or the role lacks export permission", () => {
     expect(canExportRows("Sales Manager", 1)).toBe(true);

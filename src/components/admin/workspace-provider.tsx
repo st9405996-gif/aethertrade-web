@@ -114,7 +114,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
  async function fresh(){if(!cfg||!session)throw Error("Please sign in.");return needsAdminSessionRefresh(session)?refresh(session):session;}
  async function load(c:Config,s:Session){
   const [rs,is,ns,ms,vs,auditResult,es,subs,seoRows]=await Promise.all([
-   call(c,s.access_token,"/rest/v1/content_records?select=*&order=position.asc"),
+   call(c,s.access_token,"/rest/v1/content_records?select=*&order=position.asc,id.asc"),
    call(c,s.access_token,"/rest/v1/inquiries?select=*&order=created_at.desc"),
    call(c,s.access_token,"/rest/v1/inquiry_notes?select=*&order=created_at.asc").catch(()=>[]),
    call(c,s.access_token,"/rest/v1/media_assets?select=*&order=filename.asc"),
