@@ -21,9 +21,9 @@ function AutomationsPage() {
   const { items: records, cmsPage } = Route.useLoaderData();
   const items = records.length ? records.map(item => ({
     slug: item.slug, name: item.title, category: item.category,
-    problem: item.fields.problem || "", whatItDoes: item.body,
-    exampleWorkflow: item.fields.workflow || "", deploymentModel: item.fields.deployment || "",
-    integrations: (item.fields.integrations || "").split("\n").map(value => value.trim()).filter(Boolean),
+    problem: item.fields["problem"] || "", whatItDoes: item.body,
+    exampleWorkflow: item.fields["workflow"] || "", deploymentModel: item.fields["deployment"] || "",
+    integrations: (item.fields["integrations"] || "").split("\n").map(value => value.trim()).filter(Boolean),
     availability: item.availability,
   })) : CATALOGUE_PREVIEW;
   const categories = ["All", ...new Set(items.map(item => item.category).filter(Boolean))];

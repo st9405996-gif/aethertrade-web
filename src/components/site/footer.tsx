@@ -60,10 +60,10 @@ export function Footer() {
     queryFn: () => getPublishedContentRecords({ data: { module: "branding" } }),
   });
   const brand = brandRecords?.[0];
-  const email = brand?.fields.email?.trim() || "";
-  const phone = brand?.fields.phone?.trim() || "";
-  const address = brand?.fields.address?.trim() || "";
-  const socialLinks = (brand?.fields.social || "")
+  const email = brand?.fields["email"]?.trim() || "";
+  const phone = brand?.fields["phone"]?.trim() || "";
+  const address = brand?.fields["address"]?.trim() || "";
+  const socialLinks = (brand?.fields["social"] || "")
     .split("\n")
     .map((value) => value.trim())
     .filter((value) => value.startsWith("https://"));

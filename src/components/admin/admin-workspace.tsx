@@ -108,9 +108,9 @@ function AnalyticsDashboard() {
     <p className="text-xs text-muted-foreground">Showing the latest {total} consented events. No visitor names, email addresses or shipment data are collected.</p>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       ["Events", total],
-      ["Page views", counts.page_view || 0],
-      ["CTA clicks", counts.cta_click || 0],
-      ["Demo conversions", counts.demo_conversion || 0],
+      ["Page views", counts["page_view"] || 0],
+      ["CTA clicks", counts["cta_click"] || 0],
+      ["Demo conversions", counts["demo_conversion"] || 0],
     ].map(([label, value]) => <div key={String(label)} className="rounded-md border border-border bg-card p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-4 font-mono text-3xl">{value}</p></div>)}</div>
     <section><h2 className="mb-4 text-lg font-semibold">Top pages</h2><div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[420px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Path</th><th className="text-right">Events</th></tr></thead><tbody>{topPages.map(([path, count]) => <tr key={path} className="border-t border-border"><td className="py-3 font-mono">{path}</td><td className="text-right">{count}</td></tr>)}</tbody></table></div></section>
     <section><h2 className="mb-4 text-lg font-semibold">Recent events</h2><div className="divide-y divide-border border-y border-border">{data.analytics.slice(0, 25).map(event => <div key={event.id} className="flex flex-wrap justify-between gap-3 py-3"><div><p className="text-sm font-medium">{event.eventType}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{event.pagePath}{event.automationSlug ? " · "+event.automationSlug : ""}</p></div><span className="text-xs text-muted-foreground">{date(event.createdAt)}</span></div>)}</div></section>
@@ -176,7 +176,7 @@ function Overview() {
   const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
   const deliveryStatus = deliveryReadiness.status;
   const readiness = getConnectionReadiness(authenticated);
-  const connectionRows = [
+  const connectionRows: [string, string][] = [
     ["Supabase CMS & inquiry database", readiness.database],
     ["Administrator authentication", readiness.authentication],
     ["Website media storage", readiness.mediaStorage],
@@ -386,7 +386,7 @@ function Connections() {
     staleTime: Infinity,
   });
   const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
-  const items = [
+  const items: [string, string, string][] = [
     ["Supabase database", readiness.database, "Workspace data loaded successfully during this session. This is not a continuous health check."],
     ["Administrator authentication", readiness.authentication, "The session and assigned database role were verified during workspace load."],
     ["Cloudflare Worker", readiness.worker, "This page does not verify deployment status or current Worker health."],

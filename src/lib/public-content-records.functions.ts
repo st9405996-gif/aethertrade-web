@@ -24,23 +24,23 @@ function asText(value: unknown): string {
 }
 function parseRecord(value: unknown, now = Date.now()): PublicContentRecord | null {
   const row = asRecord(value);
-  if (!isPublicAt(row.publication, row.scheduled_at, now) || row.noindex === true) return null;
-  const title = asText(row.title).trim();
+  if (!isPublicAt(row["publication"], row["scheduled_at"], now) || row["noindex"] === true) return null;
+  const title = asText(row["title"]).trim();
   if (!title) return null;
-  const rawFields = asRecord(row.fields);
+  const rawFields = asRecord(row["fields"]);
   const fields = Object.fromEntries(Object.entries(rawFields).slice(0, 80).map(([key, item]) => [
     key.slice(0, 100),
     typeof item === "string" ? item.slice(0, 10000) : (JSON.stringify(item) ?? "").slice(0, 10000),
   ]));
   return {
-    id: asText(row.id),
-    module: asText(row.module),
-    slug: asText(row.slug),
+    id: asText(row["id"]),
+    module: asText(row["module"]),
+    slug: asText(row["slug"]),
     title,
-    body: asText(row.body),
-    category: asText(row.category),
-    availability: asText(row.availability),
-    position: typeof row.position === "number" ? row.position : 0,
+    body: asText(row["body"]),
+    category: asText(row["category"]),
+    availability: asText(row["availability"]),
+    position: typeof row["position"] === "number" ? row["position"] : 0,
     fields,
   };
 }

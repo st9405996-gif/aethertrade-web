@@ -40,7 +40,7 @@ const text = (source: JsonRow, key: string, fallback = ""): string => typeof sou
 const numeric = (source: JsonRow, key: string, fallback = 0): number => typeof source[key] === "number" ? source[key] as number : Number(source[key]) || fallback;
 const KEY="aether-admin-session-v1", empty=():DemoWorkspace=>({records:[],inquiries:[],media:[],revisions:[],audit:[],analytics:[],subscribers:[]});
 const uuid=(s:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
-const err=(value:unknown)=>{const x=row(value);return String(x.message??x.msg??x.error_description??x.error??"Supabase request failed");};
+const err=(value:unknown)=>{const x=row(value);return String(x["message"]??x["msg"]??x["error_description"]??x["error"]??"Supabase request failed");};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function call(_config: Config, accessToken: string, path: string, method = "GET", body?: unknown): Promise<any> {
  const response = await fetch("/api/admin-supabase" + path, {
@@ -50,7 +50,7 @@ async function call(_config: Config, accessToken: string, path: string, method =
    ...(body === undefined ? {} : { "Content-Type": "application/json" }),
    ...(method === "POST" || method === "PATCH" || method === "DELETE" ? { Prefer: "return=representation" } : {}),
   },
-  body: body === undefined ? undefined : JSON.stringify(body),
+  ...(body === undefined ? {} : { body: JSON.stringify(body) }),
  });
  const raw = await response.text();
  let payload: unknown = null;
@@ -61,7 +61,7 @@ async function call(_config: Config, accessToken: string, path: string, method =
  return payload;
 }
 function mapRecord(source:JsonRow):ContentRecord {
- const fields=row(source.fields);
+ const fields=row(source["fields"]);
  return {
   id:text(source,"id"),
   module:text(source,"module") as ContentRecord["module"],
@@ -76,7 +76,7 @@ function mapRecord(source:JsonRow):ContentRecord {
   seoTitle:text(source,"seo_title"),
   seoDescription:text(source,"seo_description"),
   canonical:text(source,"canonical"),
-  noindex:source.noindex===true,
+  noindex:source["noindex"]===true,
   updatedAt:text(source,"updated_at"),
   fields:Object.fromEntries(Object.entries(fields).map(([key,value])=>[key,typeof value==="string"?value:JSON.stringify(value)??""])),
  };
@@ -97,14 +97,14 @@ function mapInquiry(source:JsonRow,notes:JsonRow[]=[]):Inquiry {
   consent:true,
   status:text(source,"status") as Inquiry["status"],
   createdAt:text(source,"created_at"),
-  notes:notes.filter(note=>note.inquiry_id===source.id).map(note=>({text:text(note,"body"),at:text(note,"created_at")})),
+  notes:notes.filter(note=>note["inquiry_id"]===source["id"]).map(note=>({text:text(note,"body"),at:text(note,"created_at")})),
   assignedTo:text(source,"assigned_to"),
   followUp:text(source,"follow_up"),
  };
 }
 
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
-type Ctx={adminUsers:AdminUserRecord[];listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;auditError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
+type Ctx={listAdminUsers:()=>Promise<AdminUserRecord[]>;inviteAdminUser:(email:string,role:AssignableAdminRole)=>Promise<void>;updateAdminUserRole:(userId:string,role:AssignableAdminRole)=>Promise<void>;removeAdminUser:(userId:string)=>Promise<void>;data:DemoWorkspace;globalSeo:GlobalSeoSettings;globalSeoPublished:boolean;saveGlobalSeoSettings:(settings:GlobalSeoSettings,published:boolean)=>Promise<void>;ready:boolean;authenticated:boolean;role:Role;authError:string;storageError:string;auditError:string;setRole:(r:Role)=>void;signIn:(e:string,p:string)=>Promise<void>;signOut:()=>Promise<void>;sendPasswordRecovery:(e:string)=>Promise<void>;validateRecoverySession:()=>Promise<boolean>;updatePassword:(p:string)=>Promise<void>;save:(r:ContentRecord)=>Promise<void>;remove:(id:string)=>Promise<void>;restore:(id:string)=>Promise<void>;addInquiry:(r:Inquiry)=>Promise<void>;updateInquiry:(r:Inquiry)=>Promise<void>;addMedia:(file:File,altText?:string)=>Promise<void>;updateMedia:(r:MediaRecord)=>Promise<void>;removeMedia:(id:string)=>Promise<void>;addSubscriber:(email:string,consentConfirmed:boolean)=>Promise<void>;updateSubscriberStatus:(id:string,status:"subscribed"|"unsubscribed")=>Promise<void>;reset:()=>Promise<void>};
 const Context=createContext<Ctx|null>(null);
 export function WorkspaceProvider({children}:{children:ReactNode}){
  const [cfg,setCfg]=useState<Config|null>(null),[session,setSession]=useState<Session|null>(null),[data,setData]=useState(empty),[role,setRole]=useState<Role>("Viewer"),[ready,setReady]=useState(false),[authenticated,setAuthenticated]=useState(false),[authError,setAuthError]=useState(""),[storageError,setStorageError]=useState(""),[auditError,setAuditError]=useState("");
@@ -125,7 +125,7 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
    call(c,s.access_token,"/rest/v1/global_seo_settings?select=settings,is_published&id=eq.1").catch(()=>[])
   ]);
   const revisionRows=Array.isArray(vs)?vs.map(row):[];
-  const revisions:Revision[]=revisionRows.map(v=>{const snapshot=row(row(v.snapshot).record??v.snapshot);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
+  const revisions:Revision[]=revisionRows.map(v=>{const rawSnapshot=row(v["snapshot"]);const snapshot=row(rawSnapshot["record"]??v["snapshot"]);return{id:text(v,"id"),record:text(snapshot,"module")?mapRecord(snapshot):{id:text(v,"record_id"),module:text(v,"module") as ContentRecord["module"],slug:"",title:"Previous version",body:"",category:"",publication:"Draft",availability:"Planned",position:0,scheduledAt:"",seoTitle:"",seoDescription:"",canonical:"",noindex:false,updatedAt:"",fields:{}},at:text(v,"created_at"),action:text(v,"action")==="DELETE"?"Deleted version":"Updated version"};});
   setAuditError(auditResult.error);
   const mediaRows=Array.isArray(ms)?ms.map(row):[];
   const media:MediaRecord[]=mediaRows.map(mapAdminMediaRecord);
@@ -137,12 +137,12 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
   const inquiryRows=Array.isArray(is)?is.map(row):[];
   const noteRows=Array.isArray(ns)?ns.map(row):[];
   const auditRows=auditResult.rows;
-  setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a.details);const changedFields=Array.isArray(details.changed_fields)?details.changed_fields.filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
+  setData({records:recordRows.map(mapRecord),inquiries:inquiryRows.map(i=>mapInquiry(i,noteRows)),media,revisions,audit:auditRows.map(a=>{const details=row(a["details"]);const changedFields=Array.isArray(details["changed_fields"])?details["changed_fields"].filter((field):field is string=>typeof field==="string"):[];return{id:text(a,"id"),action:text(a,"action"),title:text(a,"module")||text(a,"record_id")||"Content update",at:text(a,"created_at"),changedFields};}),analytics,subscribers});
   const seoRow=Array.isArray(seoRows)?row(seoRows[0]):{};
   if (Object.keys(seoRow).length) {
-   const saved=row(seoRow.settings);
-   setGlobalSeo({...DEFAULT_GLOBAL_SEO,...saved,sameAs:Array.isArray(saved.sameAs)?saved.sameAs.filter((item):item is string=>typeof item==="string"):[]});
-   setGlobalSeoPublished(seoRow.is_published===true);
+   const saved=row(seoRow["settings"]);
+   setGlobalSeo({...DEFAULT_GLOBAL_SEO,...saved,sameAs:Array.isArray(saved["sameAs"])?saved["sameAs"].filter((item):item is string=>typeof item==="string"):[]});
+   setGlobalSeoPublished(seoRow["is_published"]===true);
   }
   setAuthenticated(true);setStorageError("");
  }

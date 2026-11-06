@@ -21,7 +21,7 @@ function SolutionsPage() {
   const { items, cmsPage } = Route.useLoaderData();
   const records = items.length ? items.map(item => ({
     slug: item.slug, title: item.title, audience: item.body,
-    challenges: lines(item.fields.challenges || ""), helps: lines(item.fields.benefits || ""),
+    challenges: lines(item.fields["challenges"] || ""), helps: lines(item.fields["benefits"] || ""),
   })) : SOLUTIONS;
   return <>
     <PageHero eyebrow="Solutions" title="Built Around How Your Business Trades." description="Different roles in global trade face different operational problems. Here is where we focus for each.">

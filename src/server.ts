@@ -176,14 +176,14 @@ async function dynamicSeoDocument(
       const settingsPayload: unknown = await settingsResponse.json();
       const first = Array.isArray(settingsPayload) ? settingsPayload[0] : null;
       const saved =
-        first && typeof first === "object" ? (first as Record<string, unknown>).settings : null;
+        first && typeof first === "object" ? (first as Record<string, unknown>)["settings"] : null;
       if (saved && typeof saved === "object") {
         const value = saved as Record<string, unknown>;
-        if (typeof value.siteName === "string" && value.siteName.trim())
-          siteName = value.siteName.trim().slice(0, 120);
-        if (typeof value.siteUrl === "string") {
+        if (typeof value["siteName"] === "string" && value["siteName"].trim())
+          siteName = value["siteName"].trim().slice(0, 120);
+        if (typeof value["siteUrl"] === "string") {
           try {
-            const candidate = new URL(value.siteUrl);
+            const candidate = new URL(value["siteUrl"]);
             if (candidate.protocol === "https:" && candidate.hostname === "aethertrade.cloud")
               siteUrl = candidate.origin;
           } catch {
@@ -191,10 +191,10 @@ async function dynamicSeoDocument(
           }
         }
         if (
-          typeof value.organizationDescription === "string" &&
-          value.organizationDescription.trim()
+          typeof value["organizationDescription"] === "string" &&
+          value["organizationDescription"].trim()
         )
-          description = value.organizationDescription.trim().slice(0, 500);
+          description = value["organizationDescription"].trim().slice(0, 500);
       }
     }
     const body =

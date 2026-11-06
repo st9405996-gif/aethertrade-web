@@ -391,5 +391,5 @@ export function createDemoWorkspace(): DemoWorkspace {
       analyticsConsent: "false",
     },
   });
-  return { records, inquiries: [], media: [], revisions: [], audit: [] };
+  return { records, inquiries: [], media: [], revisions: [], audit: [], analytics: [], subscribers: [] };
 }
