@@ -9,6 +9,12 @@ const foundationSql = readFileSync(
 )
   .replace(/\s+/g, " ")
   .toLowerCase();
+const auditDetailsMigrationSql = readFileSync(
+  join(process.cwd(), "docs", "database", "010-audit-change-details.sql"),
+  "utf8",
+)
+  .replace(/\s+/g, " ")
+  .toLowerCase();
 
 describe("readAuditRows", () => {
   it("preserves a valid empty result as available", async () => {
@@ -68,8 +74,20 @@ describe("readAuditRows", () => {
         "create trigger content_change_audit after insert or update or delete on public.content_records",
       );
       expect(foundationSql).toContain(
-        "insert into public.audit_logs(actor_id,action,record_id,module)",
+        "insert into public.audit_logs(actor_id,action,record_id,module,details)",
       );
+    });
+
+    it("stores field names but not changed values in audit details", () => {
+      expect(foundationSql).toContain("details jsonb not null default '{}'::jsonb");
+      expect(auditDetailsMigrationSql).toContain(
+        "add column if not exists details jsonb not null default '{}'::jsonb",
+      );
+      expect(auditDetailsMigrationSql).toContain(
+        "jsonb_build_object('changed_fields', changed_fields)",
+      );
+      expect(auditDetailsMigrationSql).toContain("new_row.value is distinct from old_row.value");
+      expect(auditDetailsMigrationSql).not.toContain("jsonb_build_object('changed_values'");
     });
   });
 });

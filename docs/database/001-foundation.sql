@@ -135,17 +135,28 @@ alter table public.content_revisions enable row level security;
 create policy "Editors read content history" on public.content_revisions for select to authenticated using((module not in ('branding','settings') and (public.has_permission('draft') or public.has_permission('publish'))) or (module in ('branding','settings') and public.has_permission('settings')));
 create table public.audit_logs (
   id uuid primary key default gen_random_uuid(), actor_id uuid references auth.users(id), action text not null,
-  record_id uuid, module text, created_at timestamptz not null default now()
+  record_id uuid, module text, details jsonb not null default '{}'::jsonb, created_at timestamptz not null default now()
 );
 grant select on public.audit_logs to authenticated;
 grant all on public.audit_logs to service_role;
 alter table public.audit_logs enable row level security;
 create policy "Administrators read audit" on public.audit_logs for select to authenticated using(public.has_permission('publish'));
 create function public.audit_content_change() returns trigger language plpgsql security definer set search_path=public as $$
+declare changed_fields jsonb;
 begin
  if tg_op in ('UPDATE','DELETE') then insert into public.content_revisions(record_id,module,snapshot,actor_id) values(old.id,old.module,to_jsonb(old),auth.uid()); end if;
- if tg_op='DELETE' then insert into public.audit_logs(actor_id,action,record_id,module) values(auth.uid(),tg_op,old.id,old.module); return old; end if;
- insert into public.audit_logs(actor_id,action,record_id,module) values(auth.uid(),tg_op,new.id,new.module);
+ if tg_op='DELETE' then
+  select coalesce(jsonb_agg(key order by key),'[]'::jsonb) into changed_fields from jsonb_object_keys(to_jsonb(old)) as fields(key);
+  insert into public.audit_logs(actor_id,action,record_id,module,details) values(auth.uid(),tg_op,old.id,old.module,jsonb_build_object('changed_fields',changed_fields));
+  return old;
+ end if;
+ if tg_op='INSERT' then
+  select coalesce(jsonb_agg(key order by key),'[]'::jsonb) into changed_fields from jsonb_object_keys(to_jsonb(new)) as fields(key);
+ else
+  select coalesce(jsonb_agg(changes.key order by changes.key),'[]'::jsonb) into changed_fields
+  from (select coalesce(n.key,o.key) as key from jsonb_each(to_jsonb(new)) as n full outer join jsonb_each(to_jsonb(old)) as o using(key) where n.value is distinct from o.value) as changes;
+ end if;
+ insert into public.audit_logs(actor_id,action,record_id,module,details) values(auth.uid(),tg_op,new.id,new.module,jsonb_build_object('changed_fields',changed_fields));
  return new;
 end $$;
 create trigger content_change_audit after insert or update or delete on public.content_records for each row execute function public.audit_content_change();
