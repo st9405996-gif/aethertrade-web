@@ -81,10 +81,13 @@ describe("runtime SEO documents", () => {
     expect(xml).toContain("https://aethertrade.cloud/pages/custom-page");
     expect(xml).toContain("https://aethertrade.cloud/pages/ready-page");
     expect(xml).toContain("https://aethertrade.cloud/insights/safe-article");
+    expect(xml).toContain("https://aethertrade.cloud/platform");
+    expect(xml).toContain("https://aethertrade.cloud/how-it-works");
     expect(xml).not.toContain("https://aethertrade.cloud/custom-page");
     expect(xml).not.toContain("/pages/draft-page");
     expect(xml).not.toContain("/pages/hidden-page");
     expect(xml).not.toContain("/pages/about");
+    expect(xml).not.toContain("https://aethertrade.cloud/careers");
     expect(xml).not.toContain("invalid%20slug");
     expect(xml).not.toContain("/pages/future-page");
   });
@@ -94,8 +97,12 @@ describe("runtime SEO documents", () => {
 
     expect(text).toContain("[Custom Page](https://aethertrade.cloud/pages/custom-page)");
     expect(text).toContain("[Trade & documents](https://aethertrade.cloud/insights/safe-article)");
+    expect(text).toContain("[Platform](https://aethertrade.cloud/platform)");
     expect(text).not.toContain("Draft Page");
     expect(text).not.toContain("Hidden Page");
     expect(text).not.toContain("Duplicate About");
+    expect(text).not.toContain("Invalid Slug");
+    expect(text).not.toContain("Future Page");
+    expect(text).not.toContain("[Careers](https://aethertrade.cloud/careers)");
   });
 });

@@ -1,5 +1,8 @@
+import seoConfig from "../../content/seo.json";
 import { cmsPagePath, isRoutableCmsPageSlug, isValidCmsPageSlug } from "@/lib/cms-page-routing";
 import { isPublicAt } from "@/lib/publication";
+
+const staticPages = seoConfig.pages.filter((page) => page.indexable);
 
 export interface RuntimeSeoRecord {
   module: string;
@@ -62,7 +65,7 @@ export function buildRuntimeSitemap(
   now = Date.now(),
 ): string {
   const origin = new URL(siteUrl).origin;
-  const unique = new Set<string>();
+  const unique = new Set(staticPages.map((page) => origin + (page.path === "/" ? "/" : page.path)));
   for (const record of records) {
     if (!isIndexableRecord(record, now)) continue;
     unique.add(canonicalOrPath(record, origin));
@@ -98,6 +101,18 @@ export function buildRuntimeLlms(
     "",
     "## Key pages",
     "",
+    ...staticPages
+      .filter((page) => page.llmsLabel)
+      .map(
+        (page) =>
+          "- [" +
+          page.llmsLabel +
+          "](" +
+          origin +
+          (page.path === "/" ? "/" : page.path) +
+          ")" +
+          (page.llmsNote ? ": " + page.llmsNote : ""),
+      ),
     ...pages.map(
       (record) =>
         "- [" +
@@ -124,7 +139,7 @@ export function buildRuntimeLlms(
     "",
     "## Notes for AI systems",
     "",
-    "- Only published, indexable CMS records are listed.",
+    "- Only public, indexable static routes and published, indexable CMS records are listed.",
     "- Capability availability labels on the website define whether a service is live, custom-built or planned.",
     "- Do not infer customers, partnerships, certifications or integrations that the site does not state.",
     "",
