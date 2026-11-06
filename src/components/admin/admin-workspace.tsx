@@ -10,14 +10,48 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Logo } from "@/components/site/logo";
+import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { useWorkspace } from "@/components/admin/workspace-provider";
+import { executeAdminMutation } from "@/lib/admin-mutation-result";
+import { createCmsPagePreview } from "@/lib/cms-page-preview";
 import { GlobalSeoPanel } from "@/components/admin/global-seo-panel";
 import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
-import { modules, makeRecord, availabilityValues, publicationValues, inquiryValues, roles, demoCan, contentSchema, isPublic, safeCsvCell, type ModuleId, type ContentRecord, type Inquiry, type Role } from "@/lib/workspace-model";
+import {
+  getConnectionReadiness,
+  getInquiryDeliveryReadiness,
+} from "@/lib/connection-readiness";
+import {
+  modules,
+  makeRecord,
+  availabilityValues,
+  publicationValues,
+  inquiryValues,
+  roles,
+  demoCan,
+  contentSchema,
+  isPublic,
+  canExportRows,
+  filterContentRecords,
+  sortContentRecords,
+  filterInquiries,
+  serializeCsv,
+  type ModuleId,
+  type ContentRecord,
+  type Inquiry,
+  type Role,
+} from "@/lib/workspace-model";
 
 const icons = { overview: LayoutDashboard, pages: Files, automations: Workflow, platform: Workflow, services: BriefcaseBusiness, insights: BookOpen, inquiries: MessageSquare, media: Image, connections: Plug, audit: Shield, analytics: Activity, "global-seo": Globe };
 const selectClass = "h-9 min-w-0 rounded-md border border-input bg-background px-3 text-sm";
-async function attempt(fn: () => void | Promise<void>, message: string) { try { await fn(); toast.success(message); } catch (e) { toast.error(e instanceof Error ? e.message : "Change could not be saved"); } }
+async function attempt(fn: () => void | Promise<void>, message: string) {
+  const outcome = await executeAdminMutation(fn);
+  if (outcome.status === "success") {
+    toast.success(message);
+    return true;
+  }
+  toast.error(outcome.error instanceof Error ? outcome.error.message : "Change could not be saved");
+  return false;
+}
 function download(name: string, text: string, type = "application/json") { const url = URL.createObjectURL(new Blob([text], { type })); const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url); }
 function Status({ value }: { value: string }) { return <span className={`inline-flex items-center gap-1.5 text-xs ${value === "Published" || value === "Available" ? "text-success" : value === "Draft" || value === "New" ? "text-warning" : "text-muted-foreground"}`}><span className="size-1.5 rounded-full bg-current"/>{value}</span>; }
 function date(value: string) { return value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"; }
@@ -49,7 +83,7 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
           {module === "connections" && <Connections/>}
           {module === "users" && <Users/>}
           {module === "revisions" && <div className="divide-y divide-border border-y border-border">{data.revisions.length ? data.revisions.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{r.record.title}</p><p className="mt-1 text-xs text-muted-foreground">{r.action} · {r.record.module} · {date(r.at)}</p></div><Button variant="outline" disabled={!demoCan(role, "draft")} onClick={() => attempt(() => workspace.restore(r.id), "Revision restored as draft")}><RotateCcw/>Restore as draft</Button></div>) : <Empty icon={RotateCcw} title="No revisions yet" body="Updates and deletes create database snapshots automatically. New records have no previous version to restore."/>}</div>}
-          {module === "audit" && <div className="divide-y divide-border border-y border-border">{data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · changed fields: {r.changedFields.length ? r.changedFields.join(", ") : "No field detail"}</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
+          {module === "audit" && <div className="divide-y divide-border border-y border-border">{workspace.auditError ? <Empty icon={Shield} title="Audit history unavailable" body={workspace.auditError}/> : data.audit.length ? data.audit.map(r => <div key={r.id} className="flex justify-between gap-4 py-4"><div><p className="text-sm"><span className="font-medium">{r.action}</span> · {r.title}</p><p className="mt-1 text-xs text-muted-foreground">Database-recorded action · changed fields: {r.changedFields.length ? r.changedFields.join(", ") : "No field detail"}</p></div><span className="shrink-0 text-xs text-muted-foreground">{date(r.at)}</span></div>) : <Empty icon={Shield} title="No recorded actions" body="Database-recorded content changes appear here."/>}</div>}
           {module === "analytics" && <AnalyticsDashboard/>}
           {module === "subscribers" && <Subscribers/>}
         </>}
@@ -118,7 +152,7 @@ function Subscribers() {
       <label className="mt-4 flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={consentConfirmed} onChange={e => setConsentConfirmed(e.target.checked)}/><span>I confirm that this email owner has explicitly consented to receive newsletter communications.</span></label>
       {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
     </div>
-    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Subscriber records ({rows.length})</h2><Button variant="outline" disabled={!rows.length || !demoCan(workspace.role, "export")} onClick={() => download("aethertrade-subscribers.csv", [["Email","Status","Consent at","Source"],...rows.map(r=>[r.email,r.status,r.consentAt,r.source])].map(row=>row.map(safeCsvCell).join(",")).join("\n"),"text/csv")}><Download/>Export CSV</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Subscriber records ({rows.length})</h2><Button variant="outline" disabled={!canExportRows(workspace.role, rows.length)} onClick={() => download("aethertrade-subscribers.csv", serializeCsv([["Email","Status","Consent at","Source"],...rows.map(r=>[r.email,r.status,r.consentAt,r.source])]),"text/csv")}><Download/>Export CSV</Button></div>
     {rows.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[640px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Email</th><th>Status</th><th>Consent recorded</th><th>Source</th><th className="text-right">Action</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-t border-border"><td className="py-4">{row.email}</td><td><Status value={row.status==="subscribed"?"Subscribed":"Unsubscribed"}/></td><td className="text-xs">{date(row.consentAt)}</td><td className="text-xs">{row.source}</td><td className="text-right">{row.status==="subscribed" ? <Button size="sm" variant="outline" onClick={()=>setPendingUnsubscribe(row.id)}>Mark unsubscribed</Button> : <span className="text-xs text-muted-foreground">No action</span>}</td></tr>)}</tbody></table></div> : <Empty icon={MessageSquare} title="No subscriber records" body="Add an email only after you have a clear consent confirmation. No newsletter messages are sent by this module."/>}
     <Dialog open={!!pendingUnsubscribe} onOpenChange={open=>!open&&setPendingUnsubscribe(null)}><DialogContent><DialogHeader><DialogTitle>Mark this subscriber as unsubscribed?</DialogTitle><DialogDescription>This will update the subscriber status and keep the record for suppression. It does not send an email.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setPendingUnsubscribe(null)}>Cancel</Button><Button variant="destructive" onClick={unsubscribe}>Confirm unsubscribe</Button></div></DialogContent></Dialog>
   </div>;
@@ -127,7 +161,7 @@ function Empty({ icon: Icon, title, body }: { icon: typeof Files; title: string;
 function Overview() {
   const { data, role, authenticated } = useWorkspace();
   const readMode = useServerFn(getInquiryDeliveryMode);
-  const { data: delivery } = useQuery({
+  const { data: delivery, isError: deliveryError } = useQuery({
     queryKey: ["inquiry-delivery-mode"],
     queryFn: () => readMode(),
     staleTime: Infinity,
@@ -139,20 +173,18 @@ function Overview() {
     { label: "Published content", value: data.records.filter(r => isPublic(r)).length, icon: Files },
     { label: "Draft articles", value: data.records.filter(r => r.module === "insights" && r.publication === "Draft").length, icon: BookOpen },
   ];
-  const deliveryStatus = delivery === undefined
-    ? "Checking"
-    : delivery.mode === "live"
-      ? "Configured · not tested"
-      : "Unavailable";
+  const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
+  const deliveryStatus = deliveryReadiness.status;
+  const readiness = getConnectionReadiness(authenticated);
   const connectionRows = [
-    ["Supabase CMS & inquiry database", authenticated ? "Connected" : "Disconnected"],
-    ["Administrator authentication", authenticated ? "Connected" : "Disconnected"],
-    ["Website media storage", data.media.length ? "Available" : "No media assets"],
+    ["Supabase CMS & inquiry database", readiness.database],
+    ["Administrator authentication", readiness.authentication],
+    ["Website media storage", readiness.mediaStorage],
     ["Inquiry email delivery", deliveryStatus],
-    ["Cloudflare Worker", "Production active"],
+    ["Cloudflare Worker", readiness.worker],
   ];
   return <>
-    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Live records from the connected database</p></div>)}</div>
+    <div className="mb-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map(s => <div key={s.label} className="rounded-md border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{s.label}</p><s.icon className="size-4 text-primary"/></div><p className="mt-5 font-mono text-3xl">{s.value}</p><p className="mt-2 text-xs text-muted-foreground">Loaded records in the current workspace session</p></div>)}</div>
     <div className="grid gap-10 xl:grid-cols-[1.5fr_1fr]">
       <section><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Recent inquiries</h2><Link to="/admin/$module" params={{ module: "inquiries" }} className="text-sm text-primary">View all <ArrowUpRight className="inline size-3"/></Link></div>{permitted && data.inquiries.length ? <div className="divide-y divide-border border-y border-border">{data.inquiries.slice(0, 5).map(r => <div className="flex items-center justify-between py-4" key={r.id}><div><p className="text-sm font-medium">{r.company}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.reference}</p></div><Status value={r.status}/></div>)}</div> : <Empty icon={MessageSquare} title={permitted ? "Your inquiry queue is empty" : "Inquiry access restricted"} body={permitted ? "New inquiries submitted through the public Contact or Demo forms appear here." : "Your database role does not allow inquiry access."}/>}</section>
       <section><h2 className="mb-4 text-lg font-semibold">Connection readiness</h2><div className="divide-y divide-border border-y border-border">{connectionRows.map(([name,state]) => <div key={name} className="flex items-center justify-between gap-3 py-4"><span className="text-sm">{name}</span><Status value={state}/></div>)}</div><Link to="/admin/$module" params={{ module: "connections" }} className="mt-5 inline-flex items-center gap-2 text-sm text-primary">Review readiness <ArrowUpRight className="size-4"/></Link></section>
@@ -164,14 +196,15 @@ function ContentManager({ module, seoOnly = false }: { module: ModuleId; seoOnly
   const workspace = useWorkspace(); const { data, role } = workspace;
   const [search, setSearch] = useState(""); const [status, setStatus] = useState("All"); const [category, setCategory] = useState("All");
   const [edit, setEdit] = useState<ContentRecord | null>(null); const [preview, setPreview] = useState<ContentRecord | null>(null); const [remove, setRemove] = useState<ContentRecord | null>(null);
-  const records = data.records.filter(r => r.module === module).sort((a, b) => a.position - b.position);
-  const filtered = records.filter(r => `${r.title} ${r.body} ${r.category}`.toLowerCase().includes(search.toLowerCase()) && (status === "All" || r.publication === status) && (category === "All" || r.category === category));
+  const pagePreview = preview ? createCmsPagePreview(preview, data.media) : null;
+  const records = sortContentRecords(data.records.filter(r => r.module === module));
+  const filtered = filterContentRecords(records, { search, status, category });
   const writable = demoCan(role, ["branding", "settings", "navigation"].includes(module) ? "settings" : "draft");
   return <><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-2"><div className="relative"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground"/><Input aria-label="Search records" className="w-64 pl-9" placeholder="Search records…" value={search} onChange={e => setSearch(e.target.value)}/></div><select aria-label="Publication filter" className={selectClass} value={status} onChange={e => setStatus(e.target.value)}><option value="All">All states</option>{publicationValues.map(v => <option key={v}>{v}</option>)}</select><select aria-label="Category filter" className={selectClass} value={category} onChange={e => setCategory(e.target.value)}><option value="All">All categories</option>{[...new Set(records.map(r => r.category).filter(Boolean))].map(v => <option key={v}>{v}</option>)}</select></div>{!seoOnly && <Button disabled={!writable} onClick={() => setEdit({ ...makeRecord(module), id: crypto.randomUUID(), position: records.length })}><Plus/>New record</Button>}</div>
     <p className="mb-4 text-xs text-muted-foreground">{filtered.length} records · changes are saved to the connected CMS database</p>
     {filtered.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[640px] text-left text-sm"><thead><tr className="border-b border-border text-xs text-muted-foreground"><th className="py-3 font-medium">Title</th><th className="font-medium">Category</th><th className="font-medium">Publication</th><th className="font-medium">{seoOnly ? "SEO title" : "Availability"}</th><th className="py-3 text-right font-medium">Actions</th></tr></thead><tbody>{filtered.map(r => <tr key={r.id} className="border-b border-border last:border-0"><td className="max-w-xs py-4 pr-4"><p className="font-medium">{r.title}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{r.slug}</p></td><td className="pr-4 text-xs text-muted-foreground">{r.category || "—"}</td><td><Status value={r.publication}/></td><td className="pr-4">{seoOnly ? <span className="text-xs text-muted-foreground">{r.seoTitle || "Default"}</span> : <Status value={r.availability}/>}</td><td><div className="flex justify-end gap-1"><Button variant="ghost" size="icon" title="Preview record" aria-label={`Preview ${r.title}`} onClick={() => setPreview(r)}><Eye/></Button><Button variant="ghost" size="icon" title="Edit record" aria-label={`Edit ${r.title}`} disabled={!writable} onClick={() => setEdit(r)}><Pencil/></Button>{!seoOnly && <Button variant="ghost" size="icon" title="Delete record" aria-label={`Delete ${r.title}`} disabled={!writable} onClick={() => setRemove(r)}><Trash2/></Button>}</div></td></tr>)}</tbody></table></div> : <Empty icon={Files} title="No matching records" body="Adjust the filters or create a new record."/>}
     <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{seoOnly ? "Page SEO" : "Edit content record"}</DialogTitle><DialogDescription>Changes persist in the connected Supabase CMS. Public-site rendering must be separately verified.</DialogDescription></DialogHeader>{edit && <RecordEditor key={edit.id} initial={edit} seoOnly={seoOnly} onSaved={() => setEdit(null)}/>}</DialogContent></Dialog>
-    <Dialog open={!!preview} onOpenChange={open => !open && setPreview(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>CMS record preview</DialogTitle><DialogDescription>Preview of the selected CMS record. Preview does not guarantee public-site rendering.</DialogDescription></DialogHeader>{preview && <div className="space-y-5"><div className="flex gap-4"><Status value={preview.publication}/><Status value={preview.availability}/></div><h2 className="text-2xl font-semibold">{preview.title}</h2><p className="whitespace-pre-wrap text-muted-foreground">{preview.body || "No body text entered."}</p>{Object.entries(preview.fields).map(([k, v]) => <div key={k}><h3 className="text-sm font-medium capitalize">{k}</h3><p className="whitespace-pre-wrap text-sm text-muted-foreground">{v || "—"}</p></div>)}</div>}</DialogContent></Dialog>
+    <Dialog open={!!preview} onOpenChange={open => !open && setPreview(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>CMS record preview</DialogTitle><DialogDescription>Pages use the public CMS renderer; drafts remain unavailable publicly until publication and RLS permit access. Other module previews show stored fields.</DialogDescription></DialogHeader>{preview && <div className="space-y-5"><div className="flex gap-4"><Status value={preview.publication}/><Status value={preview.availability}/></div>{pagePreview ? <CmsPageRenderer page={pagePreview}/> : <><h2 className="text-2xl font-semibold">{preview.title}</h2><p className="whitespace-pre-wrap text-muted-foreground">{preview.body || "No body text entered."}</p>{Object.entries(preview.fields).map(([k, v]) => <div key={k}><h3 className="text-sm font-medium capitalize">{k}</h3><p className="whitespace-pre-wrap text-sm text-muted-foreground">{v || "—"}</p></div>)}</>}</div>}</DialogContent></Dialog>
     <Dialog open={!!remove} onOpenChange={open => !open && setRemove(null)}><DialogContent><DialogHeader><DialogTitle>Delete this content record?</DialogTitle><DialogDescription>{remove?.title}. This action cannot be undone.</DialogDescription></DialogHeader><div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setRemove(null)}>Cancel</Button><Button variant="destructive" onClick={() => { if (remove) attempt(() => workspace.remove(remove.id), "Record deleted"); setRemove(null); }}><Trash2/>Delete</Button></div></DialogContent></Dialog>
   </>;
 }
@@ -200,10 +233,10 @@ function RecordEditor({ initial, onSaved, seoOnly }: { initial: ContentRecord; o
 function Inquiries() {
   const workspace = useWorkspace(); const [search, setSearch] = useState(""); const [status, setStatus] = useState("All"); const [kind, setKind] = useState("All"); const [edit, setEdit] = useState<Inquiry | null>(null); const [note, setNote] = useState("");
   if (!demoCan(workspace.role, "inquiries")) return <Empty icon={Shield} title="Inquiry access restricted" body="Your assigned database role does not allow inquiry management."/>;
-  const rows = workspace.data.inquiries.filter(r => `${r.name} ${r.company} ${r.reference} ${r.email}`.toLowerCase().includes(search.toLowerCase()) && (status === "All" || r.status === status) && (kind === "All" || r.kind === kind));
-  return <><div className="mb-5 flex flex-wrap justify-between gap-3"><div className="flex flex-wrap gap-2"><Input className="w-64" aria-label="Search inquiries" placeholder="Search company, email, reference…" value={search} onChange={e => setSearch(e.target.value)}/><select className={selectClass} aria-label="Inquiry status filter" value={status} onChange={e => setStatus(e.target.value)}><option value="All">All statuses</option>{inquiryValues.map(v => <option key={v}>{v}</option>)}</select><select className={selectClass} aria-label="Inquiry type filter" value={kind} onChange={e => setKind(e.target.value)}><option value="All">All types</option><option value="contact">Contact</option><option value="demo">Demo request</option></select></div><Button variant="outline" disabled={!rows.length || !demoCan(workspace.role, "export")} onClick={() => download("aethertrade-inquiries.csv", [["Reference", "Name", "Company", "Email", "Status", "Type"], ...rows.map(r => [r.reference, r.name, r.company, r.email, r.status, r.kind])].map(r => r.map(safeCsvCell).join(",")).join("\n"), "text/csv")}><Download/>Export CSV</Button></div>
+  const rows = filterInquiries(workspace.data.inquiries, { search, status, kind });
+  return <><div className="mb-5 flex flex-wrap justify-between gap-3"><div className="flex flex-wrap gap-2"><Input className="w-64" aria-label="Search inquiries" placeholder="Search company, email, reference…" value={search} onChange={e => setSearch(e.target.value)}/><select className={selectClass} aria-label="Inquiry status filter" value={status} onChange={e => setStatus(e.target.value)}><option value="All">All statuses</option>{inquiryValues.map(v => <option key={v}>{v}</option>)}</select><select className={selectClass} aria-label="Inquiry type filter" value={kind} onChange={e => setKind(e.target.value)}><option value="All">All types</option><option value="contact">Contact</option><option value="demo">Demo request</option></select></div><Button variant="outline" disabled={!canExportRows(workspace.role, rows.length)} onClick={() => download("aethertrade-inquiries.csv", serializeCsv([["Reference", "Name", "Company", "Email", "Status", "Type"], ...rows.map(r => [r.reference, r.name, r.company, r.email, r.status, r.kind])]), "text/csv")}><Download/>Export CSV</Button></div>
     {rows.length ? <div className="overflow-x-auto border-y border-border"><table className="w-full min-w-[600px] text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="py-3">Company / contact</th><th>Reference</th><th>Type</th><th>Status</th><th className="text-right">Received</th></tr></thead><tbody>{rows.map(r => <tr className="border-t border-border" key={r.id}><td className="py-4"><Button variant="link" className="h-auto p-0" onClick={() => { setEdit(r); setNote(""); }}>{r.company}</Button><p className="mt-1 text-xs text-muted-foreground">{r.name}</p></td><td className="font-mono text-xs text-muted-foreground">{r.reference}</td><td className="text-xs">{r.kind}</td><td><Status value={r.status}/></td><td className="text-right text-xs text-muted-foreground">{date(r.createdAt)}</td></tr>)}</tbody></table></div> : <Empty icon={MessageSquare} title="No inquiries found" body="No inquiries found. Submit a Contact or Demo form to create an inquiry, or adjust your filters."/>}
-    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{edit?.company}</DialogTitle><DialogDescription>{edit?.reference} </DialogDescription></DialogHeader>{edit && <div className="space-y-4"><p className="text-sm">{edit.name} · {edit.email}<br/>{edit.country} · {edit.automation || edit.category}</p><div className="border-y border-border py-4"><p className="whitespace-pre-wrap text-sm">{edit.requirements}</p><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{edit.message}</p><p className="mt-3 text-xs text-muted-foreground">Privacy consent recorded · {date(edit.createdAt)}</p></div><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm">Status<select className={selectClass} value={edit.status} onChange={e => setEdit({ ...edit, status: e.target.value as Inquiry["status"] })}>{inquiryValues.map(v => <option key={v}>{v}</option>)}</select></label><label className="grid gap-2 text-sm">Follow-up date<Input type="date" value={edit.followUp} onChange={e => setEdit({ ...edit, followUp: e.target.value })}/></label></div><label className="grid gap-2 text-sm">Assigned administrator ID (UUID)<Input placeholder="Leave blank to unassign" value={edit.assignedTo} onChange={e => setEdit({ ...edit, assignedTo: e.target.value })}/></label><label className="grid gap-2 text-sm">Internal note<Textarea value={note} onChange={e => setNote(e.target.value)}/></label>{edit.notes.map((n, i) => <p key={i} className="border-t border-border pt-3 text-sm">{n.text}<span className="ml-2 text-xs text-muted-foreground">{date(n.at)}</span></p>)}<Button onClick={async () => { if (edit.assignedTo.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(edit.assignedTo.trim())) { toast.error("Assigned administrator must be a valid UUID, or leave it blank."); return; } await attempt(() => workspace.updateInquiry({ ...edit, assignedTo: edit.assignedTo.trim(), notes: note.trim() ? [...edit.notes, { text: note.trim(), at: new Date().toISOString() }] : edit.notes }), "Inquiry updated"); setEdit(null); }}><Save/>Save inquiry</Button></div>}</DialogContent></Dialog>
+    <Dialog open={!!edit} onOpenChange={open => !open && setEdit(null)}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>{edit?.company}</DialogTitle><DialogDescription>{edit?.reference} </DialogDescription></DialogHeader>{edit && <div className="space-y-4"><p className="text-sm">{edit.name} · {edit.email}<br/>{edit.country} · {edit.automation || edit.category}</p><div className="border-y border-border py-4"><p className="whitespace-pre-wrap text-sm">{edit.requirements}</p><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{edit.message}</p><p className="mt-3 text-xs text-muted-foreground">Privacy consent recorded · {date(edit.createdAt)}</p></div><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm">Status<select className={selectClass} value={edit.status} onChange={e => setEdit({ ...edit, status: e.target.value as Inquiry["status"] })}>{inquiryValues.map(v => <option key={v}>{v}</option>)}</select></label><label className="grid gap-2 text-sm">Follow-up date<Input type="date" value={edit.followUp} onChange={e => setEdit({ ...edit, followUp: e.target.value })}/></label></div><label className="grid gap-2 text-sm">Assigned administrator ID (UUID)<Input placeholder="Leave blank to unassign" value={edit.assignedTo} onChange={e => setEdit({ ...edit, assignedTo: e.target.value })}/></label><label className="grid gap-2 text-sm">Internal note<Textarea value={note} onChange={e => setNote(e.target.value)}/></label>{edit.notes.map((n, i) => <p key={i} className="border-t border-border pt-3 text-sm">{n.text}<span className="ml-2 text-xs text-muted-foreground">{date(n.at)}</span></p>)}<Button onClick={async () => { if (edit.assignedTo.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(edit.assignedTo.trim())) { toast.error("Assigned administrator must be a valid UUID, or leave it blank."); return; } const saved = await attempt(() => workspace.updateInquiry({ ...edit, assignedTo: edit.assignedTo.trim(), notes: note.trim() ? [...edit.notes, { text: note.trim(), at: new Date().toISOString() }] : edit.notes }), "Inquiry updated"); if (saved) setEdit(null); }}><Save/>Save inquiry</Button></div>}</DialogContent></Dialog>
   </>;
 }
 function MediaLibrary() {
@@ -345,24 +378,20 @@ function Users() {
 }
 function Connections() {
   const { authenticated, role } = useWorkspace();
+  const readiness = getConnectionReadiness(authenticated);
   const readMode = useServerFn(getInquiryDeliveryMode);
-  const { data: delivery } = useQuery({
+  const { data: delivery, isError: deliveryError } = useQuery({
     queryKey: ["inquiry-delivery-mode"],
     queryFn: () => readMode(),
     staleTime: Infinity,
   });
-  const deliveryStatus = delivery === undefined ? "Checking" : delivery.mode === "live" ? "Configured" : "Unavailable";
-  const deliveryDescription = delivery === undefined
-    ? "Checking the server-side inquiry delivery configuration."
-    : delivery.mode === "live"
-      ? "Server configuration reports live mode. Actual email deliverability has not been verified with a test message."
-      : "The inquiry service is not configured for live delivery; the public form will not claim that submissions are sent.";
+  const deliveryReadiness = getInquiryDeliveryReadiness(delivery, deliveryError);
   const items = [
-    ["Supabase database", authenticated ? "Connected" : "Disconnected", "CMS records, inquiries, revisions, audit history and consented analytics use the configured Supabase project."],
-    ["Administrator authentication", authenticated ? "Connected" : "Disconnected", "This workspace requires a verified Supabase session and an assigned database role."],
-    ["Cloudflare Worker", "Production active", "The website is served by the existing Cloudflare Worker deployment."],
-    ["Media storage", "Provisioned", "website-media (public images) and internal-media (private) buckets are provisioned with image MIME and 2 MB limits."],
-    ["Inquiry email delivery", deliveryStatus, deliveryDescription],
+    ["Supabase database", readiness.database, "Workspace data loaded successfully during this session. This is not a continuous health check."],
+    ["Administrator authentication", readiness.authentication, "The session and assigned database role were verified during workspace load."],
+    ["Cloudflare Worker", readiness.worker, "This page does not verify deployment status or current Worker health."],
+    ["Media storage", readiness.mediaStorage, "Bucket availability and storage policies are not probed from this page; live upload/read/delete verification requires staging access."],
+    ["Inquiry email delivery", deliveryReadiness.status, deliveryReadiness.description],
   ];
   return <div className="divide-y divide-border border-y border-border">
     {items.map(([name,state,description]) => <section key={name} className="py-5">

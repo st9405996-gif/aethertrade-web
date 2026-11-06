@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { readServerEnv } from "@/lib/server-env.server";
 import { isPublicAt } from "@/lib/publication";
+import { isValidCmsPageSlug } from "@/lib/cms-page-routing";
 
 export interface AeoQuestion {
   question: string;
@@ -36,35 +37,41 @@ function parseAeoQuestions(value: unknown): AeoQuestion[] {
   if (!Array.isArray(value)) return [];
   return value.slice(0, 12).flatMap((entry) => {
     const item = asRecord(entry);
-    const question = asText(item?.question).trim();
-    const answer = asText(item?.answer).trim();
+    const question = asText(item?.["question"]).trim();
+    const answer = asText(item?.["answer"]).trim();
     if (!question || !answer || question.length > 240 || answer.length > 1200) return [];
     return [{ question, answer }];
   });
 }
 
-function parsePublishedInsight(value: unknown, now = Date.now()): PublishedInsight | null {
+export function parsePublishedInsight(value: unknown, now = Date.now()): PublishedInsight | null {
   const row = asRecord(value);
   if (!row) return null;
 
-  const slug = asText(row.slug);
-  const title = asText(row.title);
-  const body = asText(row.body);
-  if (!slug || !title || !body.trim() || !isPublicAt(row.publication, row.scheduled_at, now) || row.noindex === true) {
+  const slug = asText(row["slug"]);
+  const title = asText(row["title"]);
+  const body = asText(row["body"]);
+  if (
+    !isValidCmsPageSlug(slug) ||
+    !title.trim() ||
+    !body.trim() ||
+    !isPublicAt(row["publication"], row["scheduled_at"], now) ||
+    row["noindex"] !== false
+  ) {
     return null;
   }
 
-  const fields = asRecord(row.fields);
+  const fields = asRecord(row["fields"]);
   return {
     slug,
     title,
     body,
-    category: asText(row.category),
-    seoTitle: asText(row.seo_title),
-    seoDescription: asText(row.seo_description),
-    author: asText(fields?.author),
-    geoSummary: asText(fields?.geoSummary).trim().slice(0, 1200),
-    aeoQuestions: parseAeoQuestions(fields?.aeoQuestions),
+    category: asText(row["category"]),
+    seoTitle: asText(row["seo_title"]),
+    seoDescription: asText(row["seo_description"]),
+    author: asText(fields?.["author"]),
+    geoSummary: asText(fields?.["geoSummary"]).trim().slice(0, 1200),
+    aeoQuestions: parseAeoQuestions(fields?.["aeoQuestions"]),
   };
 }
 
@@ -73,27 +80,34 @@ function parsePublishedInsight(value: unknown, now = Date.now()): PublishedInsig
  * Uses the publishable key so Supabase RLS remains the authorization boundary.
  * The service-role key is deliberately never read or used here.
  */
-async function readPublishedInsights(slug?: string): Promise<PublishedInsight[]> {
-  const env = readServerEnv();
-  const baseUrl = env["SUPABASE_URL"]?.replace(/\/$/, "");
-  const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
-  if (!baseUrl || !publishableKey) {
+export async function fetchPublishedInsights(
+  baseUrl: string | undefined,
+  publishableKey: string | undefined,
+  slug?: string,
+  fetchImpl: typeof fetch = fetch,
+  now = Date.now(),
+): Promise<PublishedInsight[]> {
+  const normalizedBaseUrl = baseUrl?.replace(/\/+$/, "");
+  if (!normalizedBaseUrl || !publishableKey) {
     throw new Error("Public content connection is not configured.");
   }
 
-  const url = new URL(`${baseUrl}/rest/v1/content_records`);
+  const url = new URL(`${normalizedBaseUrl}/rest/v1/content_records`);
   url.searchParams.set(
     "select",
     "slug,title,body,category,publication,scheduled_at,noindex,seo_title,seo_description,fields",
   );
   url.searchParams.set("module", "eq.insights");
-  url.searchParams.set("or", `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date().toISOString()}))`);
+  url.searchParams.set(
+    "or",
+    `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date(now).toISOString()}))`,
+  );
   url.searchParams.set("noindex", "eq.false");
   url.searchParams.set("order", "position.asc,slug.asc");
   url.searchParams.set("limit", "100");
   if (slug) url.searchParams.set("slug", `eq.${slug}`);
 
-  const response = await fetch(url, {
+  const response = await fetchImpl(url, {
     method: "GET",
     headers: {
       apikey: publishableKey,
@@ -112,8 +126,13 @@ async function readPublishedInsights(slug?: string): Promise<PublishedInsight[]>
   }
 
   return payload
-    .map(parsePublishedInsight)
+    .map((item) => parsePublishedInsight(item, now))
     .filter((item): item is PublishedInsight => item !== null);
+}
+
+async function readPublishedInsights(slug?: string): Promise<PublishedInsight[]> {
+  const env = readServerEnv();
+  return fetchPublishedInsights(env["SUPABASE_URL"], env["SUPABASE_PUBLISHABLE_KEY"], slug);
 }
 
 export const getPublishedInsights = createServerFn({ method: "GET" }).handler(async () => {
@@ -121,7 +140,11 @@ export const getPublishedInsights = createServerFn({ method: "GET" }).handler(as
 });
 
 const slugInput = z.object({
-  slug: z.string().min(1).max(160).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  slug: z
+    .string()
+    .min(1)
+    .max(160)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
 });
 
 export const getPublishedInsight = createServerFn({ method: "GET" })

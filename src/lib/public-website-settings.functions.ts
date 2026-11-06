@@ -54,7 +54,7 @@ export async function readPublicWebsiteSettings(
 
   const first = asRecord(rows[0]);
   const careersEnabled = first?.["careers_enabled"];
-  if (typeof careersEnabled !== "boolean") return missingSettings;
+  if (typeof careersEnabled !== "boolean") return unavailableSettings;
   return {
     status: "available",
     careersEnabled,

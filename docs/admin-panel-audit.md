@@ -1,6 +1,6 @@
 # AETHER-TRADE Admin Panel Audit & Implementation Status
 
-Updated: 2026-11-05
+Updated: 2026-11-06
 Branch: \`admin-panel-p0-p2-completion\`
 Scope: source inspection, staging Supabase migrations, transactional policy checks, GitHub Actions and Cloudflare preview builds. This is not a completed browser-based end-to-end test or a production deployment report.
 
@@ -86,6 +86,26 @@ PR #43 (`admin-panel-p0-p2-completion` → `main`) is open and unmerged. GitHub 
 ### Broader audit boundaries
 
 The existing pre-launch audit remains valid for its stated scope. Source review and database schema checks are not equivalent to browser-driven end-to-end testing. Admin modules requiring external account/provider setup or controlled live actions remain marked blocked/not tested until those checks are completed. No live email, destructive reset, user invitation, or public inquiry has been sent as part of this incident investigation.
+
+## Latest main integration — 2026-11-06
+
+`origin/main` advanced to `5fd6942a102cd88ad1fac86c169dc0feac601167` after the first source-branch push. Its PR #45 session, consent, audit, subscriber, preview, readiness, revision-restore, stable-ordering, and regression-test changes were merged into the local PR #43 source branch. Actual conflicts in this second integration were `AGENT.md`, `src/components/admin/workspace-provider.tsx`, `src/lib/analytics.functions.ts`, and `src/lib/workspace-model.ts`; the other incoming files, including `src/components/admin/admin-workspace.tsx`, merged automatically.
+
+- `AGENT.md`: retained the latest main roadmap/acceptance ledger and recorded this PR-specific merge and validation evidence.
+- `workspace-provider.tsx`: retained main's session hardening, audit read-error reporting, subscriber-consent handling, revision restore and stable data ordering; kept the source branch's readable invite/role-change/revoke audit titles and administrator operations. The unused `adminUsers` requirement was removed from the provider context type; the list operation remains exposed.
+- `analytics.functions.ts`: retained main's fail-closed server-verifiable consent gate and analytics validation/rate limiting; kept `readServerEnv` dynamically imported inside the server handler.
+- `workspace-model.ts`: retained main's expanded filtering, sorting, and export helpers while preserving `roleCan` and the backwards-compatible `demoCan` alias.
+- `admin-workspace.tsx`: Git merged it automatically. The existing AETHER-TRADE identity and administrator workflows remain; no Company Identity replacement or branding/layout redesign was introduced by this resolution.
+
+Pre-commit local verification of the combined tree:
+
+- `bun run test`: passed, 39 test files and 275 tests.
+- `bun run build`: passed.
+- `bun run tsc --noEmit`: failed with 59 TypeScript diagnostics. The prior main ledger recorded 60 diagnostics, but no exact parent-by-parent diagnostic comparison was run; therefore they are reported as current failures rather than asserted to be entirely pre-existing.
+- `bun run lint`: failed with 8,985 errors and 11 warnings, primarily Prettier/CRLF diagnostics. Focused ESLint on the changed TypeScript surfaces with `prettier/prettier` disabled reported 0 errors and 4 hook/Fast Refresh warnings.
+- Conflict-marker scan and `git diff --cached --check` passed.
+
+At this point the second merge is resolved locally but remains pending commit and push. Post-push GitHub checks, preview status, and PR mergeability have not yet been verified. PR #43 is not declared ready to merge while typecheck/lint are non-green and external review/CI checks remain pending. No staging access, database write, migration application, or deployment was performed.
 
 ## PR #43 source-branch conflict resolution
 
