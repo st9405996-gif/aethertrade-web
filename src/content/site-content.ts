@@ -1,7 +1,7 @@
 /**
- * Default public-site content. Milestone 3 moves this into the CMS database;
- * until then pages read from here. Every capability carries an availability
- * status and engagement scope are explicit.
+ * Static public-site fallback content and seed data for the demo workspace.
+ * Public routes use published CMS records when available and retain intentional
+ * route-specific static content.
  */
 import type { AvailabilityStatus } from "@/components/site/status-badge";
 
