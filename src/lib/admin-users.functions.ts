@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { attemptInvitedUserRevocation } from "@/lib/admin-user-compensation";
 import { readServerEnv } from "@/lib/server-env.server";
 
 const OWNER_ID = "bfc5b3bb-aa5d-496a-ad0b-ac14834ea690";
@@ -110,11 +111,15 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
     });
     const rolePayload = await roleResponse.json().catch(() => null) as { success?: boolean } | null;
     if (!roleResponse.ok || rolePayload?.success !== true) {
-      await fetch(env.baseUrl + "/auth/v1/admin/users/" + invitedUserId, {
-        method: "DELETE",
-        headers: serviceHeaders(env),
-      }).catch(() => null);
-      throw new Error("The role assignment failed; the invitation was revoked.");
+      const revoked = await attemptInvitedUserRevocation(
+        env.baseUrl + "/auth/v1/admin/users/" + invitedUserId,
+        serviceHeaders(env),
+      );
+      throw new Error(
+        revoked
+          ? "The role assignment failed; the invitation was revoked."
+          : "The role assignment failed, but invitation revocation could not be confirmed. Contact the project owner before retrying.",
+      );
     }
     return { success: true as const, email: data.email, role: data.role };
   });

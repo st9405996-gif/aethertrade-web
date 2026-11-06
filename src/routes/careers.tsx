@@ -1,20 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { meta, PlaceholderNote } from "@/components/site/blocks";
 import { Button } from "@/components/ui/button";
-import { CAREERS } from "@/content/site-content";
+import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
+import { isCareersEnabled, careersRobotsMeta } from "@/lib/careers-visibility";
+import { getPublishedCareerListings } from "@/lib/public-careers.functions";
 
 export const Route = createFileRoute("/careers")({
-  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "careers" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => {
-    const m = meta("Careers", "Careers at AETHER-TRADE.");
-    return CAREERS.published ? m : { meta: [...m.meta, { name: "robots", content: "noindex" }] };
-  })(), loaderData?.cmsPage) ,
+  loader: async () => {
+    const settings = await getPublicWebsiteSettings();
+    const openings = isCareersEnabled(settings) ? await getPublishedCareerListings() : [];
+    return { settings, openings };
+  },
+  head: ({ loaderData }) => {
+    const base = meta("Careers", "Careers at AETHER-TRADE.");
+    const robots = careersRobotsMeta(loaderData?.settings);
+    return robots ? { ...base, meta: [...base.meta, robots] } : base;
+  },
   component: CareersPage,
 });
 
 function CareersPage() {
+  const { settings, openings } = Route.useLoaderData();
+  const careersEnabled = isCareersEnabled(settings);
   return (
     <>
       <PageHero
@@ -23,12 +31,19 @@ function CareersPage() {
         description="Roles at AETHER-TRADE will be listed here when they are open."
       />
       <section className="container-page section-pad space-y-6">
-        {CAREERS.published && CAREERS.openings.length ? (
+        {careersEnabled && openings.length ? (
           <ul className="space-y-3">
-            {CAREERS.openings.map((o) => (
-              <li key={o.title} className="rounded-xl border border-border bg-card p-5">
-                <h2 className="font-semibold">{o.title}</h2>
-                <p className="text-sm text-muted-foreground">{o.location} · {o.type}</p>
+            {openings.map((opening) => (
+              <li key={opening.id} className="rounded-xl border border-border bg-card p-5">
+                <h2 className="font-semibold">{opening.title}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {opening.location} · {opening.type}
+                </p>
+                {opening.body.trim() && (
+                  <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {opening.body}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -36,9 +51,12 @@ function CareersPage() {
           <>
             <PlaceholderNote>No open roles right now</PlaceholderNote>
             <p className="max-w-xl text-muted-foreground">
-              We aren't hiring at the moment. If you'd like to introduce yourself for the future, get in touch.
+              We aren't hiring at the moment. If you'd like to introduce yourself for the future,
+              get in touch.
             </p>
-            <Button variant="outline" asChild><Link to="/contact">Contact us</Link></Button>
+            <Button variant="outline" asChild>
+              <Link to="/contact">Contact us</Link>
+            </Button>
           </>
         )}
       </section>
