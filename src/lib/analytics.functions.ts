@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { readServerEnv } from "@/lib/server-env.server";
 import { analyticsEventSchema, validateAnalyticsOrigin } from "@/lib/analytics-event";
 
 export const trackAnalyticsEvent = createServerFn({ method: "POST" })
@@ -24,6 +23,7 @@ export const trackAnalyticsEvent = createServerFn({ method: "POST" })
     const { consumeAnalyticsRateLimit } = await import("@/lib/analytics-rate-limit.server");
     if (!consumeAnalyticsRateLimit(clientKey)) return { accepted: false as const };
 
+    const { readServerEnv } = await import("@/lib/server-env.server");
     const env = readServerEnv();
     const baseUrl = env["SUPABASE_URL"]?.replace(/\/$/, "");
     const serviceRoleKey = env["SUPABASE_SERVICE_ROLE_KEY"];

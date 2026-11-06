@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { attemptInvitedUserRevocation } from "@/lib/admin-user-compensation";
-import { readServerEnv } from "@/lib/server-env.server";
 
 const OWNER_ID = "bfc5b3bb-aa5d-496a-ad0b-ac14834ea690";
 const roleSchema = z.enum(["Administrator", "Content Editor", "Sales Manager", "Viewer"]);
@@ -24,7 +23,8 @@ type AuthUser = { id: string; email?: string; created_at?: string; user_metadata
 type RoleRow = { user_id: string; role: string };
 export type AdminUserRecord = { userId: string; email: string; displayName: string; role: string; createdAt: string };
 
-function getAdminEnvironment(): AdminEnvironment {
+async function getAdminEnvironment(): Promise<AdminEnvironment> {
+  const { readServerEnv } = await import("@/lib/server-env.server");
   const env = readServerEnv();
   const baseUrl = env["SUPABASE_URL"]?.replace(/\/+$/, "");
   const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
@@ -83,7 +83,7 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
     return { ...parsed.data, email: parsed.data.email.trim().toLowerCase() };
   })
   .handler(async ({ data }) => {
-    const env = getAdminEnvironment();
+    const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     if (!consumeInviteLimit()) throw new Error("Invitation limit reached. Try again later.");
 
@@ -131,7 +131,7 @@ export const listAdminUsers = createServerFn({ method: "POST" })
     return parsed.data;
   })
   .handler(async ({ data }) => {
-    const env = getAdminEnvironment();
+    const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     const roleUrl = new URL(env.baseUrl + "/rest/v1/user_roles");
     roleUrl.searchParams.set("select", "user_id,role");
@@ -164,7 +164,7 @@ export const updateAdminUserRole = createServerFn({ method: "POST" })
     return parsed.data;
   })
   .handler(async ({ data }) => {
-    const env = getAdminEnvironment();
+    const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     if (data.targetUserId === OWNER_ID) throw new Error("The owner account role cannot be changed.");
     const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
@@ -184,7 +184,7 @@ export const removeAdminUser = createServerFn({ method: "POST" })
     return parsed.data;
   })
   .handler(async ({ data }) => {
-    const env = getAdminEnvironment();
+    const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
     if (data.targetUserId === OWNER_ID) throw new Error("The owner account cannot be removed.");
     const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {

@@ -1,60 +1,76 @@
-# AETHER-TRADE Admin Panel Audit
+# AETHER-TRADE Admin Panel Audit & Implementation Status
 
-Updated: 2026-11-05
-Scope: repository/source inspection and read-only Supabase schema/policy checks. This is not a full end-to-end browser test.
+Updated: 2026-11-06
+Branch: \`admin-panel-p0-p2-completion\`
+Scope: source inspection, staging Supabase migrations, transactional policy checks, GitHub Actions and Cloudflare preview builds. This is not a completed browser-based end-to-end test or a production deployment report.
 
-## Implemented in branch `admin-panel-audit-fixes`
+## Implemented in the working branch
 
-- Replaced the misleading CMS editor action label "Save demo changes" with "Save changes".
-- Removed demo-only copy from the connected CMS content and inquiry screens where records are loaded from Supabase.
-- Made CMS preview disclaim that preview is not proof of public-site rendering.
-- Clarified that revision history snapshots are created by the database trigger on content UPDATE/DELETE (new INSERTs do not have a prior version).
-- Disabled Media Library uploads in the UI until a Supabase Storage bucket is provisioned; clarified the storage readiness notice.
-- Added UUID validation to inquiry assignment input so invalid text cannot silently be converted to an unassigned inquiry.
-- Clarified that the user-role matrix is reference information and requires server-side policy verification before granting team access.
+### CMS and public pages
+- Replaced the misleading \`Save demo changes\` label with \`Save changes\`.
+- Public routes now load published page CMS data server-side. Content with a non-empty body or sections can render as CMS-managed content; contact and request-demo pages retain their inquiry forms and render CMS sections inline.
+- CMS section editor supports selecting persistent Media Library images and setting image alt text.
+- CMS SEO fields are merged into server-rendered route head metadata: title, description, canonical, robots/noindex, Open Graph and Twitter metadata.
+- CMS preview remains explicitly distinguished from guaranteed public rendering.
 
-## Findings requiring implementation/configuration
+### Media Library and storage
+- Provisioned Supabase Storage buckets: \`website-media\` (public image delivery) and \`internal-media\` (private).
+- Enforced JPG/PNG/WebP only, maximum 2 MB for stored media metadata and bucket objects.
+- Admin upload/delete is wired through a same-origin proxy with bucket/path allowlisting, authenticated uploads and Storage RLS.
+- Catalogue rows include bucket/object path, file name/type/size, owner and alt text.
+- Upload rollback deletes the uploaded object if metadata persistence fails.
 
-### P0 — CMS public rendering
-CMS records persist in Supabase, but the public site must be wired to read/present those records consistently. Confirm page-by-page rendering, publish/draft behavior, and preview/live parity before editors populate content.
+### Audit logs and revisions
+- Content UPDATE/DELETE snapshots are recorded in \`content_revisions\`, with operation type.
+- Database audit records include changed field names.
+- Role invitation/update/revoke events are written atomically by the owner-only \`admin_manage_user_role\` database function.
+- Admin audit UI renders human-readable operation titles and changed fields.
 
-### P0 — Media storage
-The `media_assets` table exists, but no bucket is configured and the table is empty. Create a bucket, Storage RLS policies, safe upload path, size/type enforcement, durable URL handling, replacement/deletion lifecycle, and then re-enable uploads.
+### Role-based access and administrator management
+- \`has_permission(text)\` now evaluates the configured \`role_permissions\` matrix using a SECURITY DEFINER function.
+- \`user_roles\` client reads are restricted to the signed-in user's own role assignment; client writes remain blocked.
+- Owner-only server functions can list administrator accounts, send invitations, change a role or revoke the role assignment. They use the server-side Supabase service-role binding; it is never sent to the browser.
+- The database role-management RPC hardcodes the owner identity, forbids changing/removing the owner, allows only Administrator / Content Editor / Sales Manager / Viewer assignments, and writes audit entries in the same transaction.
+- Invite links accept the \`invite\` type in the password setup route. The root route forwards invite/recovery hashes to \`/reset-password\` as a fallback if the auth redirect lands on the Site URL.
+- Invitation send limit: five per hour. No invitation email has been sent as part of this implementation.
 
-### P1 — Roles and authorization
-The UI role-permission matrix is local reference logic. Supabase RLS is the actual enforcement layer. The inspected `has_permission` function currently explicitly restricts permissions to the configured Super Admin user and Super Admin role; therefore, the other listed roles should not be presented as fully operational until the policies/function and role assignment model are implemented and tested. Do not invite users before that work.
+### Analytics and subscribers
+- First-party page views, CTA clicks and successful Contact/Demo conversions are recorded only after ConsentManager's TCF audience-statistics purpose 8 is explicitly granted. The tracker fails closed if the CMP reports a different configuration.
+- Analytics requests validate event/path fields, same-origin requests and a per-client rate limit. No visitor name, email or form fields are collected in analytics.
+- Analytics admin page reports stored events and page counts; empty data is not fabricated.
+- Subscribers module supports owner-only manual entries with explicit consent confirmation, CSV export and unsubscribe suppression status. It does not send newsletter campaigns; double opt-in and email delivery remain unconfigured.
 
-### P1 — SEO integration
-CMS SEO fields exist, but confirm they populate public HTML title/meta description/canonical/robots/Open Graph, sitemap and robots rules, and scheduled publication behavior. Currently fields alone do not prove the SEO feature works end to end.
+### Connection readiness and inquiry flow
+- Connections page reports authenticated database status, provisioned media buckets, Cloudflare Worker status and server inquiry-delivery mode.
+- Email delivery is labelled “Configured” only when the server says live mode; actual email deliverability is not claimed without a test message.
+- Existing inquiry form workflow remains consent-gated, server-validated and rate-limited.
 
-### P1 — Audit and revisions
-Database triggers exist: content change events are recorded in `audit_logs`; prior snapshots on content UPDATE/DELETE are inserted in `content_revisions`. Audit records contain event metadata, not a comprehensive before/after diff. Add richer actor/action detail only with a migration and policy review.
+## Verification completed
 
-### P1 — Connections/readiness
-Connection statuses must be sourced from actual health checks, not static labels. Add safe server-side checks for Supabase, Storage, inquiry delivery, email provider, and deployed runtime. Never expose secret values.
+- Cloudflare preview Worker build succeeded for the feature branch at an earlier implementation checkpoint.
+- GitHub Actions workflow added for lint, unit tests, SEO asset generation/check and production build. Lint is run with the repository's pre-existing Prettier rule disabled; baseline formatting debt is not silently auto-fixed across the whole repository.
+- Supabase transaction tests confirmed:
+  - consented anonymous analytics insert is allowed;
+  - analytics insert with consent=false is rejected by RLS;
+  - owner role can insert test media/subscriber rows (transactions rolled back);
+  - content update produced audit entries, a revision snapshot and changed fields;
+  - role permission checks were exercised transactionally.
+- Test transactions were rolled back; no permanent test records were created.
 
-### P1 — Inquiry handling
-Validate inquiry lifecycle end-to-end: secure server submission, duplicate/idempotency handling, bot challenge, RLS, status-history trigger, notes, assignment, follow-up and CSV export. Verify notification email delivery with a controlled test.
+## Remaining manual/end-to-end checks before production merge/deploy
 
-### P2 — Missing/partial modules
-- Admin invitations: disabled; implement only after authorization model is corrected.
-- Analytics: currently no tracked events; add privacy/consent-aware analytics and honest empty states.
-- Subscribers: no newsletter collection or delivery; configure consent and a provider before enabling.
-- Revision UI: test restore-to-draft end to end and ensure restored snapshots are saved safely.
-- Settings/branding: verify protected writes; avoid exposing private settings in public queries.
-- UX: loading/error/empty states, accessible form labels, mobile navigation, confirmation dialogs, and meaningful toast outcomes.
+- Confirm the current latest GitHub Actions run passes after the administrator management and invitation changes.
+- Confirm the latest Cloudflare preview build passes for the current commit.
+- Browser-test with the owner account: CMS publish and public render, media upload/delete, inquiry status/notes, audit/revision restore, analytics and subscriber UI.
+- Send one real administrator invitation to a recipient explicitly chosen by the owner, verify email link/password setup, and test that the assigned role has only the intended RLS permissions. This is not done automatically or by this chat.
+- Verify Supabase Auth redirect allowlist and the Invite User email template against \`https://aethertrade.cloud/\`; root hash forwarding is a fallback, not a substitute for testing.
+- Confirm ConsentManager's configured analytics purpose is purpose 8; otherwise first-party analytics will intentionally remain empty.
+- Send a controlled Resend test email and verify delivery/notifications; configuration status alone is not proof.
+- Review Supabase security advisors, backups and rollback plan after the migrations.
 
-## Verification checklist before production merge/deploy
+## Deployment state
 
-- Run lint, TypeScript, unit tests and production build in a clean environment.
-- Test CMS create/edit/delete, draft/publish, slug uniqueness, and rollback.
-- Confirm public page output reflects intended published CMS data and not drafts.
-- Test roles against Supabase RLS with separate accounts (not just UI gating).
-- Test inquiry submission and status change; confirm audit/history records.
-- Test Media Storage permissions with anonymous and authenticated users.
-- Check SEO output, sitemap, robots, canonical and noindex.
-- Verify backups, secrets, error logging and deploy rollback.
-
+PR #43 (`admin-panel-p0-p2-completion` → `main`) is open and unmerged. GitHub reported it as not draft when checked; mergeability was unknown. Conflict resolution and verification do not constitute a merge into `main` or a production deployment. Merge/deploy should happen only after current CI/preview checks and the manual checks above are reconciled.
 
 ## Production incident verification — 2026-11-06
 
@@ -70,3 +86,34 @@ Validate inquiry lifecycle end-to-end: secure server submission, duplicate/idemp
 ### Broader audit boundaries
 
 The existing pre-launch audit remains valid for its stated scope. Source review and database schema checks are not equivalent to browser-driven end-to-end testing. Admin modules requiring external account/provider setup or controlled live actions remain marked blocked/not tested until those checks are completed. No live email, destructive reset, user invitation, or public inquiry has been sent as part of this incident investigation.
+
+## Latest main integration — 2026-11-06
+
+`origin/main` advanced to `5fd6942a102cd88ad1fac86c169dc0feac601167` after the first source-branch push. Its PR #45 session, consent, audit, subscriber, preview, readiness, revision-restore, stable-ordering, and regression-test changes were merged into the local PR #43 source branch. Actual conflicts in this second integration were `AGENT.md`, `src/components/admin/workspace-provider.tsx`, `src/lib/analytics.functions.ts`, and `src/lib/workspace-model.ts`; the other incoming files, including `src/components/admin/admin-workspace.tsx`, merged automatically.
+
+- `AGENT.md`: retained the latest main roadmap/acceptance ledger and recorded this PR-specific merge and validation evidence.
+- `workspace-provider.tsx`: retained main's session hardening, audit read-error reporting, subscriber-consent handling, revision restore and stable data ordering; kept the source branch's readable invite/role-change/revoke audit titles and administrator operations. The unused `adminUsers` requirement was removed from the provider context type; the list operation remains exposed.
+- `analytics.functions.ts`: retained main's fail-closed server-verifiable consent gate and analytics validation/rate limiting; kept `readServerEnv` dynamically imported inside the server handler.
+- `workspace-model.ts`: retained main's expanded filtering, sorting, and export helpers while preserving `roleCan` and the backwards-compatible `demoCan` alias.
+- `admin-workspace.tsx`: Git merged it automatically. The existing AETHER-TRADE identity and administrator workflows remain; no Company Identity replacement or branding/layout redesign was introduced by this resolution.
+
+Pre-commit local verification of the combined tree:
+
+- `bun run test`: passed, 39 test files and 275 tests.
+- `bun run build`: passed.
+- `bun run tsc --noEmit`: failed with 59 TypeScript diagnostics. The prior main ledger recorded 60 diagnostics, but no exact parent-by-parent diagnostic comparison was run; therefore they are reported as current failures rather than asserted to be entirely pre-existing.
+- `bun run lint`: failed with 8,985 errors and 11 warnings, primarily Prettier/CRLF diagnostics. Focused ESLint on the changed TypeScript surfaces with `prettier/prettier` disabled reported 0 errors and 4 hook/Fast Refresh warnings.
+- Conflict-marker scan and `git diff --cached --check` passed.
+
+The second merge was committed as `1aa542c1770c267ba712af2a4ab083cb53fb674a` and pushed normally to `admin-panel-p0-p2-completion`; the remote PR head was verified at that SHA. GitHub Actions run 103 passed its lint, unit-test, SEO-asset, and production-build steps. The Cloudflare Workers preview build also passed; it is a preview only, not a production deployment. GitHub reports PR #43 open, unmerged, and conflict-free (`mergeable_state: clean`). The local TypeScript check remains non-green with 59 diagnostics; the previous main ledger recorded 60, but no exact parent-by-parent diagnostic comparison was run. Local full lint reports 8,985 Prettier/CRLF-dominated errors and 11 warnings, while the hosted lint step passed; focused local ESLint with the Prettier rule disabled reports 0 errors and 4 hook/Fast Refresh warnings. Thus conflict resolution and hosted checks are complete and the PR is ready for review, but it should not be considered ready to merge until the TypeScript diagnostics and remaining external acceptance checks are reviewed. No staging access, database write, migration application, or production deployment was performed.
+
+## PR #43 source-branch conflict resolution
+
+The merge of `origin/main` into the PR source branch produced actual conflicts in `docs/admin-panel-audit.md`, `src/components/admin/workspace-provider.tsx`, `src/lib/admin-users.functions.ts`, and `src/lib/public-cms.functions.ts`. `src/components/admin/admin-workspace.tsx` was named in the request but was not conflicted by Git; the current main version keeps the global SEO panel and administrator list/invite/role-change/revoke workflows, with those operations routed through the workspace provider. No branding or layout edit was made to resolve conflicts. `src/components/admin/reset-preview.tsx` has the branch's account-setup/recovery wording for invitation links; its layout is unchanged.
+
+- `workspace-provider.tsx`: kept main's global SEO state/save and administrator management functions while preserving the branch's human-readable administrator audit operation titles. Removed the unused `adminUsers` requirement from the context type because the administrator screen owns and loads its own list state; the list/invite/role-change/revoke methods remain exposed.
+- `admin-users.functions.ts`: retained invitation-revocation compensation and the branch's dynamic server-environment import, avoiding a redundant static server-environment import.
+- `public-cms.functions.ts`: retained publication/slug/media-proxy dependencies and the dynamic server-environment import, avoiding a redundant static server-environment import.
+- `docs/admin-panel-audit.md`: retained the Global SEO proxy incident diagnosis and the source branch's no-production-deployment qualification; corrected PR status to open/unmerged rather than draft.
+
+Local verification: `bun run test` passed (27 files, 203 tests); `bun run build` passed; `bun run tsc --noEmit` fails with 88 diagnostics, primarily TS4111 index-signature property-access diagnostics. The `DemoWorkspace` return missing `analytics` and `subscribers` is present in both the source and main parent trees. `bun run lint` fails with 7,055 errors and 11 warnings, dominated by Prettier formatting/CRLF diagnostics; focused ESLint on the three changed TypeScript files with the Prettier rule disabled reports 0 errors and 3 hook/Fast Refresh warnings. No complete lint/typecheck baseline was run against both parents, so the remaining diagnostics are not all labeled pre-existing. The conflict-marker scan and `git diff --check` passed. Staging, production, deployment, live email, and GitHub Actions/Cloudflare preview behavior were not exercised. Recheck PR head and CI before merge; this audit does not declare PR #43 ready to merge.

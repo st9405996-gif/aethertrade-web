@@ -47,18 +47,18 @@ export default function ResetPage() {
 
   return (
     <div className="container-page mx-auto max-w-lg py-16">
-      <p className="eyebrow">Account recovery</p>
+      <p className="eyebrow">Account setup / recovery</p>
       <h1 className="mt-4 text-3xl font-semibold">Set a new password</h1>
       {checking ? (
         <p className="mt-6 text-sm text-muted-foreground" role="status">
-          Verifying your recovery link…
+          Verifying your account link…
         </p>
       ) : completed ? (
         <p className="mt-6 text-sm text-success" role="status">{message}</p>
       ) : !recoveryValid ? (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-destructive" role="alert">
-            This recovery link is invalid or expired. Return to administrator sign-in and request a new link.
+            This account link is invalid or expired. Return to administrator sign-in and request a fresh invitation or recovery link.
           </p>
           <Link to="/auth" className="inline-block text-sm text-primary">
             Back to administrator sign-in
