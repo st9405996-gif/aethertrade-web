@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { readServerEnv } from "@/lib/server-env.server";
 import { isPublicAt } from "@/lib/publication";
 import { isValidCmsPageSlug } from "@/lib/cms-page-routing";
 import { publicMediaProxyUrl } from "@/lib/admin-proxy";

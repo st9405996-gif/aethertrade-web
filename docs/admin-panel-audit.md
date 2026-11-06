@@ -70,7 +70,7 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 
 ## Deployment state
 
-The feature is on a separate branch and draft PR. Production has not been deployed from this branch. Merge/deploy should happen only after current CI/preview checks and the manual checks above are reconciled.
+PR #43 (`admin-panel-p0-p2-completion` → `main`) is open and unmerged. GitHub reported it as not draft when checked; mergeability was unknown. Conflict resolution and verification do not constitute a merge into `main` or a production deployment. Merge/deploy should happen only after current CI/preview checks and the manual checks above are reconciled.
 
 ## Production incident verification — 2026-11-06
 
@@ -86,3 +86,14 @@ The feature is on a separate branch and draft PR. Production has not been deploy
 ### Broader audit boundaries
 
 The existing pre-launch audit remains valid for its stated scope. Source review and database schema checks are not equivalent to browser-driven end-to-end testing. Admin modules requiring external account/provider setup or controlled live actions remain marked blocked/not tested until those checks are completed. No live email, destructive reset, user invitation, or public inquiry has been sent as part of this incident investigation.
+
+## PR #43 source-branch conflict resolution
+
+The merge of `origin/main` into the PR source branch produced actual conflicts in `docs/admin-panel-audit.md`, `src/components/admin/workspace-provider.tsx`, `src/lib/admin-users.functions.ts`, and `src/lib/public-cms.functions.ts`. `src/components/admin/admin-workspace.tsx` was named in the request but was not conflicted by Git; the current main version keeps the global SEO panel and administrator list/invite/role-change/revoke workflows, with those operations routed through the workspace provider. No branding or layout edit was made to resolve conflicts. `src/components/admin/reset-preview.tsx` has the branch's account-setup/recovery wording for invitation links; its layout is unchanged.
+
+- `workspace-provider.tsx`: kept main's global SEO state/save and administrator management functions while preserving the branch's human-readable administrator audit operation titles. Removed the unused `adminUsers` requirement from the context type because the administrator screen owns and loads its own list state; the list/invite/role-change/revoke methods remain exposed.
+- `admin-users.functions.ts`: retained invitation-revocation compensation and the branch's dynamic server-environment import, avoiding a redundant static server-environment import.
+- `public-cms.functions.ts`: retained publication/slug/media-proxy dependencies and the dynamic server-environment import, avoiding a redundant static server-environment import.
+- `docs/admin-panel-audit.md`: retained the Global SEO proxy incident diagnosis and the source branch's no-production-deployment qualification; corrected PR status to open/unmerged rather than draft.
+
+Local verification: `bun run test` passed (27 files, 203 tests); `bun run build` passed; `bun run tsc --noEmit` fails with 88 diagnostics, primarily TS4111 index-signature property-access diagnostics. The `DemoWorkspace` return missing `analytics` and `subscribers` is present in both the source and main parent trees. `bun run lint` fails with 7,055 errors and 11 warnings, dominated by Prettier formatting/CRLF diagnostics; focused ESLint on the three changed TypeScript files with the Prettier rule disabled reports 0 errors and 3 hook/Fast Refresh warnings. No complete lint/typecheck baseline was run against both parents, so the remaining diagnostics are not all labeled pre-existing. The conflict-marker scan and `git diff --check` passed. Staging, production, deployment, live email, and GitHub Actions/Cloudflare preview behavior were not exercised. Recheck PR head and CI before merge; this audit does not declare PR #43 ready to merge.
