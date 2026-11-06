@@ -11,6 +11,11 @@ import {
   writeAdminRecord,
 } from "@/lib/admin-mutations";
 import { mapAdminMediaRecord } from "@/lib/admin-media";
+import {
+  parseExistingSubscriberLookup,
+  createSubscriberSubscriptionPlan,
+  createSubscriberUnsubscribePlan,
+} from "@/lib/subscriber-consent";
 import { toast } from "sonner";
 import {
   createAdminSession,
@@ -210,28 +215,26 @@ export function WorkspaceProvider({children}:{children:ReactNode}){
    void refreshAfterWrite();
  }
  async function addSubscriber(email:string,consentConfirmed:boolean){
-  const normalized=email.trim().toLowerCase();
-  if(!consentConfirmed)throw Error("Confirm that the email owner gave permission before adding them.");
-  if(normalized.length<5||normalized.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized))throw Error("Enter a valid email address.");
+  const initialPlan=createSubscriberSubscriptionPlan(email,consentConfirmed,null);
   const s=await fresh();const user=await call(cfg!,s.access_token,"/auth/v1/user");
-  const existing=await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?select=id,status,email&email=eq."+encodeURIComponent(normalized));
-  const existingRow=Array.isArray(existing)&&existing.length?row(existing[0]):null;let saved:JsonRow;
-  if(existingRow){
-   const existingId=text(existingRow,"id");if(!uuid(existingId))throw Error("Subscriber lookup returned an invalid record.");
-   if(existingRow["status"]==="subscribed")throw Error("This email is already subscribed.");
-   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+existingId,method:"PATCH",body:{status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id,updated_at:new Date().toISOString()},expectedId:existingId,operation:"Subscriber re-subscription"});
+  const existing=await call(cfg!,s.access_token,"/rest/v1/newsletter_subscribers?select=id,status,email&email=eq."+encodeURIComponent(initialPlan.email));
+  const existingSubscriber=parseExistingSubscriberLookup(existing,initialPlan.email);
+  const plan=createSubscriberSubscriptionPlan(initialPlan.email,true,existingSubscriber);
+  const timestamp=new Date().toISOString();
+  let saved:JsonRow;
+  if(plan.existingId){
+   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+plan.existingId,method:"PATCH",body:{status:"subscribed",consent:true,consent_at:timestamp,source:"admin",created_by:user.id,updated_at:timestamp},expectedId:plan.existingId,operation:"Subscriber re-subscription"});
   }else{
-   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers",method:"POST",body:{email:normalized,status:"subscribed",consent:true,consent_at:new Date().toISOString(),source:"admin",created_by:user.id},operation:"Subscriber creation"});
+   saved=await writeAdminRecord({accessToken:s.access_token,path:"/rest/v1/newsletter_subscribers",method:"POST",body:{email:plan.email,status:"subscribed",consent:true,consent_at:timestamp,source:"admin",created_by:user.id},operation:"Subscriber creation"});
   }
-  const subscriberId=text(saved,"id");if(!uuid(subscriberId)||text(saved,"email")!==normalized||saved["status"]!=="subscribed"||saved["consent"]!==true)throw Error("Subscriber write returned a record that did not match the confirmed consent.");
-  const subscriber:Subscriber={id:subscriberId,email:normalized,status:"subscribed",consent:true,consentAt:text(saved,"consent_at"),source:text(saved,"source","admin"),createdAt:text(saved,"created_at")};
-  setData(old=>({...old,subscribers:[subscriber,...old.subscribers.filter(x=>x.email!==normalized)]}));
+  const subscriberId=text(saved,"id");if(!uuid(subscriberId)||text(saved,"email")!==plan.email||saved["status"]!=="subscribed"||saved["consent"]!==true)throw Error("Subscriber write returned a record that did not match the confirmed consent.");
+  const subscriber:Subscriber={id:subscriberId,email:plan.email,status:"subscribed",consent:true,consentAt:text(saved,"consent_at"),source:text(saved,"source","admin"),createdAt:text(saved,"created_at")};
+  setData(old=>({...old,subscribers:[subscriber,...old.subscribers.filter(x=>x.email!==plan.email)]}));
   void refreshAfterWrite();
  }
  async function updateSubscriberStatus(id:string,status:"subscribed"|"unsubscribed"){
-  if(!uuid(id))throw Error("Invalid subscriber record.");
-  if(status!=="unsubscribed")throw Error("Re-subscribing requires confirming fresh consent through the add-subscriber form.");
-  const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+id,method:"PATCH",body:{status:"unsubscribed",updated_at:new Date().toISOString()},expectedId:id,operation:"Subscriber unsubscribe"});
+  const plan=createSubscriberUnsubscribePlan(id,status);
+  const saved=await writeAdminRecord({accessToken:(await fresh()).access_token,path:"/rest/v1/newsletter_subscribers?id=eq."+plan.id,method:"PATCH",body:{status:plan.status,updated_at:new Date().toISOString()},expectedId:plan.id,operation:"Subscriber unsubscribe"});
   if(saved["status"]!=="unsubscribed")throw Error("Subscriber update returned an unexpected status.");
   setData(old=>({...old,subscribers:old.subscribers.map(x=>x.id===id?{...x,status:"unsubscribed"}:x)}));
   void refreshAfterWrite();
