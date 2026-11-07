@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { readServerEnv } from "@/lib/server-env.server";
 import { isPublicAt } from "@/lib/publication";
 import { isValidCmsPageSlug } from "@/lib/cms-page-routing";
 import { publicMediaProxyUrl } from "@/lib/admin-proxy";
@@ -160,6 +159,7 @@ export const getPublishedCmsPage = createServerFn({ method: "GET" })
     return parsed.data;
   })
   .handler(async ({ data }) => {
+    const { readServerEnv } = await import("@/lib/server-env.server");
     const env = readServerEnv();
     return fetchPublishedCmsPage(env["SUPABASE_URL"], env["SUPABASE_PUBLISHABLE_KEY"], data.slug);
   });

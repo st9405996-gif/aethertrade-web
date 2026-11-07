@@ -162,7 +162,6 @@ function mapInquiry(source: JsonRow, notes: JsonRow[] = []): Inquiry {
     followUp: text(source, "follow_up"),
   };
 }
-
 type AssignableAdminRole = Exclude<Role, "Super Admin">;
 type Ctx = {
   listAdminUsers: () => Promise<AdminUserRecord[]>;
@@ -319,10 +318,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const changedFields = Array.isArray(details["changed_fields"])
           ? details["changed_fields"].filter((field): field is string => typeof field === "string")
           : [];
+        const operation = text(details, "operation");
+        const title =
+          operation === "INVITE"
+            ? "Administrator invited"
+            : operation === "ROLE_UPDATE"
+              ? "Administrator role updated"
+              : operation === "ROLE_REVOKE"
+                ? "Administrator access revoked"
+                : text(a, "module") || text(a, "record_id") || "Content update";
         return {
           id: text(a, "id"),
           action: text(a, "action"),
-          title: text(a, "module") || text(a, "record_id") || "Content update",
+          title,
           at: text(a, "created_at"),
           changedFields,
         };

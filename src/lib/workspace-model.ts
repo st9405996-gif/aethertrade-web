@@ -44,9 +44,11 @@ const rolePermissions: Record<Role, Permission[]> = {
   Viewer: ["report"],
 };
 // UI simulation only. These values must never authorize a connected endpoint.
-export function demoCan(role: Role, permission: Permission) {
+export function roleCan(role: Role, permission: Permission) {
   return rolePermissions[role].includes(permission);
 }
+/** Backward-compatible name retained for existing workspace model tests. */
+export const demoCan = roleCan;
 export const modules = [
   ["overview", "Overview", "Workspace"],
   ["pages", "Pages & sections", "Content"],
