@@ -492,6 +492,32 @@ describe("website media object cleanup", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
 
+  it("keeps the pending catalogue row recoverable after a metadata network timeout", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: recordId }]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockRejectedValueOnce(new TypeError("database network timeout"));
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("catalogue deletion is still pending");
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not touch Storage when the pending-state database write times out", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(new TypeError("database timeout"));
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("database timeout");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it("recovers when storage was already deleted by an earlier attempt", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
