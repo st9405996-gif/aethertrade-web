@@ -5,24 +5,28 @@ import { StubPage } from "@/components/site/stub-page";
 
 export const Route = createFileRoute("/about")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "about" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => ({
-    meta: [
-      { title: "About — AETHER-TRADE" },
-      {
-        name: "description",
-        content:
-          "AETHER-TRADE builds more connected operations for global trade — human-controlled AI, evidence and operational clarity.",
-      },
-      { property: "og:title", content: "About — AETHER-TRADE" },
-      {
-        property: "og:description",
-        content: "Building more connected operations for global trade.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "noindex" },
-    ],
-  }))(), loaderData?.cmsPage) ,
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      (() => ({
+        meta: [
+          { title: "About — AETHER-TRADE" },
+          {
+            name: "description",
+            content:
+              "AETHER-TRADE builds more connected operations for global trade — human-controlled AI, evidence and operational clarity.",
+          },
+          { property: "og:title", content: "About — AETHER-TRADE" },
+          {
+            property: "og:description",
+            content: "Building more connected operations for global trade.",
+          },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
+          { name: "robots", content: "noindex" },
+        ],
+      }))(),
+      loaderData?.cmsPage,
+    ),
   component: AboutPage,
 });
 

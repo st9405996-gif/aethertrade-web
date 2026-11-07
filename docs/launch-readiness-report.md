@@ -4,22 +4,22 @@ Decision: **NOT SAFE TO PUBLISH.** Nothing has been deployed, published, or conn
 
 ## 1. Verified in this environment
 
-| Check | Result |
-|---|---|
-| Unit tests (`bunx vitest run`) | 89 of 89 pass (9 files) |
-| Typecheck (`tsc --noEmit`) | Pass |
-| Production build (`vite build`) | Pass; Cloudflare Worker output generated |
-| Bundle leak check | No server-only names (`CONFIRMATION_SECRET`, `TURNSTILE_SECRET_KEY`, `ABUSE_HASH_SECRET`, `OPS_HEALTH_TOKEN`, `SUPABASE_SERVICE`, provider URLs, quota RPC) in `.output/public` |
-| Admin bundle | No `admin-workspace`, `auth-preview` or `reset-preview` chunks in production output; no admin or sign-in UI strings in public assets |
-| Production dependency audit (`bun audit --production`) | 0 advisories across 287 packages |
-| Full dependency audit | 1 moderate, dev-only (minimatch 3.x via ESLint's dependency chain). Accepted; see section 4 |
-| Browser QA, final build, Workers runtime | 38 of 38 public responses 200 at 1280px and 390px; no horizontal overflow; no console or CSP errors; all nav/footer links 200; `/admin`, `/admin/inquiries`, `/auth`, `/reset-password`, unknown paths 404 |
-| Demo form behaviour | Fast submission rejected (3-second rule); honeypot bot-style submission rejected with the generic message and no navigation; valid submission saved locally with a DEMO reference; demo notice visible |
-| Forged confirmations (browser, both runtimes) | `token` forgeries, malformed tokens, wrong reference formats and the legacy `status=received` parameter all show "not confirmed" or "no saved inquiry"; never "received" |
-| Live submission without challenge token | Rejected with the generic message; zero database writes to the mock |
-| Health endpoint | Hidden (404) without a token and with a wrong token; with the correct token returns 503 and category-only fields; output checked for secret, domain, email and error-text leakage |
-| Rate-limit SQL (`docs/database/004`) | Run against a real PostgreSQL 16.15 server with simulated Supabase roles: 5 allowed then refused; independent keys; window reset; exactly 5 of 20 concurrent calls allowed; `anon` and `authenticated` denied function and table; `service_role` allowed |
-| Security headers | CSP, HSTS, frame denial, nosniff, referrer, permissions and COOP present on every Worker response; CSP checked in a real browser |
+| Check                                                  | Result                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit tests (`bunx vitest run`)                         | 89 of 89 pass (9 files)                                                                                                                                                                                                                                  |
+| Typecheck (`tsc --noEmit`)                             | Pass                                                                                                                                                                                                                                                     |
+| Production build (`vite build`)                        | Pass; Cloudflare Worker output generated                                                                                                                                                                                                                 |
+| Bundle leak check                                      | No server-only names (`CONFIRMATION_SECRET`, `TURNSTILE_SECRET_KEY`, `ABUSE_HASH_SECRET`, `OPS_HEALTH_TOKEN`, `SUPABASE_SERVICE`, provider URLs, quota RPC) in `.output/public`                                                                          |
+| Admin bundle                                           | No `admin-workspace`, `auth-preview` or `reset-preview` chunks in production output; no admin or sign-in UI strings in public assets                                                                                                                     |
+| Production dependency audit (`bun audit --production`) | 0 advisories across 287 packages                                                                                                                                                                                                                         |
+| Full dependency audit                                  | 1 moderate, dev-only (minimatch 3.x via ESLint's dependency chain). Accepted; see section 4                                                                                                                                                              |
+| Browser QA, final build, Workers runtime               | 38 of 38 public responses 200 at 1280px and 390px; no horizontal overflow; no console or CSP errors; all nav/footer links 200; `/admin`, `/admin/inquiries`, `/auth`, `/reset-password`, unknown paths 404                                               |
+| Demo form behaviour                                    | Fast submission rejected (3-second rule); honeypot bot-style submission rejected with the generic message and no navigation; valid submission saved locally with a DEMO reference; demo notice visible                                                   |
+| Forged confirmations (browser, both runtimes)          | `token` forgeries, malformed tokens, wrong reference formats and the legacy `status=received` parameter all show "not confirmed" or "no saved inquiry"; never "received"                                                                                 |
+| Live submission without challenge token                | Rejected with the generic message; zero database writes to the mock                                                                                                                                                                                      |
+| Health endpoint                                        | Hidden (404) without a token and with a wrong token; with the correct token returns 503 and category-only fields; output checked for secret, domain, email and error-text leakage                                                                        |
+| Rate-limit SQL (`docs/database/004`)                   | Run against a real PostgreSQL 16.15 server with simulated Supabase roles: 5 allowed then refused; independent keys; window reset; exactly 5 of 20 concurrent calls allowed; `anon` and `authenticated` denied function and table; `service_role` allowed |
+| Security headers                                       | CSP, HSTS, frame denial, nosniff, referrer, permissions and COOP present on every Worker response; CSP checked in a real browser                                                                                                                         |
 
 ## 2. Not verified (do not claim these)
 
@@ -63,6 +63,7 @@ Decision: **NOT SAFE TO PUBLISH.** Nothing has been deployed, published, or conn
 Applied in order: 001_foundation, 002_existing_content, 003_inquiry_delivery, 004_submission_quota, 005_harden_table_grants, 006_revoke_trigger_function_execute.
 
 Verified with real queries on the staging database:
+
 - 14 public tables, all with RLS enabled.
 - anon cannot read inquiries (permission denied), cannot call consume_submission_quota (permission denied).
 - anon reads 68 published content rows and 0 draft rows.

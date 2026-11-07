@@ -1,7 +1,12 @@
 export type ConsentManagerData = {
   purposeConsents?: Record<string, boolean>;
 };
-export type ConsentManagerApi = (command: string, parameter?: unknown, callback?: unknown, async?: boolean) => unknown;
+export type ConsentManagerApi = (
+  command: string,
+  parameter?: unknown,
+  callback?: unknown,
+  async?: boolean,
+) => unknown;
 
 declare global {
   interface Window {

@@ -56,22 +56,48 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   const config = readServerEnv();
   const base = config["SUPABASE_URL"]?.replace(/\/$/, "");
   const key = config["SUPABASE_PUBLISHABLE_KEY"];
-  if (!base || !key) return new Response(JSON.stringify({message:"Supabase server connection settings are missing."}), {status:503,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
+  if (!base || !key)
+    return new Response(
+      JSON.stringify({ message: "Supabase server connection settings are missing." }),
+      {
+        status: 503,
+        headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+      },
+    );
   const target = adminProxyTarget(requestUrl.pathname, requestUrl.search, request.method);
-  if (!target) return new Response("Not found", {status:404});
+  if (!target) return new Response("Not found", { status: 404 });
   const targetPath = target.split("?")[0] ?? "";
   const storage = targetPath.startsWith("/storage/v1/object/");
-  const publicStorageRead = targetPath.startsWith("/storage/v1/object/public/website-media/") && request.method === "GET";
+  const publicStorageRead =
+    targetPath.startsWith("/storage/v1/object/public/website-media/") && request.method === "GET";
   const publicAuth = targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover";
   const rest = targetPath.startsWith("/rest/v1/");
-  const auth = ((targetPath.startsWith("/auth/v1/token") || targetPath === "/auth/v1/recover" || targetPath === "/auth/v1/logout") && request.method === "POST") || (targetPath === "/auth/v1/user" && ["GET","PUT"].includes(request.method));
-  const storageMethod = storage && (publicStorageRead || ["POST","PUT","DELETE"].includes(request.method));
-  if (!storageMethod && !(rest && ["GET","POST","PATCH","DELETE"].includes(request.method)) && !auth) return new Response("Method not allowed", {status:405});
+  const auth =
+    ((targetPath.startsWith("/auth/v1/token") ||
+      targetPath === "/auth/v1/recover" ||
+      targetPath === "/auth/v1/logout") &&
+      request.method === "POST") ||
+    (targetPath === "/auth/v1/user" && ["GET", "PUT"].includes(request.method));
+  const storageMethod =
+    storage && (publicStorageRead || ["POST", "PUT", "DELETE"].includes(request.method));
+  if (
+    !storageMethod &&
+    !(rest && ["GET", "POST", "PATCH", "DELETE"].includes(request.method)) &&
+    !auth
+  )
+    return new Response("Method not allowed", { status: 405 });
   const authorization = request.headers.get("authorization");
-  if (!publicStorageRead && !publicAuth && !authorization?.startsWith("Bearer ")) return new Response(JSON.stringify({message:"Authentication required."}), {status:401,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store"}});
-  const headers = new Headers({apikey:key});
-  for (const name of ["accept","content-type","prefer","range","x-upsert","cache-control"]) { const value=request.headers.get(name); if(value) headers.set(name,value); }
-  if (authorization) headers.set("authorization",authorization);
+  if (!publicStorageRead && !publicAuth && !authorization?.startsWith("Bearer "))
+    return new Response(JSON.stringify({ message: "Authentication required." }), {
+      status: 401,
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  const headers = new Headers({ apikey: key });
+  for (const name of ["accept", "content-type", "prefer", "range", "x-upsert", "cache-control"]) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  if (authorization) headers.set("authorization", authorization);
   const body = ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer();
   if (request.method === "DELETE" && targetPath === "/storage/v1/object/website-media") {
     let deletion: unknown;
@@ -104,9 +130,16 @@ async function proxyAdminSupabase(request: Request): Promise<Response> {
   if (body !== undefined) upstreamRequest.body = body;
   const upstream = await fetch(new URL(target, base), upstreamRequest);
   const outHeaders = new Headers();
-  for (const name of ["content-type","content-range","accept-ranges","etag","last-modified"]) { const value=upstream.headers.get(name); if(value) outHeaders.set(name,value); }
-  outHeaders.set("cache-control",publicStorageRead?"public, max-age=300":"no-store");
-  return new Response(upstream.body,{status:upstream.status,statusText:upstream.statusText,headers:outHeaders});
+  for (const name of ["content-type", "content-range", "accept-ranges", "etag", "last-modified"]) {
+    const value = upstream.headers.get(name);
+    if (value) outHeaders.set(name, value);
+  }
+  outHeaders.set("cache-control", publicStorageRead ? "public, max-age=300" : "no-store");
+  return new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers: outHeaders,
+  });
 }
 
 async function dynamicSeoDocument(
@@ -220,27 +253,46 @@ async function dynamicSeoDocument(
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const requestUrl = new URL(request.url);
-    if (requestUrl.pathname.startsWith("/api/admin-supabase/")) return withSecurityHeaders(await proxyAdminSupabase(request));
+    if (requestUrl.pathname.startsWith("/api/admin-supabase/"))
+      return withSecurityHeaders(await proxyAdminSupabase(request));
     const seoDocument = await dynamicSeoDocument(requestUrl.pathname, readServerEnv());
     if (seoDocument) return withSecurityHeaders(seoDocument);
     if (requestUrl.pathname === "/api/admin-config") {
       if (request.method !== "GET") {
-        return withSecurityHeaders(new Response("Method not allowed", { status: 405, headers: { "allow": "GET" } }));
+        return withSecurityHeaders(
+          new Response("Method not allowed", { status: 405, headers: { allow: "GET" } }),
+        );
       }
       const config = readServerEnv();
       const rawUrl = config["SUPABASE_URL"];
       const url = rawUrl?.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
       const key = config["SUPABASE_PUBLISHABLE_KEY"];
       if (!url || !key) {
-        return withSecurityHeaders(new Response(JSON.stringify({ message: "Supabase public connection settings are missing from the Cloudflare Worker." }), {
-          status: 503,
-          headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-        }));
+        return withSecurityHeaders(
+          new Response(
+            JSON.stringify({
+              message:
+                "Supabase public connection settings are missing from the Cloudflare Worker.",
+            }),
+            {
+              status: 503,
+              headers: {
+                "content-type": "application/json; charset=utf-8",
+                "cache-control": "no-store",
+              },
+            },
+          ),
+        );
       }
-      return withSecurityHeaders(new Response(JSON.stringify({ url, configured: true }), {
-        status: 200,
-        headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store, max-age=0" },
-      }));
+      return withSecurityHeaders(
+        new Response(JSON.stringify({ url, configured: true }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json; charset=utf-8",
+            "cache-control": "no-store, max-age=0",
+          },
+        }),
+      );
     }
     try {
       const handler = await getServerEntry();

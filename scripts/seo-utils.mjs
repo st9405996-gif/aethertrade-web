@@ -1,11 +1,15 @@
 export function escapeXml(value) {
-  return String(value).replace(/[<>&"']/g, (character) => ({
-    "<": "&lt;",
-    ">": "&gt;",
-    "&": "&amp;",
-    '"': "&quot;",
-    "'": "&apos;",
-  })[character]);
+  return String(value).replace(
+    /[<>&"']/g,
+    (character) =>
+      ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&apos;",
+      })[character],
+  );
 }
 
 export function validateSeoConfig(config) {
@@ -26,8 +30,14 @@ export function validateSeoConfig(config) {
 
   const seen = new Set();
   for (const page of config.pages) {
-    if (!page || typeof page.path !== "string" || !page.path.startsWith("/") ||
-        page.path.startsWith("//") || page.path.includes("?") || page.path.includes("#")) {
+    if (
+      !page ||
+      typeof page.path !== "string" ||
+      !page.path.startsWith("/") ||
+      page.path.startsWith("//") ||
+      page.path.includes("?") ||
+      page.path.includes("#")
+    ) {
       errors.push(`Invalid page path: ${String(page?.path)}`);
       continue;
     }
@@ -58,7 +68,10 @@ export function buildSitemap(config) {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map((page) => `  <url><loc>${escapeXml(base + (page.path === "/" ? "/" : page.path))}</loc></url>`),
+    ...urls.map(
+      (page) =>
+        `  <url><loc>${escapeXml(base + (page.path === "/" ? "/" : page.path))}</loc></url>`,
+    ),
     "</urlset>",
     "",
   ].join("\n");
@@ -68,7 +81,12 @@ export function buildLlms(config) {
   const base = config.site.url.replace(/\/+$/, "");
   const links = config.pages
     .filter((page) => page.indexable && page.llmsLabel)
-    .map((page) => `- [${page.llmsLabel}](${base}${page.path === "/" ? "/" : page.path}): ${page.llmsNote ?? ""}`.replace(/: $/, ""));
+    .map((page) =>
+      `- [${page.llmsLabel}](${base}${page.path === "/" ? "/" : page.path}): ${page.llmsNote ?? ""}`.replace(
+        /: $/,
+        "",
+      ),
+    );
   return [
     `# ${config.site.name}`,
     "",

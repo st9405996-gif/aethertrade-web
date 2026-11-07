@@ -10,6 +10,34 @@ export interface DeliveryReadiness {
   description: string;
 }
 
+export interface WorkspaceSessionReadiness {
+  label: "Checking" | "Session loaded" | "Not verified";
+  description: string;
+}
+
+export function getWorkspaceSessionReadiness(
+  ready: boolean,
+  authenticated: boolean,
+): WorkspaceSessionReadiness {
+  if (!ready) {
+    return {
+      label: "Checking",
+      description: "Verifying the administrator session and loading workspace data.",
+    };
+  }
+  if (!authenticated) {
+    return {
+      label: "Not verified",
+      description: "No verified administrator session is available.",
+    };
+  }
+  return {
+    label: "Session loaded",
+    description:
+      "Workspace data was loaded for this authenticated session. This is not a continuous health check.",
+  };
+}
+
 export function getConnectionReadiness(authenticated: boolean): ConnectionReadiness {
   return {
     database: authenticated ? "Loaded this session" : "Not checked",

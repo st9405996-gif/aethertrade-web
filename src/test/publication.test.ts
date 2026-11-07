@@ -15,5 +15,6 @@ describe("isPublicAt", () => {
     expect(isPublicAt("Scheduled", "2026-11-06T12:00:00.000Z", now)).toBe(true);
     expect(isPublicAt("Scheduled", "2026-11-06T11:59:00.000Z", now)).toBe(true);
   });
-  it("rejects invalid scheduled timestamps", () => expect(isPublicAt("Scheduled", "not-a-date", now)).toBe(false));
+  it("rejects invalid scheduled timestamps", () =>
+    expect(isPublicAt("Scheduled", "not-a-date", now)).toBe(false));
 });

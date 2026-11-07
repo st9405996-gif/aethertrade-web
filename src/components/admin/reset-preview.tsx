@@ -54,11 +54,14 @@ export default function ResetPage() {
           Verifying your recovery link…
         </p>
       ) : completed ? (
-        <p className="mt-6 text-sm text-success" role="status">{message}</p>
+        <p className="mt-6 text-sm text-success" role="status">
+          {message}
+        </p>
       ) : !recoveryValid ? (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-destructive" role="alert">
-            This recovery link is invalid or expired. Return to administrator sign-in and request a new link.
+            This recovery link is invalid or expired. Return to administrator sign-in and request a
+            new link.
           </p>
           <Link to="/auth" className="inline-block text-sm text-primary">
             Back to administrator sign-in
@@ -78,8 +81,16 @@ export default function ResetPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </label>
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            {message && <p role="status" className="text-sm text-success">{message}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p role="status" className="text-sm text-success">
+                {message}
+              </p>
+            )}
             <Button type="submit" disabled={busy || password.length < 8}>
               {busy ? "Updating…" : "Update password"}
             </Button>

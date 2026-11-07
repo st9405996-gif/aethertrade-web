@@ -30,7 +30,6 @@ import "@fontsource/geist-sans/500.css";
 import "@fontsource/geist-sans/600.css";
 import "@fontsource/geist-sans/700.css";
 
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -104,14 +103,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: loaderData?.defaultTitle || "AETHER-TRADE — Trade Automation Engineering" },
       {
         name: "description",
-        content: loaderData?.defaultDescription || "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
+        content:
+          loaderData?.defaultDescription ||
+          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
       },
       { name: "author", content: loaderData?.siteName || "AETHER-TRADE" },
       { property: "og:title", content: loaderData?.defaultTitle || "AETHER-TRADE" },
-      { property: "og:description", content: loaderData?.defaultDescription || "Custom document intelligence and workflow automation for global trade." },
-      ...(loaderData?.defaultOgImage ? [{ property: "og:image", content: loaderData.defaultOgImage }, { name: "twitter:image", content: loaderData.defaultOgImage }] : []),
-      ...(loaderData?.googleVerification ? [{ name: "google-site-verification", content: loaderData.googleVerification }] : []),
-      ...(loaderData?.bingVerification ? [{ name: "msvalidate.01", content: loaderData.bingVerification }] : []),
+      {
+        property: "og:description",
+        content:
+          loaderData?.defaultDescription ||
+          "Custom document intelligence and workflow automation for global trade.",
+      },
+      ...(loaderData?.defaultOgImage
+        ? [
+            { property: "og:image", content: loaderData.defaultOgImage },
+            { name: "twitter:image", content: loaderData.defaultOgImage },
+          ]
+        : []),
+      ...(loaderData?.googleVerification
+        ? [{ name: "google-site-verification", content: loaderData.googleVerification }]
+        : []),
+      ...(loaderData?.bingVerification
+        ? [{ name: "msvalidate.01", content: loaderData.bingVerification }]
+        : []),
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -141,7 +156,9 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
             "@type": "Organization",
             name: loaderData?.organizationName || "AETHER-TRADE",
             url: loaderData?.organizationUrl || loaderData?.siteUrl || SITE_URL,
-            description: loaderData?.organizationDescription || "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
+            description:
+              loaderData?.organizationDescription ||
+              "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
             ...(loaderData?.organizationLogo ? { logo: loaderData.organizationLogo } : {}),
             ...(loaderData?.sameAs?.length ? { sameAs: loaderData.sameAs } : {}),
           },
@@ -210,11 +227,15 @@ function RootComponent() {
     "/cookie-policy": "cookie-policy",
   };
   const cmsSlug = pageSlugs[pathname] ?? null;
-  const leafMatch = router.state.matches[router.state.matches.length - 1] as unknown as { loaderData?: { cmsPage?: PublishedCmsPage | null } } | undefined;
+  const leafMatch = router.state.matches[router.state.matches.length - 1] as unknown as
+    { loaderData?: { cmsPage?: PublishedCmsPage | null } } | undefined;
   const cmsPage = leafMatch?.loaderData?.cmsPage ?? null;
   const hasCmsContent = Boolean(cmsPage && (cmsPage.body.trim() || cmsPage.sections.length));
-  const cmsOverridesRoute = Boolean(hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug));
-  const cmsContentHandledByRoute = cmsSlug === "contact" || cmsSlug === "request-demo" || pathname.startsWith("/pages/");
+  const cmsOverridesRoute = Boolean(
+    hasCmsContent && cmsSlug && !["contact", "request-demo", "insights"].includes(cmsSlug),
+  );
+  const cmsContentHandledByRoute =
+    cmsSlug === "contact" || cmsSlug === "request-demo" || pathname.startsWith("/pages/");
 
   useEffect(() => {
     if (pathname !== "/") return;
@@ -229,7 +250,9 @@ function RootComponent() {
     const title = cmsPage.seoTitle || cmsPage.title + " — AETHER-TRADE";
     document.title = title;
     const updateMeta = (attribute: "name" | "property", key: string, content: string) => {
-      let element = document.head.querySelector('meta[' + attribute + '="' + key + '"]') as HTMLMetaElement | null;
+      let element = document.head.querySelector(
+        "meta[" + attribute + '="' + key + '"]',
+      ) as HTMLMetaElement | null;
       if (!content) {
         element?.remove();
         return;
@@ -244,7 +267,9 @@ function RootComponent() {
     const canonical = /^https:\/\/[A-Za-z0-9.-]+(?:\/.*)?$/.test(cmsPage.canonical)
       ? cmsPage.canonical
       : "https://aethertrade.cloud" + (pathname === "/" ? "/" : pathname);
-    let canonicalLink = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    let canonicalLink = document.head.querySelector(
+      'link[rel="canonical"]',
+    ) as HTMLLinkElement | null;
     if (!canonicalLink) {
       canonicalLink = document.createElement("link");
       canonicalLink.rel = "canonical";
@@ -270,9 +295,11 @@ function RootComponent() {
           <main className="flex-1">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
-            {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && <CmsPageRenderer page={cmsPage} showTitle={false} />}
+            {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && (
+              <CmsPageRenderer page={cmsPage} showTitle={false} />
+            )}
           </main>
-          {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname}/>}
+          {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname} />}
           {!bareAuthPage && <ConsentedClarityTracker />}
           {!bareAuthPage && <Footer />}
         </div>

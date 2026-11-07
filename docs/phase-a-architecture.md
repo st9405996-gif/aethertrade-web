@@ -12,23 +12,23 @@ Preserve Milestones 1–2 and the existing TanStack Start app. Implement the fut
 
 ## 2. Existing implementation and audit evidence
 
-| Area | Inspected state | Evidence / limitation |
-|---|---|---|
-| Framework | React 19, TypeScript, TanStack Start/Router, Query | `package.json`, `src/router.tsx`, `src/routes/__root.tsx` |
-| Build configuration | Vite config wrapper; custom SSR error entry; Nitro dependency | `vite.config.ts`, `src/server.ts`. Installed package declares Vite 8, despite older generic template references to Vite 7. No migration proposed. |
-| Public pages | 19 page routes plus shared shell | Home, About, Platform, How It Works, Solutions, Industries, Services, Automations, Custom Solutions, Insights, Partnerships, Careers, FAQs, Contact, Request Demo, Thank You, Privacy, Terms, Cookies |
-| Visual identity | Semantic theme tokens, Geist Sans/Mono, existing theme bootstrap | `src/styles.css`, shared site components; preserve unchanged |
-| Navigation | Header, mobile menu, footer | Currently source-controlled rather than CMS-managed |
-| Content | Static platform, solutions, services, FAQs, industries, insight previews, partnership types | `src/content/site-content.ts`; catalogue in `src/lib/catalogue-preview.ts` |
-| Forms | Not implemented | Contact and Request Demo use `StubPage`; Thank You is a placeholder, not evidence of receipt |
-| Catalogue | Static preview with filtering and demo-request context | Existing `automation` search parameter must be preserved |
-| Publishing | Careers unpublished default; insight previews, not full article publishing | No draft database, scheduler or CMS |
-| SEO | All 19 content-route files define `head()`; shared/inline metadata includes basic social tags | Source inspection only; rendered metadata, canonical, sitemap, structured data still require testing |
-| Error handling | Root error/not-found UI, SSR wrapper, CSRF middleware | Not a replacement for private endpoint authorization |
-| Auth/database/storage/admin | Not implemented | No generated Supabase integration, dependency, migrations or admin routes found |
-| Analytics | No measured reporting pipeline found | Do not interpret a dependency such as Recharts as implemented analytics |
-| Automated checks | Existing routing test passed: one test | `bunx vitest run src/test/app-routing.test.tsx`; checks `/` matches a route, not all pages |
-| Build/runtime signals | Available diagnostics were absent or empty | No fresh production build executed; do not report build or production QA as passed |
+| Area                        | Inspected state                                                                               | Evidence / limitation                                                                                                                                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework                   | React 19, TypeScript, TanStack Start/Router, Query                                            | `package.json`, `src/router.tsx`, `src/routes/__root.tsx`                                                                                                                                             |
+| Build configuration         | Vite config wrapper; custom SSR error entry; Nitro dependency                                 | `vite.config.ts`, `src/server.ts`. Installed package declares Vite 8, despite older generic template references to Vite 7. No migration proposed.                                                     |
+| Public pages                | 19 page routes plus shared shell                                                              | Home, About, Platform, How It Works, Solutions, Industries, Services, Automations, Custom Solutions, Insights, Partnerships, Careers, FAQs, Contact, Request Demo, Thank You, Privacy, Terms, Cookies |
+| Visual identity             | Semantic theme tokens, Geist Sans/Mono, existing theme bootstrap                              | `src/styles.css`, shared site components; preserve unchanged                                                                                                                                          |
+| Navigation                  | Header, mobile menu, footer                                                                   | Currently source-controlled rather than CMS-managed                                                                                                                                                   |
+| Content                     | Static platform, solutions, services, FAQs, industries, insight previews, partnership types   | `src/content/site-content.ts`; catalogue in `src/lib/catalogue-preview.ts`                                                                                                                            |
+| Forms                       | Not implemented                                                                               | Contact and Request Demo use `StubPage`; Thank You is a placeholder, not evidence of receipt                                                                                                          |
+| Catalogue                   | Static preview with filtering and demo-request context                                        | Existing `automation` search parameter must be preserved                                                                                                                                              |
+| Publishing                  | Careers unpublished default; insight previews, not full article publishing                    | No draft database, scheduler or CMS                                                                                                                                                                   |
+| SEO                         | All 19 content-route files define `head()`; shared/inline metadata includes basic social tags | Source inspection only; rendered metadata, canonical, sitemap, structured data still require testing                                                                                                  |
+| Error handling              | Root error/not-found UI, SSR wrapper, CSRF middleware                                         | Not a replacement for private endpoint authorization                                                                                                                                                  |
+| Auth/database/storage/admin | Not implemented                                                                               | No generated Supabase integration, dependency, migrations or admin routes found                                                                                                                       |
+| Analytics                   | No measured reporting pipeline found                                                          | Do not interpret a dependency such as Recharts as implemented analytics                                                                                                                               |
+| Automated checks            | Existing routing test passed: one test                                                        | `bunx vitest run src/test/app-routing.test.tsx`; checks `/` matches a route, not all pages                                                                                                            |
+| Build/runtime signals       | Available diagnostics were absent or empty                                                    | No fresh production build executed; do not report build or production QA as passed                                                                                                                    |
 
 Local files cannot establish hosted GitHub synchronization, auth settings, external database security, DNS, certificates or Cloudflare account access. The supplied project context reports no published URL or connected backend. GitHub status remains unverified; an `AGENTS.md` sync notice is not proof of a working remote connection.
 
@@ -57,25 +57,25 @@ Use generated integration files after External Supabase linking, not invented cr
 
 All tables below are proposed, not created. UUID keys unless a natural key is explicitly suitable. Each mutable business row includes timestamps and actor IDs where appropriate; slugs are unique; relationships use foreign keys and explicit delete behavior. All public-schema table migrations must include grants, then RLS, then policies.
 
-| Domain | Tables and relationships | Core data / constraints |
-|---|---|---|
-| Identity | `admin_profiles` -> `auth.users`; `roles`; `permissions`; `user_roles`; `role_permissions` | Profile contains display name only as needed, never roles. User-role joins unique; permissions have stable capability keys. Profile automatically created for provisioned users. |
-| Pages | `pages`; `page_sections` -> page | Slug, title, SEO fields, publication state; typed section key, validated content, position. Unique page/section key. No executable content. |
-| Navigation | `navigation_items`; `footer_sections` | Parent link, destination, order, visibility; validate same-origin/approved external destinations. |
-| Settings | `site_settings` | Typed allowlisted keys for branding, contact, publishing and notifications; secrets excluded. Public/private read projections separated. |
-| Media | `media_assets` | Bucket, object path, type, size, alt text, owner, visibility; no private signed URLs stored permanently. |
-| Platform | `platform_modules`; `product_features` -> module/category; `product_categories`; `feature_status_history` | Title, description, availability, publishing, order, previous/current status and actor. |
-| Catalogue | `automations`; `automation_categories`; `automation_capabilities` -> automation; `automation_status_history` | Unique slug, category, description, feature list, availability, publication, featured flag, image, SEO. |
-| Services/solutions | `services`; `service_categories`; `solutions`; `solution_challenges`; `solution_benefits` | Preserve existing public content and per-capability availability. Normalize ordered repeatable items. |
-| Industries | `industries` | Slug, title, description, publication, SEO, order. |
-| Articles | `articles`; `article_categories`; `article_tags`; `article_tag_links`; `article_revisions` | Author profile, slug, safe structured content, image, SEO, publish time. Join links unique. |
-| FAQs | `faqs`; `faq_categories` | Question, answer, position, publishing. |
-| Partnerships | `partnership_types`; `partnership_inquiries` -> inquiry | Inquiry extension only; never seed imaginary partner relationships. |
-| Careers | `job_listings`; `job_applications` -> job | Disabled by default; minimal contact/application data; no public trade-document upload. Applicant attachments deferred unless separately approved. |
-| Leads | `inquiries`; `contact_submissions` -> inquiry; `demo_requests` -> inquiry | Common name, email, company, country, consent/time, source, type, selected automation/service, status, unique reference and idempotency key. One subtype per inquiry. |
-| Lead workflow | `inquiry_notes`; `inquiry_status_history`; assignments/follow-up on inquiry | Private notes, status transition, actor, assigned user, follow-up date. |
-| Governance | `content_revisions`; `audit_logs` | Before/after content with version/actor; immutable audit entries; sensitive values redacted. No duplicate revision stores for articles. |
-| Reporting | `analytics_events`; consent configuration | Minimal event type, page, catalogue slug, timestamp; no raw email/message data or tracking before applicable consent. Retention-defined aggregates. |
+| Domain             | Tables and relationships                                                                                     | Core data / constraints                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity           | `admin_profiles` -> `auth.users`; `roles`; `permissions`; `user_roles`; `role_permissions`                   | Profile contains display name only as needed, never roles. User-role joins unique; permissions have stable capability keys. Profile automatically created for provisioned users. |
+| Pages              | `pages`; `page_sections` -> page                                                                             | Slug, title, SEO fields, publication state; typed section key, validated content, position. Unique page/section key. No executable content.                                      |
+| Navigation         | `navigation_items`; `footer_sections`                                                                        | Parent link, destination, order, visibility; validate same-origin/approved external destinations.                                                                                |
+| Settings           | `site_settings`                                                                                              | Typed allowlisted keys for branding, contact, publishing and notifications; secrets excluded. Public/private read projections separated.                                         |
+| Media              | `media_assets`                                                                                               | Bucket, object path, type, size, alt text, owner, visibility; no private signed URLs stored permanently.                                                                         |
+| Platform           | `platform_modules`; `product_features` -> module/category; `product_categories`; `feature_status_history`    | Title, description, availability, publishing, order, previous/current status and actor.                                                                                          |
+| Catalogue          | `automations`; `automation_categories`; `automation_capabilities` -> automation; `automation_status_history` | Unique slug, category, description, feature list, availability, publication, featured flag, image, SEO.                                                                          |
+| Services/solutions | `services`; `service_categories`; `solutions`; `solution_challenges`; `solution_benefits`                    | Preserve existing public content and per-capability availability. Normalize ordered repeatable items.                                                                            |
+| Industries         | `industries`                                                                                                 | Slug, title, description, publication, SEO, order.                                                                                                                               |
+| Articles           | `articles`; `article_categories`; `article_tags`; `article_tag_links`; `article_revisions`                   | Author profile, slug, safe structured content, image, SEO, publish time. Join links unique.                                                                                      |
+| FAQs               | `faqs`; `faq_categories`                                                                                     | Question, answer, position, publishing.                                                                                                                                          |
+| Partnerships       | `partnership_types`; `partnership_inquiries` -> inquiry                                                      | Inquiry extension only; never seed imaginary partner relationships.                                                                                                              |
+| Careers            | `job_listings`; `job_applications` -> job                                                                    | Disabled by default; minimal contact/application data; no public trade-document upload. Applicant attachments deferred unless separately approved.                               |
+| Leads              | `inquiries`; `contact_submissions` -> inquiry; `demo_requests` -> inquiry                                    | Common name, email, company, country, consent/time, source, type, selected automation/service, status, unique reference and idempotency key. One subtype per inquiry.            |
+| Lead workflow      | `inquiry_notes`; `inquiry_status_history`; assignments/follow-up on inquiry                                  | Private notes, status transition, actor, assigned user, follow-up date.                                                                                                          |
+| Governance         | `content_revisions`; `audit_logs`                                                                            | Before/after content with version/actor; immutable audit entries; sensitive values redacted. No duplicate revision stores for articles.                                          |
+| Reporting          | `analytics_events`; consent configuration                                                                    | Minimal event type, page, catalogue slug, timestamp; no raw email/message data or tracking before applicable consent. Retention-defined aggregates.                              |
 
 Publication enum: Draft, Published, Scheduled, Archived. Careers additionally requires explicit site-level enablement. Availability enum: Available, In Development, Custom Build, Planned. Inquiry enum: New, Contacted, Qualified, In Progress, Closed, Rejected.
 
@@ -89,13 +89,13 @@ Admin profiles are needed because the blueprint requires named authors, assignme
 
 Proposed least-privilege matrix:
 
-| Role | Permissions |
-|---|---|
-| Super Admin | All approved capabilities; administrator provisioning, role grants, protected settings and audit access. Last-super-admin removal/demotion prohibited transactionally. |
-| Administrator | Website editing/publishing, media, inquiries and reporting; cannot grant Super Admin or alter privileged infrastructure/secrets. |
-| Content Editor | Content/media drafts and previews; no publishing, lead PII, exports or user management by default. |
-| Sales Manager | Inquiry read/update/notes/assignment and authorized CSV export; no content publishing or administrator provisioning. |
-| Viewer | Read-only operational dashboard/reporting; inquiry PII withheld by default. |
+| Role           | Permissions                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Super Admin    | All approved capabilities; administrator provisioning, role grants, protected settings and audit access. Last-super-admin removal/demotion prohibited transactionally. |
+| Administrator  | Website editing/publishing, media, inquiries and reporting; cannot grant Super Admin or alter privileged infrastructure/secrets.                                       |
+| Content Editor | Content/media drafts and previews; no publishing, lead PII, exports or user management by default.                                                                     |
+| Sales Manager  | Inquiry read/update/notes/assignment and authorized CSV export; no content publishing or administrator provisioning.                                                   |
+| Viewer         | Read-only operational dashboard/reporting; inquiry PII withheld by default.                                                                                            |
 
 These are proposed defaults for approval, not active permissions. Server checks read authoritative role assignments; neither browser storage nor UI visibility authorizes access. Roles/permission helpers must remain callable by authenticated clients without recursive RLS. User-role tables have no anonymous grants.
 
@@ -137,13 +137,13 @@ Already available: React Hook Form, Zod, resolvers, TanStack Query, shadcn/Radix
 
 Expected integration variables (verify actual generated names after linking):
 
-| Variable | Scope |
-|---|---|
-| `VITE_SUPABASE_URL` | Public browser database/storage endpoint |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public key, protected by grants/RLS |
-| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` | Server-side public reads |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only privileged operations; never browser/route data |
-| Optional approved notification/challenge credentials | Server-only secret configuration; never CMS-visible |
+| Variable                                             | Scope                                                       |
+| ---------------------------------------------------- | ----------------------------------------------------------- |
+| `VITE_SUPABASE_URL`                                  | Public browser database/storage endpoint                    |
+| `VITE_SUPABASE_PUBLISHABLE_KEY`                      | Public key, protected by grants/RLS                         |
+| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY`          | Server-side public reads                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`                          | Server-only privileged operations; never browser/route data |
+| Optional approved notification/challenge credentials | Server-only secret configuration; never CMS-visible         |
 
 Do not request private keys in chat, print env files or infer hosted credentials. User-owned project connection must be completed by the user in **Settings → General → External Supabase → Connect**. Hosted email/password signup/login configuration must be verified for that external project; account provisioning will not use open public signup.
 
@@ -169,15 +169,15 @@ Test concrete availability states, publication visibility, role capabilities, in
 
 ### Current delivery status
 
-| Deliverable | Status |
-|---|---|
-| Phase A audit and proposed architecture/schema/security | Delivered for review; proposal only |
-| Existing public site | Partially implemented against full production blueprint; one routing test passed |
-| Database/migrations/RLS/auth/admin/forms/CMS/media management | Not implemented |
-| Editable SEO and analytics reporting | Not implemented |
-| GitHub synchronization and backup recovery | Unverified / not established by this audit |
-| Cloudflare-owned deployment | Not implemented; unsupported here |
-| Production QA/launch | Not executed |
+| Deliverable                                                   | Status                                                                           |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Phase A audit and proposed architecture/schema/security       | Delivered for review; proposal only                                              |
+| Existing public site                                          | Partially implemented against full production blueprint; one routing test passed |
+| Database/migrations/RLS/auth/admin/forms/CMS/media management | Not implemented                                                                  |
+| Editable SEO and analytics reporting                          | Not implemented                                                                  |
+| GitHub synchronization and backup recovery                    | Unverified / not established by this audit                                       |
+| Cloudflare-owned deployment                                   | Not implemented; unsupported here                                                |
+| Production QA/launch                                          | Not executed                                                                     |
 
 ## 12. Decisions required before implementation
 

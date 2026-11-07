@@ -4,13 +4,7 @@ import { Button } from "@/components/ui/button";
 import globe from "@/assets/globe-network.jpg";
 
 /** Closing call-to-action band with the connected-global-trade visual. */
-export function CtaBand({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+export function CtaBand({ title, description }: { title: string; description: string }) {
   return (
     <section className="relative overflow-hidden">
       <img

@@ -16,7 +16,10 @@ export function CardGrid({
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((it) => (
-        <article key={it.title} className="flex flex-col rounded-xl border border-border bg-card p-6">
+        <article
+          key={it.title}
+          className="flex flex-col rounded-xl border border-border bg-card p-6"
+        >
           <div className="mb-3 flex items-start justify-between gap-3">
             <h3 className="text-lg font-semibold tracking-tight">{it.title}</h3>
             {it.status ? <StatusBadge status={it.status} className="shrink-0" /> : null}

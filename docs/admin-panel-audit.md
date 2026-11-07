@@ -16,27 +16,35 @@ Scope: repository/source inspection and read-only Supabase schema/policy checks.
 ## Findings requiring implementation/configuration
 
 ### P0 — CMS public rendering
+
 CMS records persist in Supabase, but the public site must be wired to read/present those records consistently. Confirm page-by-page rendering, publish/draft behavior, and preview/live parity before editors populate content.
 
 ### P0 — Media storage
+
 The `media_assets` table exists, but no bucket is configured and the table is empty. Create a bucket, Storage RLS policies, safe upload path, size/type enforcement, durable URL handling, replacement/deletion lifecycle, and then re-enable uploads.
 
 ### P1 — Roles and authorization
+
 The UI role-permission matrix is local reference logic. Supabase RLS is the actual enforcement layer. The inspected `has_permission` function currently explicitly restricts permissions to the configured Super Admin user and Super Admin role; therefore, the other listed roles should not be presented as fully operational until the policies/function and role assignment model are implemented and tested. Do not invite users before that work.
 
 ### P1 — SEO integration
+
 CMS SEO fields exist, but confirm they populate public HTML title/meta description/canonical/robots/Open Graph, sitemap and robots rules, and scheduled publication behavior. Currently fields alone do not prove the SEO feature works end to end.
 
 ### P1 — Audit and revisions
+
 Database triggers exist: content change events are recorded in `audit_logs`; prior snapshots on content UPDATE/DELETE are inserted in `content_revisions`. Audit records contain event metadata, not a comprehensive before/after diff. Add richer actor/action detail only with a migration and policy review.
 
 ### P1 — Connections/readiness
+
 Connection statuses must be sourced from actual health checks, not static labels. Add safe server-side checks for Supabase, Storage, inquiry delivery, email provider, and deployed runtime. Never expose secret values.
 
 ### P1 — Inquiry handling
+
 Validate inquiry lifecycle end-to-end: secure server submission, duplicate/idempotency handling, bot challenge, RLS, status-history trigger, notes, assignment, follow-up and CSV export. Verify notification email delivery with a controlled test.
 
 ### P2 — Missing/partial modules
+
 - Admin invitations: disabled; implement only after authorization model is corrected.
 - Analytics: currently no tracked events; add privacy/consent-aware analytics and honest empty states.
 - Subscribers: no newsletter collection or delivery; configure consent and a provider before enabling.
@@ -54,7 +62,6 @@ Validate inquiry lifecycle end-to-end: secure server submission, duplicate/idemp
 - Test Media Storage permissions with anonymous and authenticated users.
 - Check SEO output, sitemap, robots, canonical and noindex.
 - Verify backups, secrets, error logging and deploy rollback.
-
 
 ## Production incident verification — 2026-11-06
 

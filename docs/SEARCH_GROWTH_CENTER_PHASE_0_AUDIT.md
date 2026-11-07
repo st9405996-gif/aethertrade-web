@@ -12,21 +12,21 @@ This document records a read-only baseline before implementing the integrated SE
 
 The production database reports exactly **74 rows** in `public.content_records`.
 
-| Module | Rows |
-|---|---:|
-| automations | 6 |
-| branding | 1 |
-| faqs | 7 |
-| industries | 6 |
-| insights | 3 |
-| navigation | 12 |
-| pages | 18 |
-| partnerships | 3 |
-| platform | 7 |
-| services | 5 |
-| settings | 1 |
-| solutions | 5 |
-| **Total** | **74** |
+| Module       |   Rows |
+| ------------ | -----: |
+| automations  |      6 |
+| branding     |      1 |
+| faqs         |      7 |
+| industries   |      6 |
+| insights     |      3 |
+| navigation   |     12 |
+| pages        |     18 |
+| partnerships |      3 |
+| platform     |      7 |
+| services     |      5 |
+| settings     |      1 |
+| solutions    |      5 |
+| **Total**    | **74** |
 
 A deterministic row fingerprint was recorded for later before/after comparison:
 
@@ -37,6 +37,7 @@ The fingerprint is not a backup. Before any production migration or content writ
 ## Existing database capabilities
 
 The existing `content_records` table already has:
+
 - `publication`: Draft, Published, Scheduled, Archived
 - `scheduled_at`
 - `seo_title`, `seo_description`, `canonical`, `noindex`
@@ -66,6 +67,7 @@ Existing migration history includes the foundation, initial content, inquiry del
 ## Supabase security advisor baseline
 
 The security advisor currently reports:
+
 1. `public.submission_quotas` has RLS enabled with no policies (informational; review whether access should remain service-role-only).
 2. Leaked-password protection is disabled (warning; enable through Auth configuration after reviewing project settings).
 
@@ -84,16 +86,16 @@ These are pre-existing findings and should be addressed or explicitly accepted i
 
 ## Phase gate status
 
-| Phase | Status at audit |
-|---|---|
+| Phase                                           | Status at audit                                                      |
+| ----------------------------------------------- | -------------------------------------------------------------------- |
 | 0 — backup, inventory and preservation baseline | Inventory and fingerprint recorded; restorable backup still required |
-| 1 — additive CMS/data foundation | Not started |
-| 2 — public SSR article integration | Not started |
-| 3 — SEO manager and technical SEO | Existing foundation only; admin integration not started |
-| 4 — GEO and AEO tooling | Not started |
-| 5 — blog editor and workflow | Not started |
-| 6 — trusted scheduled publisher | Not started |
-| 7 — Search Console/Bing integrations | Not started |
-| 8 — security, tests and production QA | Baseline findings recorded; not passed |
+| 1 — additive CMS/data foundation                | Not started                                                          |
+| 2 — public SSR article integration              | Not started                                                          |
+| 3 — SEO manager and technical SEO               | Existing foundation only; admin integration not started              |
+| 4 — GEO and AEO tooling                         | Not started                                                          |
+| 5 — blog editor and workflow                    | Not started                                                          |
+| 6 — trusted scheduled publisher                 | Not started                                                          |
+| 7 — Search Console/Bing integrations            | Not started                                                          |
+| 8 — security, tests and production QA           | Baseline findings recorded; not passed                               |
 
 This file is an audit record, not a claim that the phases are implemented.

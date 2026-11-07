@@ -24,13 +24,9 @@ export function SectionHeader({
       )}
     >
       {eyebrow ? <p className="eyebrow mb-3">{eyebrow}</p> : null}
-      <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-        {title}
-      </h2>
+      <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h2>
       {description ? (
-        <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
-          {description}
-        </p>
+        <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">{description}</p>
       ) : null}
     </div>
   );
@@ -57,9 +53,7 @@ export function PageHero({
           {title}
         </h1>
         {description ? (
-          <p className="mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">
-            {description}
-          </p>
+          <p className="mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">{description}</p>
         ) : null}
         {children ? <div className="mt-8">{children}</div> : null}
       </div>

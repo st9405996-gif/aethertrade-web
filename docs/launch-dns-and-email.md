@@ -6,11 +6,11 @@ Values in angle brackets come from your dashboards. Copy them exactly. Do not in
 
 Before changing nameservers, copy every existing DNS record from Hostinger → Domains → DNS. Recreate the same records in Cloudflare DNS first, especially:
 
-| Type | Name | Value (copy from Hostinger) |
-|---|---|---|
-| MX | @ | `<Hostinger mail server>` (with priority) |
-| TXT | @ | `<Hostinger SPF record, e.g. v=spf1 include:...>` |
-| TXT / CNAME | `<selector>._domainkey` | `<Hostinger DKIM value>` |
+| Type        | Name                    | Value (copy from Hostinger)                       |
+| ----------- | ----------------------- | ------------------------------------------------- |
+| MX          | @                       | `<Hostinger mail server>` (with priority)         |
+| TXT         | @                       | `<Hostinger SPF record, e.g. v=spf1 include:...>` |
+| TXT / CNAME | `<selector>._domainkey` | `<Hostinger DKIM value>`                          |
 
 If you do not keep a Hostinger mailbox, skip this step.
 
@@ -18,17 +18,17 @@ If you do not keep a Hostinger mailbox, skip this step.
 
 In Resend → Domains → Add domain, use the subdomain `mail.aethertrade.cloud` (recommended). This keeps sending separate from the root domain's mailbox. Resend will show the exact records. Add them in Cloudflare DNS, with proxy OFF (grey cloud):
 
-| Type | Name | Value (copy from Resend) |
-|---|---|---|
-| MX | `send.mail` | `<Resend MX value>` (priority as shown) |
-| TXT | `send.mail` | `<Resend SPF value>` |
-| TXT | `resend._domainkey.mail` | `<Resend DKIM value>` |
+| Type | Name                     | Value (copy from Resend)                |
+| ---- | ------------------------ | --------------------------------------- |
+| MX   | `send.mail`              | `<Resend MX value>` (priority as shown) |
+| TXT  | `send.mail`              | `<Resend SPF value>`                    |
+| TXT  | `resend._domainkey.mail` | `<Resend DKIM value>`                   |
 
 Then add DMARC on the root domain:
 
-| Type | Name | Value |
-|---|---|---|
-| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:<your monitored address>` |
+| Type | Name     | Value                                                   |
+| ---- | -------- | ------------------------------------------------------- |
+| TXT  | `_dmarc` | `v=DMARC1; p=none; rua=mailto:<your monitored address>` |
 
 Start with `p=none`. Change to `quarantine` only after mail is verified.
 

@@ -2,9 +2,6 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "aethertrade",
   "compatibility_date": "2026-11-04",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "nodejs_compat_populate_process_env"
-  ],
-  "previews": {}
+  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
+  "previews": {},
 }

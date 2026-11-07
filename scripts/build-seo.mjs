@@ -17,4 +17,6 @@ if (errors.length) {
 
 writeFileSync(join(root, "public/sitemap.xml"), buildSitemap(config));
 writeFileSync(join(root, "public/llms.txt"), buildLlms(config));
-console.log(`SEO files written: ${config.pages.filter((page) => page.indexable).length} indexable pages`);
+console.log(
+  `SEO files written: ${config.pages.filter((page) => page.indexable).length} indexable pages`,
+);

@@ -49,12 +49,7 @@ function Panel({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "card-elevated overflow-hidden bg-popover",
-        className,
-      )}
-    >
+    <div className={cn("card-elevated overflow-hidden bg-popover", className)}>
       <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/40 px-4 py-2.5">
         <span className="font-mono text-[0.7rem] uppercase tracking-widest text-muted-foreground">
           {title}
@@ -92,16 +87,14 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
             Please find attached the document set for the upcoming departure.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {["Commercial Invoice.pdf", "Packing List.pdf", "Bill of Lading.pdf"].map(
-              (f) => (
-                <span
-                  key={f}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 font-mono text-[0.7rem]"
-                >
-                  <Files className="size-3 text-primary" /> {f}
-                </span>
-              ),
-            )}
+            {["Commercial Invoice.pdf", "Packing List.pdf", "Bill of Lading.pdf"].map((f) => (
+              <span
+                key={f}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 font-mono text-[0.7rem]"
+              >
+                <Files className="size-3 text-primary" /> {f}
+              </span>
+            ))}
           </div>
         </div>
       </Panel>
@@ -197,12 +190,7 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
                   <td className="px-3 py-2 font-mono">{f}</td>
                   <td className="px-3 py-2 text-muted-foreground">{a}</td>
                   <td className="px-3 py-2 text-muted-foreground">{b}</td>
-                  <td
-                    className={cn(
-                      "px-3 py-2 font-mono",
-                      ok ? "text-success" : "text-warning",
-                    )}
-                  >
+                  <td className={cn("px-3 py-2 font-mono", ok ? "text-success" : "text-warning")}>
                     {ok ? "MATCH" : "MISMATCH"}
                   </td>
                 </tr>
@@ -222,8 +210,8 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
                 Quantity mismatch between commercial invoice and packing list
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Invoice states 1,200 units; packing list states 1,180 units. Human
-                review required before any action is taken.
+                Invoice states 1,200 units; packing list states 1,180 units. Human review required
+                before any action is taken.
               </p>
             </div>
           </div>
@@ -237,8 +225,8 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
           </div>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Findings are presented with references so reviewers can verify every
-          conclusion. A discrepancy is a review finding, not an automatic decision.
+          Findings are presented with references so reviewers can verify every conclusion. A
+          discrepancy is a review finding, not an automatic decision.
         </p>
       </Panel>
     ),
@@ -271,8 +259,7 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
           </span>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Authorized staff make the consequential decision; the system organizes
-          the evidence.
+          Authorized staff make the consequential decision; the system organizes the evidence.
         </p>
       </Panel>
     ),
@@ -320,8 +307,7 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
                 Cross-document comparison paused — packing list not received
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                The case is held rather than reviewed against incomplete
-                information.
+                The case is held rather than reviewed against incomplete information.
               </p>
             </div>
           </div>
@@ -333,12 +319,12 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
         <div className="rounded-lg border border-border bg-card/60 p-4">
           <p className="text-sm font-medium">Follow-up prepared for approval</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            “Could you share the packing list for booking REF-2081? The document
-            set appears incomplete.”
+            “Could you share the packing list for booking REF-2081? The document set appears
+            incomplete.”
           </p>
           <p className="mt-3 text-xs text-muted-foreground">
-            Messages are prepared for your team to review and send — nothing is
-            sent automatically without approval.
+            Messages are prepared for your team to review and send — nothing is sent automatically
+            without approval.
           </p>
         </div>
       </Panel>
@@ -351,8 +337,7 @@ export function WorkflowDemo() {
   const [active, setActive] = useState(1);
 
   const panel =
-    PANELS[flow][active] ??
-    (flow === "exception" ? PANELS.exception[7] : PANELS.normal[active]);
+    PANELS[flow][active] ?? (flow === "exception" ? PANELS.exception[7] : PANELS.normal[active]);
 
   const stepsForFlow = STEPS.filter((s) => {
     if (flow === "normal") return true;
@@ -482,8 +467,7 @@ export function WorkflowDemo() {
               onClick={() => {
                 const ids = stepsForFlow.map((s) => s.id);
                 const idx = ids.indexOf(active);
-                const next =
-                  idx >= 0 && idx < ids.length - 1 ? ids[idx + 1] : ids[0];
+                const next = idx >= 0 && idx < ids.length - 1 ? ids[idx + 1] : ids[0];
                 if (typeof next === "number") setActive(next);
               }}
             >

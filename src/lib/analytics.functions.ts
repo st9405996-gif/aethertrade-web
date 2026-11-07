@@ -15,9 +15,8 @@ export const trackAnalyticsEvent = createServerFn({ method: "POST" })
     validateAnalyticsOrigin(origin ?? null, host ?? null);
     // No server-verifiable CMP signal exists; the browser claim is not proof.
     const serverVerifiedConsent: boolean | undefined = undefined;
-    const { requireServerVerifiedAnalyticsConsent, writeAnalyticsEvent } = await import(
-      "@/lib/analytics-write.server"
-    );
+    const { requireServerVerifiedAnalyticsConsent, writeAnalyticsEvent } =
+      await import("@/lib/analytics-write.server");
     requireServerVerifiedAnalyticsConsent(serverVerifiedConsent);
 
     const clientKey = getRequestHeader("cf-connecting-ip") ?? "unidentified-client";
