@@ -257,9 +257,15 @@ export function AdminWorkspace({ module = "overview" }: { module?: ModuleId }) {
             </span>
           </div>
           {workspace.storageError && (
-            <p role="alert" className="mb-5 border border-destructive/40 p-3 text-destructive">
-              {workspace.storageError}
-            </p>
+            <div
+              role="alert"
+              className="mb-5 flex flex-wrap items-center justify-between gap-3 border border-destructive/40 p-3 text-destructive"
+            >
+              <p>{workspace.storageError}</p>
+              <Button size="sm" variant="outline" onClick={() => void workspace.reloadWorkspace()}>
+                Retry loading
+              </Button>
+            </div>
           )}
           {!ready ? (
             <p className="text-muted-foreground">Loading workspace…</p>

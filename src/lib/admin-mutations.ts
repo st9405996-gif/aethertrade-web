@@ -205,9 +205,69 @@ export async function deleteWebsiteMediaObject(
     },
     body: JSON.stringify({ prefixes: [objectPath] }),
   });
+  // A 404 means the object is already gone (for example a retry after a partial failure).
+  // Treat that as removed so the catalogue entry can still be cleaned up.
+  if (response.status === 404) return;
   if (!response.ok) {
     throw new Error(`Storage object deletion failed with status ${response.status}.`);
   }
+}
+
+/**
+ * Deletes the catalogue row. Returns true when this call removed it, and false when the
+ * row was already gone (a repeated or retried deletion). A DELETE that returns no rows is
+ * ambiguous (already removed, or denied by RLS), so the row is re-read to tell them apart.
+ */
+async function deleteMediaMetadataRow(
+  accessToken: string,
+  id: string,
+  fetchImpl: typeof fetch,
+): Promise<boolean> {
+  const headers = {
+    Authorization: "Bearer " + accessToken,
+    "Content-Type": "application/json",
+  };
+  const path = "/rest/v1/media_assets?id=eq." + id;
+  const deleted = await fetchImpl("/api/admin-supabase" + path, {
+    method: "DELETE",
+    headers: { ...headers, Prefer: "return=representation" },
+  });
+  const raw = await deleted.text();
+  let payload: unknown = null;
+  if (raw) {
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      if (deleted.ok) throw new Error("Media metadata deletion returned invalid JSON.");
+      payload = { message: raw };
+    }
+  }
+  if (!deleted.ok) {
+    throw new Error(
+      errorMessage(payload) ?? `Media metadata deletion failed with status ${deleted.status}.`,
+    );
+  }
+  if (
+    Array.isArray(payload) &&
+    payload.length === 1 &&
+    isRecord(payload[0]) &&
+    payload[0]["id"] === id
+  ) {
+    return true;
+  }
+  if (!Array.isArray(payload) || payload.length !== 0) {
+    throw new Error("Media metadata deletion could not be confirmed.");
+  }
+
+  const check = await fetchImpl("/api/admin-supabase/rest/v1/media_assets?select=id&id=eq." + id, {
+    method: "GET",
+    headers,
+  });
+  if (!check.ok) throw new Error("Media metadata deletion could not be confirmed.");
+  const remaining: unknown = await check.json().catch(() => null);
+  if (!Array.isArray(remaining)) throw new Error("Media metadata deletion could not be confirmed.");
+  if (remaining.length === 0) return false; // already removed: idempotent success
+  throw new Error("Media metadata deletion was denied. Check your media permission.");
 }
 
 function containsMediaObjectPath(
@@ -257,21 +317,12 @@ export async function deleteWebsiteMediaAsset(
 
   await deleteWebsiteMediaObject(input.accessToken, input.objectPath, fetchImpl);
   try {
-    await writeAdminRecord(
-      {
-        accessToken: input.accessToken,
-        path: "/rest/v1/media_assets?id=eq." + input.id,
-        method: "DELETE",
-        expectedId: input.id,
-        operation: "Media metadata deletion",
-      },
-      fetchImpl,
-    );
+    await deleteMediaMetadataRow(input.accessToken, input.id, fetchImpl);
   } catch (error) {
     const detail =
       error instanceof Error ? error.message : "The database response was unavailable.";
     throw new Error(
-      `The storage object was deleted, but media metadata deletion could not be confirmed for ${input.id}. Reload and verify the media library before retrying. ${detail}`,
+      `The storage object was removed, but media metadata deletion could not be confirmed for ${input.id}. Retry the deletion to finish cleanup; no other data changed. ${detail}`,
     );
   }
 }

@@ -460,10 +460,17 @@ describe("website media object cleanup", () => {
   });
 
   it("reports metadata deletion failure after successful storage cleanup", async () => {
+    // Delete returns no rows, and the re-read shows the row still exists: RLS denied the delete.
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response("[]", { status: 200 }));
+      .mockResolvedValueOnce(new Response("[]", { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ id: recordId }]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
 
     await expect(
       deleteWebsiteMediaAsset(
@@ -471,8 +478,76 @@ describe("website media object cleanup", () => {
         fetchImpl,
       ),
     ).rejects.toThrow(
-      "The storage object was deleted, but media metadata deletion could not be confirmed",
+      "The storage object was removed, but media metadata deletion could not be confirmed",
     );
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it("treats a repeated deletion as success when the object and row are already gone", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response("[]", { status: 200 }))
+      .mockResolvedValueOnce(new Response("[]", { status: 200 }));
+
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).resolves.toBeUndefined();
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it("finishes a deletion retried after the metadata step failed earlier", async () => {
+    const attempt1 = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response(null, { status: 500 }));
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        attempt1,
+      ),
+    ).rejects.toThrow("The storage object was removed");
+
+    // Retry: the object is already gone (404), and the metadata row deletes this time.
+    const attempt2 = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ id: recordId }]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        attempt2,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("does not delete the metadata row when the storage object cannot be removed", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 503 }));
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("Storage object deletion failed with status 503.");
+    expect(fetchImpl.mock.calls.every(([url]) => String(url).includes("/storage/"))).toBe(true);
+  });
+
+  it("refuses unauthenticated deletion before any request is sent", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    await expect(
+      deleteWebsiteMediaAsset(
+        { accessToken: "", id: recordId, objectPath, referenceRecords: [] },
+        fetchImpl,
+      ),
+    ).rejects.toThrow("Authentication required.");
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
