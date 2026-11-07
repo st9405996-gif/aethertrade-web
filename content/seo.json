@@ -6,23 +6,133 @@
     "llmsSummary": "AETHER-TRADE is a platform for organizing global trade operations. It is aimed at importers, exporters, freight forwarders and logistics businesses. Its capabilities are labelled by status on the site: Available, In Development, Custom Build or Planned. Treat any capability not marked Available as not yet live."
   },
   "pages": [
-    { "path": "/", "title": "AETHER-TRADE", "description": "", "indexable": true, "llmsLabel": "Home", "llmsNote": "overview of the platform and its approach" },
-    { "path": "/platform", "title": "Platform", "description": "", "indexable": true, "llmsLabel": "Platform", "llmsNote": "platform capabilities and their status" },
-    { "path": "/how-it-works", "title": "How it works", "description": "", "indexable": true, "llmsLabel": "How it works", "llmsNote": "the operating workflow" },
-    { "path": "/solutions", "title": "Solutions", "description": "", "indexable": true, "llmsLabel": "Solutions", "llmsNote": "solutions by business need" },
-    { "path": "/industries", "title": "Industries", "description": "", "indexable": true, "llmsLabel": "Industries", "llmsNote": "sectors served" },
-    { "path": "/services", "title": "Services", "description": "", "indexable": true, "llmsLabel": "Services", "llmsNote": "service offerings" },
-    { "path": "/automations", "title": "Automations", "description": "", "indexable": true, "llmsLabel": "Automations", "llmsNote": "automation catalogue with status labels" },
-    { "path": "/insights", "title": "Insights", "description": "", "indexable": true, "llmsLabel": "Insights", "llmsNote": "articles and insights" },
-    { "path": "/partnerships", "title": "Partnerships", "description": "", "indexable": true, "llmsLabel": "Partnerships", "llmsNote": "partnership information" },
-    { "path": "/faqs", "title": "FAQs", "description": "", "indexable": true, "llmsLabel": "FAQs", "llmsNote": "common questions" },
-    { "path": "/contact", "title": "Contact", "description": "", "indexable": true, "llmsLabel": "Contact", "llmsNote": "contact form (demo mode until live delivery is enabled)" },
-    { "path": "/request-demo", "title": "Request a demo", "description": "", "indexable": true, "llmsLabel": "Request a demo", "llmsNote": "demo request form" },
-    { "path": "/privacy-policy", "title": "Privacy policy", "description": "", "indexable": true, "llmsLabel": "Privacy policy", "llmsNote": "pending legal review" },
-    { "path": "/terms", "title": "Terms", "description": "", "indexable": true, "llmsLabel": "Terms", "llmsNote": "pending legal review" },
-    { "path": "/cookie-policy", "title": "Cookie policy", "description": "", "indexable": true, "llmsLabel": "Cookie policy", "llmsNote": "pending legal review" },
+    {
+      "path": "/",
+      "title": "AETHER-TRADE",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Home",
+      "llmsNote": "overview of the platform and its approach"
+    },
+    {
+      "path": "/platform",
+      "title": "Platform",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Platform",
+      "llmsNote": "platform capabilities and their status"
+    },
+    {
+      "path": "/how-it-works",
+      "title": "How it works",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "How it works",
+      "llmsNote": "the operating workflow"
+    },
+    {
+      "path": "/solutions",
+      "title": "Solutions",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Solutions",
+      "llmsNote": "solutions by business need"
+    },
+    {
+      "path": "/industries",
+      "title": "Industries",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Industries",
+      "llmsNote": "sectors served"
+    },
+    {
+      "path": "/services",
+      "title": "Services",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Services",
+      "llmsNote": "service offerings"
+    },
+    {
+      "path": "/automations",
+      "title": "Automations",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Automations",
+      "llmsNote": "automation catalogue with status labels"
+    },
+    {
+      "path": "/insights",
+      "title": "Insights",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Insights",
+      "llmsNote": "articles and insights"
+    },
+    {
+      "path": "/partnerships",
+      "title": "Partnerships",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Partnerships",
+      "llmsNote": "partnership information"
+    },
+    {
+      "path": "/faqs",
+      "title": "FAQs",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "FAQs",
+      "llmsNote": "common questions"
+    },
+    {
+      "path": "/contact",
+      "title": "Contact",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Contact",
+      "llmsNote": "contact form (demo mode until live delivery is enabled)"
+    },
+    {
+      "path": "/request-demo",
+      "title": "Request a demo",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Request a demo",
+      "llmsNote": "demo request form"
+    },
+    {
+      "path": "/privacy-policy",
+      "title": "Privacy policy",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Privacy policy",
+      "llmsNote": "pending legal review"
+    },
+    {
+      "path": "/terms",
+      "title": "Terms",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Terms",
+      "llmsNote": "pending legal review"
+    },
+    {
+      "path": "/cookie-policy",
+      "title": "Cookie policy",
+      "description": "",
+      "indexable": true,
+      "llmsLabel": "Cookie policy",
+      "llmsNote": "pending legal review"
+    },
     { "path": "/about", "title": "About", "description": "", "indexable": false },
-    { "path": "/custom-solutions", "title": "Custom solutions", "description": "", "indexable": false },
+    {
+      "path": "/custom-solutions",
+      "title": "Custom solutions",
+      "description": "",
+      "indexable": false
+    },
     { "path": "/careers", "title": "Careers", "description": "", "indexable": false },
     { "path": "/thank-you", "title": "Thank you", "description": "", "indexable": false },
     { "path": "/auth", "title": "Sign in", "description": "", "indexable": false },

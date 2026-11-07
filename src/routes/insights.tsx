@@ -6,18 +6,25 @@ import { CtaBand } from "@/components/site/cta-band";
 import { getPublishedInsights } from "@/lib/public-insights.functions";
 
 export const Route = createFileRoute("/insights")({
-  loader: async () => ({ articles: await getPublishedInsights(), cmsPage: await getPublishedCmsPage({ data: { slug: "insights" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => ({
-    meta: [
-      { title: "Insights — AETHER-TRADE" },
-      {
-        name: "description",
-        content:
-          "Practical perspectives on trade operations, document workflows and responsible AI in logistics.",
-      },
-      { property: "og:type", content: "website" },
-    ],
-  }))(), loaderData?.cmsPage) ,
+  loader: async () => ({
+    articles: await getPublishedInsights(),
+    cmsPage: await getPublishedCmsPage({ data: { slug: "insights" } }),
+  }),
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      (() => ({
+        meta: [
+          { title: "Insights — AETHER-TRADE" },
+          {
+            name: "description",
+            content:
+              "Practical perspectives on trade operations, document workflows and responsible AI in logistics.",
+          },
+          { property: "og:type", content: "website" },
+        ],
+      }))(),
+      loaderData?.cmsPage,
+    ),
   component: InsightsPage,
 });
 
@@ -43,9 +50,7 @@ function InsightsPage() {
                 key={article.slug}
                 className="flex flex-col rounded-xl border border-border bg-card p-6"
               >
-                {article.category ? (
-                  <p className="eyebrow mb-2">{article.category}</p>
-                ) : null}
+                {article.category ? <p className="eyebrow mb-2">{article.category}</p> : null}
                 <h2 className="text-lg font-semibold">
                   <Link
                     to="/insights/$slug"

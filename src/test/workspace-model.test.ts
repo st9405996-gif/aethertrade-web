@@ -73,6 +73,12 @@ describe("Disconnected workspace business rules", () => {
         ?.publication,
     ).toBe("Draft"));
   it("does not seed invented leads", () => expect(createDemoWorkspace().inquiries).toHaveLength(0));
+  it("initializes every workspace collection", () => {
+    const workspace = createDemoWorkspace();
+
+    expect(workspace.analytics).toEqual([]);
+    expect(workspace.subscribers).toEqual([]);
+  });
   it("keeps Cookie Policy approval disabled", () =>
     expect(
       createDemoWorkspace().records.find((r) => r.module === "settings")?.fields[

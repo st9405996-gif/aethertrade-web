@@ -88,9 +88,7 @@ function InsightArticlePage() {
       </Link>
       <header className="mb-10 mt-8 space-y-4">
         {article.category ? <p className="eyebrow">{article.category}</p> : null}
-        <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
-          {article.title}
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{article.title}</h1>
         {article.author ? (
           <p className="text-sm text-muted-foreground">By {article.author}</p>
         ) : null}

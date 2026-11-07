@@ -5,7 +5,15 @@ import { PlaceholderNote } from "@/components/site/blocks";
 export const LEGAL_UPDATED = "November 2, 2026";
 
 /** Shared layout for legal pages. Text is accurate to the site's current behavior but awaits legal review. */
-export function LegalPage({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {
+export function LegalPage({
+  title,
+  intro,
+  children,
+}: {
+  title: string;
+  intro: string;
+  children: ReactNode;
+}) {
   return (
     <>
       <PageHero eyebrow="Legal" title={title} description={intro} />

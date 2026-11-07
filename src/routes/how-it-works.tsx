@@ -9,11 +9,15 @@ import { HOW_IT_WORKS_STEPS } from "@/content/site-content";
 
 export const Route = createFileRoute("/how-it-works")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "how-it-works" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() =>
-    meta(
-      "How It Works",
-      "How AETHER-TRADE engagements run: discover, scope, configure, pilot and expand — with human review at every step.",
-    ))(), loaderData?.cmsPage) ,
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      (() =>
+        meta(
+          "How It Works",
+          "How AETHER-TRADE engagements run: discover, scope, configure, pilot and expand — with human review at every step.",
+        ))(),
+      loaderData?.cmsPage,
+    ),
   component: HowItWorksPage,
 });
 
@@ -27,7 +31,10 @@ function HowItWorksPage() {
         description="Every engagement begins with one workflow, a clear goal and a measured pilot — not a big-bang rollout."
       />
       <section className="container-page section-pad">
-        <SectionHeader eyebrow="Engagement" title="Five steps from conversation to working workflow" />
+        <SectionHeader
+          eyebrow="Engagement"
+          title="Five steps from conversation to working workflow"
+        />
         <ol className="mx-auto mt-12 grid max-w-4xl gap-4">
           {HOW_IT_WORKS_STEPS.map((s, i) => (
             <li key={s.title} className="flex gap-5 rounded-xl border border-border bg-card p-6">
@@ -42,14 +49,21 @@ function HowItWorksPage() {
       </section>
       <section className="border-t border-border">
         <div className="container-page section-pad">
-          <SectionHeader eyebrow="Inside a case" title="What a reviewed workflow looks like" description="Illustrative example with sample data." />
+          <SectionHeader
+            eyebrow="Inside a case"
+            title="What a reviewed workflow looks like"
+            description="Illustrative example with sample data."
+          />
           <div className="mt-10">
             <WorkflowDemo />
           </div>
         </div>
       </section>
       <CmsPageSections page={cmsPage} />
-      <CtaBand title="Pick the first workflow together." description="Tell us where your team loses the most time." />
+      <CtaBand
+        title="Pick the first workflow together."
+        description="Tell us where your team loses the most time."
+      />
     </>
   );
 }

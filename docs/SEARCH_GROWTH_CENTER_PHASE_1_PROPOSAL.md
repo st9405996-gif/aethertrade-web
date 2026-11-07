@@ -14,6 +14,7 @@ Status: **prepared for review; not applied to staging or production**.
 ## Verified authorization baseline
 
 Read-only inspection on 2026-11-04 confirmed:
+
 - `public.has_permission(text)` exists and is **SECURITY INVOKER** (not SECURITY DEFINER).
 - Existing `content_records` RLS separates Published public reads from editor draft access and restricts branding/settings through a separate permission.
 - Existing `content_revisions` and `audit_logs` have RLS enabled.
@@ -30,10 +31,12 @@ The migration does not create a second CMS table and does not seed or rewrite ex
 ## Current advisor findings (read-only baseline)
 
 Security:
+
 - `public.submission_quotas` has RLS enabled with no policies (existing informational finding; confirm it remains service-role-only).
 - Supabase Auth leaked-password protection is disabled (existing warning).
 
 Performance:
+
 - 12 foreign keys lack covering indexes.
 - 4 RLS policies have auth init-plan warnings.
 - 6 multiple-permissive-policy warnings, including existing `content_records` policies.

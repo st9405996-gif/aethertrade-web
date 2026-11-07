@@ -15,13 +15,17 @@ for (const page of config.pages.filter((entry) => entry.indexable)) {
 if (!robots.includes(`Sitemap: ${config.site.url.replace(/\/+$/, "")}/sitemap.xml`)) {
   errors.push("robots.txt must reference the canonical sitemap URL.");
 }
-if (!llms.startsWith(`# ${config.site.name}\n`)) errors.push("llms.txt is missing the site heading.");
-if (/&(?!amp;|lt;|gt;|quot;|apos;)/.test(sitemap)) errors.push("Sitemap contains an unescaped XML ampersand.");
+if (!llms.startsWith(`# ${config.site.name}\n`))
+  errors.push("llms.txt is missing the site heading.");
+if (/&(?!amp;|lt;|gt;|quot;|apos;)/.test(sitemap))
+  errors.push("Sitemap contains an unescaped XML ampersand.");
 
 if (errors.length) {
   console.error("SEO checks failed:");
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log(`SEO checks passed for ${config.pages.filter((page) => page.indexable).length} configured public URLs.`);
+  console.log(
+    `SEO checks passed for ${config.pages.filter((page) => page.indexable).length} configured public URLs.`,
+  );
 }

@@ -149,7 +149,9 @@ describe("deliverInquiry (mocked providers; not verified against real accounts)"
       return json(200, { id: "email_sales" });
     });
     await deliverInquiry({ ...input, kind: "demo" }, config, fetchMock as unknown as typeof fetch);
-    const teamCall = fetchMock.mock.calls.filter(([url]) => String(url).includes("api.resend.com"))[0];
+    const teamCall = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes("api.resend.com"),
+    )[0];
     const teamBody = JSON.parse((teamCall![1] as RequestInit).body as string);
     expect(teamBody.to).toEqual(["sales@aethertrade.cloud"]);
   });

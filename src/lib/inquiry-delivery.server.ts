@@ -101,7 +101,10 @@ const configSchema = z.object({
   INQUIRY_FROM_EMAIL: senderSchema,
   CONFIRMATION_SECRET: z.string().min(32),
   TURNSTILE_SECRET_KEY: z.string().min(10),
-  PUBLIC_SITE_HOSTNAME: z.string().regex(/^[a-z0-9.-]+$/i).max(253),
+  PUBLIC_SITE_HOSTNAME: z
+    .string()
+    .regex(/^[a-z0-9.-]+$/i)
+    .max(253),
   ABUSE_HASH_SECRET: z.string().min(32),
 });
 

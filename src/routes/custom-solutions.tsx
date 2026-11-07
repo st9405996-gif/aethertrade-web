@@ -34,31 +34,50 @@ const WORKFLOW_AREAS = [
 
 const DELIVERY_STEPS = [
   ["Discover", "Understand the current process, users, systems, pain points and constraints."],
-  ["Scope", "Agree the workflow, integrations, permissions, human checkpoints, deliverables and success measures."],
-  ["Build & test", "Develop against agreed requirements, test edge cases and review failures with your team."],
-  ["Pilot & deploy", "Run a controlled pilot, measure results and deploy in an agreed managed or client-owned environment."],
-  ["Handover & improve", "Document the solution, train users and optionally provide monitoring, maintenance and iteration."],
+  [
+    "Scope",
+    "Agree the workflow, integrations, permissions, human checkpoints, deliverables and success measures.",
+  ],
+  [
+    "Build & test",
+    "Develop against agreed requirements, test edge cases and review failures with your team.",
+  ],
+  [
+    "Pilot & deploy",
+    "Run a controlled pilot, measure results and deploy in an agreed managed or client-owned environment.",
+  ],
+  [
+    "Handover & improve",
+    "Document the solution, train users and optionally provide monitoring, maintenance and iteration.",
+  ],
 ];
 
 export const Route = createFileRoute("/custom-solutions")({
-  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "custom-solutions" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => ({
-    meta: [
-      { title: "Custom Automation, Workflows & AI Agents — AETHER-TRADE" },
-      {
-        name: "description",
-        content:
-          "Custom automation, AI agents, freight forwarding and shipment workflows, import-export operations, integrations and document intelligence.",
-      },
-      { property: "og:title", content: "Custom Automation & AI Agents — AETHER-TRADE" },
-      {
-        property: "og:description",
-        content: "Purpose-built workflows and agents for trade, logistics and business operations.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }))(), loaderData?.cmsPage) ,
+  loader: async () => ({
+    cmsPage: await getPublishedCmsPage({ data: { slug: "custom-solutions" } }),
+  }),
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      (() => ({
+        meta: [
+          { title: "Custom Automation, Workflows & AI Agents — AETHER-TRADE" },
+          {
+            name: "description",
+            content:
+              "Custom automation, AI agents, freight forwarding and shipment workflows, import-export operations, integrations and document intelligence.",
+          },
+          { property: "og:title", content: "Custom Automation & AI Agents — AETHER-TRADE" },
+          {
+            property: "og:description",
+            content:
+              "Purpose-built workflows and agents for trade, logistics and business operations.",
+          },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+      }))(),
+      loaderData?.cmsPage,
+    ),
   component: CustomSolutionsPage,
 });
 
@@ -72,7 +91,9 @@ function CustomSolutionsPage() {
         description="We design and build custom automations, connected workflows and AI agents for importers, exporters, freight forwarders, logistics operators and other businesses. Start with one process or scope a connected system across your team."
       >
         <Button asChild variant="hero">
-          <Link to="/request-demo" search={{ automation: undefined }}>Discuss a workflow</Link>
+          <Link to="/request-demo" search={{ automation: undefined }}>
+            Discuss a workflow
+          </Link>
         </Button>
         <Button asChild variant="outline">
           <Link to="/services">Explore all services</Link>
@@ -122,15 +143,21 @@ function CustomSolutionsPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-border p-5">
             <h3 className="font-semibold">Client-approved access</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Connections are made only to systems and data the client authorizes.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Connections are made only to systems and data the client authorizes.
+            </p>
           </div>
           <div className="rounded-lg border border-border p-5">
             <h3 className="font-semibold">Human approval points</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Agents can prepare and route work; approvals stay with designated people.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Agents can prepare and route work; approvals stay with designated people.
+            </p>
           </div>
           <div className="rounded-lg border border-border p-5">
             <h3 className="font-semibold">Scoped delivery</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Integrations, timelines and outcomes are confirmed in a written project scope.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Integrations, timelines and outcomes are confirmed in a written project scope.
+            </p>
           </div>
         </div>
       </section>

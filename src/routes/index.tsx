@@ -41,25 +41,30 @@ import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }) }),
-  head:  ({ loaderData }) => mergeCmsHead((() => ({
-    meta: [
-      {
-        title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
-      },
-      {
-        name: "description",
-        content:
-          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for mid-market importers, exporters and logistics enterprises.",
-      },
-      { property: "og:title", content: "AETHER-TRADE" },
-      {
-        property: "og:description",
-        content: "Custom document intelligence. Connected workflows. Human-controlled automation.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }))(), loaderData?.cmsPage) ,
+  head: ({ loaderData }) =>
+    mergeCmsHead(
+      (() => ({
+        meta: [
+          {
+            title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
+          },
+          {
+            name: "description",
+            content:
+              "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for mid-market importers, exporters and logistics enterprises.",
+          },
+          { property: "og:title", content: "AETHER-TRADE" },
+          {
+            property: "og:description",
+            content:
+              "Custom document intelligence. Connected workflows. Human-controlled automation.",
+          },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary_large_image" },
+        ],
+      }))(),
+      loaderData?.cmsPage,
+    ),
   component: HomePage,
 });
 
@@ -115,10 +120,26 @@ const APPROACH = [
 ];
 
 const CAPABILITIES = [
-  { icon: FolderTree, title: "Trade Operations", body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace." },
-  { icon: ScanSearch, title: "Document Intelligence", body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs." },
-  { icon: Workflow, title: "Workflow Automation", body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy." },
-  { icon: LayoutDashboard, title: "Operational Visibility", body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions." },
+  {
+    icon: FolderTree,
+    title: "Trade Operations",
+    body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
+  },
+  {
+    icon: ScanSearch,
+    title: "Document Intelligence",
+    body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
+  },
+  {
+    icon: Workflow,
+    title: "Workflow Automation",
+    body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Operational Visibility",
+    body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
+  },
 ];
 
 const AUDIENCES = [
@@ -247,7 +268,9 @@ function Hero() {
             Custom document intelligence and workflow automation for global trade.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            We engineer custom document intelligence and end-to-end workflow automation for mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry and customs friction.
+            We engineer custom document intelligence and end-to-end workflow automation for
+            mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry
+            and customs friction.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
@@ -259,9 +282,7 @@ function Hero() {
               <Link to="/services">Explore Our Services</Link>
             </Button>
           </div>
-          <p className="mt-8 font-mono text-xs text-muted-foreground">
-            Connect. Automate. Grow.
-          </p>
+          <p className="mt-8 font-mono text-xs text-muted-foreground">Connect. Automate. Grow.</p>
         </div>
       </div>
     </section>
@@ -296,7 +317,10 @@ function Challenges() {
 
 function Approach() {
   return (
-    <section className="section-pad border-y border-border bg-secondary/30" aria-labelledby="approach-title">
+    <section
+      className="section-pad border-y border-border bg-secondary/30"
+      aria-labelledby="approach-title"
+    >
       <div className="container-page">
         <SectionHeader
           eyebrow="The AETHER-TRADE approach"
@@ -337,7 +361,10 @@ function WorkflowSection() {
 
 function Capabilities() {
   return (
-    <section className="section-pad border-y border-border bg-secondary/30" aria-labelledby="capabilities-title">
+    <section
+      className="section-pad border-y border-border bg-secondary/30"
+      aria-labelledby="capabilities-title"
+    >
       <div className="container-page">
         <SectionHeader
           eyebrow="Engineering capabilities"
@@ -353,7 +380,6 @@ function Capabilities() {
                 <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                   <c.icon className="size-5 text-primary" />
                 </span>
-                
               </div>
               <h3 className="text-base font-semibold">{c.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{c.body}</p>
@@ -405,7 +431,10 @@ function Audiences() {
 
 function CataloguePreview() {
   return (
-    <section className="section-pad border-y border-border bg-secondary/30" aria-labelledby="catalogue-title">
+    <section
+      className="section-pad border-y border-border bg-secondary/30"
+      aria-labelledby="catalogue-title"
+    >
       <div className="container-page">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeader
@@ -425,7 +454,6 @@ function CataloguePreview() {
             <article key={item.slug} className="card-elevated flex flex-col gap-3 p-6">
               <div className="flex items-start justify-between gap-3">
                 <p className="eyebrow">{item.category}</p>
-                
               </div>
               <h3 className="text-base font-semibold">{item.name}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">
@@ -438,10 +466,7 @@ function CataloguePreview() {
               </p>
               <div className="mt-auto pt-2">
                 <Button variant="outline" size="sm" asChild>
-                  <Link
-                    to="/request-demo"
-                    search={{ automation: item.slug }}
-                  >
+                  <Link to="/request-demo" search={{ automation: item.slug }}>
                     Discuss This Workflow
                   </Link>
                 </Button>
@@ -515,12 +540,12 @@ function CustomServices() {
 
 function TrustGovernance() {
   return (
-    <section className="section-pad border-y border-border bg-secondary/30" aria-labelledby="trust-title">
+    <section
+      className="section-pad border-y border-border bg-secondary/30"
+      aria-labelledby="trust-title"
+    >
       <div className="container-page">
-        <SectionHeader
-          eyebrow="Trust & governance"
-          title="Intelligence with people in control."
-        />
+        <SectionHeader eyebrow="Trust & governance" title="Intelligence with people in control." />
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
           {TRUST.map((t) => (
             <article key={t.title} className="card-elevated flex flex-col gap-3 p-6">

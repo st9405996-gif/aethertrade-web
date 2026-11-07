@@ -7,6 +7,7 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 ## Implemented in the working branch
 
 ### CMS and public pages
+
 - Replaced the misleading \`Save demo changes\` label with \`Save changes\`.
 - Public routes now load published page CMS data server-side. Content with a non-empty body or sections can render as CMS-managed content; contact and request-demo pages retain their inquiry forms and render CMS sections inline.
 - CMS section editor supports selecting persistent Media Library images and setting image alt text.
@@ -14,6 +15,7 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 - CMS preview remains explicitly distinguished from guaranteed public rendering.
 
 ### Media Library and storage
+
 - Provisioned Supabase Storage buckets: \`website-media\` (public image delivery) and \`internal-media\` (private).
 - Enforced JPG/PNG/WebP only, maximum 2 MB for stored media metadata and bucket objects.
 - Admin upload/delete is wired through a same-origin proxy with bucket/path allowlisting, authenticated uploads and Storage RLS.
@@ -21,12 +23,14 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 - Upload rollback deletes the uploaded object if metadata persistence fails.
 
 ### Audit logs and revisions
+
 - Content UPDATE/DELETE snapshots are recorded in \`content_revisions\`, with operation type.
 - Database audit records include changed field names.
 - Role invitation/update/revoke events are written atomically by the owner-only \`admin_manage_user_role\` database function.
 - Admin audit UI renders human-readable operation titles and changed fields.
 
 ### Role-based access and administrator management
+
 - \`has_permission(text)\` now evaluates the configured \`role_permissions\` matrix using a SECURITY DEFINER function.
 - \`user_roles\` client reads are restricted to the signed-in user's own role assignment; client writes remain blocked.
 - Owner-only server functions can list administrator accounts, send invitations, change a role or revoke the role assignment. They use the server-side Supabase service-role binding; it is never sent to the browser.
@@ -35,12 +39,14 @@ Scope: source inspection, staging Supabase migrations, transactional policy chec
 - Invitation send limit: five per hour. No invitation email has been sent as part of this implementation.
 
 ### Analytics and subscribers
+
 - First-party page views, CTA clicks and successful Contact/Demo conversions are recorded only after ConsentManager's TCF audience-statistics purpose 8 is explicitly granted. The tracker fails closed if the CMP reports a different configuration.
 - Analytics requests validate event/path fields, same-origin requests and a per-client rate limit. No visitor name, email or form fields are collected in analytics.
 - Analytics admin page reports stored events and page counts; empty data is not fabricated.
 - Subscribers module supports owner-only manual entries with explicit consent confirmation, CSV export and unsubscribe suppression status. It does not send newsletter campaigns; double opt-in and email delivery remain unconfigured.
 
 ### Connection readiness and inquiry flow
+
 - Connections page reports authenticated database status, provisioned media buckets, Cloudflare Worker status and server inquiry-delivery mode.
 - Email delivery is labelled “Configured” only when the server says live mode; actual email deliverability is not claimed without a test message.
 - Existing inquiry form workflow remains consent-gated, server-validated and rate-limited.
@@ -117,3 +123,14 @@ The merge of `origin/main` into the PR source branch produced actual conflicts i
 - `docs/admin-panel-audit.md`: retained the Global SEO proxy incident diagnosis and the source branch's no-production-deployment qualification; corrected PR status to open/unmerged rather than draft.
 
 Local verification: `bun run test` passed (27 files, 203 tests); `bun run build` passed; `bun run tsc --noEmit` fails with 88 diagnostics, primarily TS4111 index-signature property-access diagnostics. The `DemoWorkspace` return missing `analytics` and `subscribers` is present in both the source and main parent trees. `bun run lint` fails with 7,055 errors and 11 warnings, dominated by Prettier formatting/CRLF diagnostics; focused ESLint on the three changed TypeScript files with the Prettier rule disabled reports 0 errors and 3 hook/Fast Refresh warnings. No complete lint/typecheck baseline was run against both parents, so the remaining diagnostics are not all labeled pre-existing. The conflict-marker scan and `git diff --check` passed. Staging, production, deployment, live email, and GitHub Actions/Cloudflare preview behavior were not exercised. Recheck PR head and CI before merge; this audit does not declare PR #43 ready to merge.
+
+## PR #46 stabilization-branch conflict resolution — 2026-11-07
+
+The merge of `origin/main` at `6a881f0` (PR #43 merge commit) into `stabilization/admin-cms-2026-11-06` (head `6370d30`, PR #46) produced actual conflicts in `AGENT.md`, `docs/admin-panel-audit.md`, `src/components/admin/reset-preview.tsx`, and `src/components/admin/workspace-provider.tsx`. `src/lib/admin-users.functions.ts`, `src/lib/analytics.functions.ts`, `src/lib/public-cms.functions.ts`, and `src/lib/workspace-model.ts` merged automatically.
+
+- `reset-preview.tsx`: adopted main's account-setup/recovery wording ("account link", "fresh invitation or recovery link") while keeping this branch's Prettier line wrapping. No logic, validation, or layout change.
+- `workspace-provider.tsx`: kept this branch's readable rewrite (typed multi-line context, formatted `load`, TS-error fixes); main's removal of the unused `adminUsers` context member was already present in this branch, and main's human-readable administrator audit operation titles (`INVITE`/`ROLE_UPDATE`/`ROLE_REVOKE`) were ported into this branch's formatted audit-row mapping. Session, SEO, subscriber, analytics and error-handling behavior from both parents is preserved.
+- `docs/admin-panel-audit.md`: took main's current audit document (implementation status, verification evidence, PR #43 resolution history); this branch had contributed only formatting to sections main replaced. Prettier blank-line normalization was applied; the escaped-backtick content style from main was preserved.
+- `AGENT.md`: kept this branch's latest 2026-11-07 resume/progress ledger and formatting, and appended main's "Separate PR #43 conflict-resolution request" section, so both sides' records are retained.
+
+Verification of the combined tree before commit: `bun run test` passed (39 files, 278 tests); `bun run tsc --noEmit` passed with 0 diagnostics; `bun run build` passed; `bun run lint` passed with 0 errors and 11 pre-existing React Hook/Fast Refresh warnings; `bunx prettier --check .` passed; `node scripts/check-seo.mjs` passed for 15 public URLs; conflict-marker scan and `git diff --check` passed. The merge was committed and pushed normally (no force-push) to the PR #46 head branch only. No staging or production database access, migration application, deployment, or external write occurred. PR #46 remains open and unmerged for review.

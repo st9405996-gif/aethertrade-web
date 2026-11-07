@@ -5,9 +5,7 @@ export interface AnalyticsDatabaseConfig {
   serviceRoleKey: string;
 }
 
-export function requireServerVerifiedAnalyticsConsent(
-  consent: boolean | undefined,
-): void {
+export function requireServerVerifiedAnalyticsConsent(consent: boolean | undefined): void {
   if (consent !== true) {
     throw new Error(
       "Analytics event was not recorded because server-verifiable consent is unavailable.",

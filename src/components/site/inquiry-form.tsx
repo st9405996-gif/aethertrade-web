@@ -115,7 +115,9 @@ export function InquiryForm({
         },
       });
       if (result.mode !== "live") {
-        throw new Error("The inquiry service is temporarily unavailable. Your details were not saved.");
+        throw new Error(
+          "The inquiry service is temporarily unavailable. Your details were not saved.",
+        );
       }
       // Track only a consented conversion event; never send the form fields or contact details.
       if (hasAnalyticsConsent()) {
@@ -200,7 +202,8 @@ export function InquiryForm({
             <p>
               <strong>Inquiry service unavailable.</strong>
               <br />
-              This form is not accepting submissions until secure server-side delivery is configured. Your details will not be stored in this browser.
+              This form is not accepting submissions until secure server-side delivery is
+              configured. Your details will not be stored in this browser.
             </p>
           </div>
         )}

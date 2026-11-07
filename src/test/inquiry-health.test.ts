@@ -53,9 +53,7 @@ function providers(
       return new Response("[]", { status: o.quotas ?? 200 });
     if (url.includes("api.resend.com/domains")) {
       return new Response(
-        JSON.stringify(
-          o.domains ?? { data: [{ name: "aethertrade.cloud", status: "verified" }] },
-        ),
+        JSON.stringify(o.domains ?? { data: [{ name: "aethertrade.cloud", status: "verified" }] }),
         { status: o.resend ?? 200 },
       );
     }

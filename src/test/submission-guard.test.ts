@@ -17,6 +17,7 @@ const config: DeliveryConfig = {
   serviceRoleKey: "service_role_test_value_0123456789",
   resendApiKey: "re_test_value_0123456789",
   notifyTo: "hello@aethertrade.cloud",
+  salesNotifyTo: "sales@aethertrade.cloud",
   fromEmail: "notifications@example-verified-domain.test",
   confirmationSecret: "confirmation_test_secret_0123456789abcdef",
   turnstileSecret: "turnstile_test_secret_0123456789",

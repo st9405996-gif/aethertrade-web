@@ -18,10 +18,26 @@ const roleUpdateSchema = z.object({
 });
 const removeSchema = z.object({ accessToken: accessTokenSchema, targetUserId: z.uuid() });
 
-type AdminEnvironment = { baseUrl: string; publishableKey: string; serviceKey: string; siteUrl: string };
-type AuthUser = { id: string; email?: string; created_at?: string; user_metadata?: Record<string, unknown> };
+type AdminEnvironment = {
+  baseUrl: string;
+  publishableKey: string;
+  serviceKey: string;
+  siteUrl: string;
+};
+type AuthUser = {
+  id: string;
+  email?: string;
+  created_at?: string;
+  user_metadata?: Record<string, unknown>;
+};
 type RoleRow = { user_id: string; role: string };
-export type AdminUserRecord = { userId: string; email: string; displayName: string; role: string; createdAt: string };
+export type AdminUserRecord = {
+  userId: string;
+  email: string;
+  displayName: string;
+  role: string;
+  createdAt: string;
+};
 
 async function getAdminEnvironment(): Promise<AdminEnvironment> {
   const { readServerEnv } = await import("@/lib/server-env.server");
@@ -42,17 +58,23 @@ async function verifyOwner(accessToken: string, env: AdminEnvironment): Promise<
   const host = getRequestHeader("host");
   if (origin && host) {
     try {
-      if (new URL(origin).host !== host) throw new Error("Cross-origin administrator request rejected.");
+      if (new URL(origin).host !== host)
+        throw new Error("Cross-origin administrator request rejected.");
     } catch {
       throw new Error("Administrator request origin could not be validated.");
     }
   }
   const response = await fetch(env.baseUrl + "/auth/v1/user", {
-    headers: { apikey: env.publishableKey, Authorization: "Bearer " + accessToken, Accept: "application/json" },
+    headers: {
+      apikey: env.publishableKey,
+      Authorization: "Bearer " + accessToken,
+      Accept: "application/json",
+    },
   });
   if (!response.ok) throw new Error("Your administrator session has expired. Sign in again.");
-  const user = await response.json() as { id?: string };
-  if (user.id !== OWNER_ID) throw new Error("Only the account owner can manage administrator accounts.");
+  const user = (await response.json()) as { id?: string };
+  if (user.id !== OWNER_ID)
+    throw new Error("Only the account owner can manage administrator accounts.");
 }
 
 function serviceHeaders(env: AdminEnvironment): Record<string, string> {
@@ -94,9 +116,13 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
       headers: serviceHeaders(env),
       body: JSON.stringify({ email: data.email }),
     });
-    const payload = await response.json().catch(() => null) as { id?: string; user?: { id?: string } } | null;
+    const payload = (await response.json().catch(() => null)) as {
+      id?: string;
+      user?: { id?: string };
+    } | null;
     if (!response.ok) {
-      if (response.status === 409 || response.status === 422) throw new Error("This email may already have an account or invitation.");
+      if (response.status === 409 || response.status === 422)
+        throw new Error("This email may already have an account or invitation.");
       throw new Error("Supabase could not send the administrator invitation.");
     }
     const invitedUserId = payload?.id ?? payload?.user?.id;
@@ -107,9 +133,16 @@ export const inviteAdminUser = createServerFn({ method: "POST" })
     const roleResponse = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
       method: "POST",
       headers: serviceHeaders(env),
-      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: invitedUserId, p_target_role: data.role, p_operation: "INVITE" }),
+      body: JSON.stringify({
+        p_actor_id: OWNER_ID,
+        p_target_user_id: invitedUserId,
+        p_target_role: data.role,
+        p_operation: "INVITE",
+      }),
     });
-    const rolePayload = await roleResponse.json().catch(() => null) as { success?: boolean } | null;
+    const rolePayload = (await roleResponse.json().catch(() => null)) as {
+      success?: boolean;
+    } | null;
     if (!roleResponse.ok || rolePayload?.success !== true) {
       const revoked = await attemptInvitedUserRevocation(
         env.baseUrl + "/auth/v1/admin/users/" + invitedUserId,
@@ -138,15 +171,24 @@ export const listAdminUsers = createServerFn({ method: "POST" })
     roleUrl.searchParams.set("order", "role.asc");
     const [rolesResponse, usersResponse] = await Promise.all([
       fetch(roleUrl, { headers: serviceHeaders(env) }),
-      fetch(env.baseUrl + "/auth/v1/admin/users?page=1&per_page=100", { headers: serviceHeaders(env) }),
+      fetch(env.baseUrl + "/auth/v1/admin/users?page=1&per_page=100", {
+        headers: serviceHeaders(env),
+      }),
     ]);
-    if (!rolesResponse.ok || !usersResponse.ok) throw new Error("Administrator list could not be loaded.");
-    const roleRows = z.array(z.object({ user_id: z.uuid(), role: z.string() })).safeParse(await rolesResponse.json());
-    const userPayload = await usersResponse.json() as { users?: AuthUser[] };
-    if (!roleRows.success || !Array.isArray(userPayload.users)) throw new Error("Administrator list response was invalid.");
+    if (!rolesResponse.ok || !usersResponse.ok)
+      throw new Error("Administrator list could not be loaded.");
+    const roleRows = z
+      .array(z.object({ user_id: z.uuid(), role: z.string() }))
+      .safeParse(await rolesResponse.json());
+    const userPayload = (await usersResponse.json()) as { users?: AuthUser[] };
+    if (!roleRows.success || !Array.isArray(userPayload.users))
+      throw new Error("Administrator list response was invalid.");
     return roleRows.data.map((row): AdminUserRecord => {
-      const user = userPayload.users?.find(candidate => candidate.id === row.user_id);
-      const metadataName = typeof user?.user_metadata?.["full_name"] === "string" ? user.user_metadata["full_name"] as string : "";
+      const user = userPayload.users?.find((candidate) => candidate.id === row.user_id);
+      const metadataName =
+        typeof user?.user_metadata?.["full_name"] === "string"
+          ? (user.user_metadata["full_name"] as string)
+          : "";
       return {
         userId: row.user_id,
         email: user?.email ?? "Email unavailable",
@@ -166,14 +208,21 @@ export const updateAdminUserRole = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const env = await getAdminEnvironment();
     await verifyOwner(data.accessToken, env);
-    if (data.targetUserId === OWNER_ID) throw new Error("The owner account role cannot be changed.");
+    if (data.targetUserId === OWNER_ID)
+      throw new Error("The owner account role cannot be changed.");
     const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
       method: "POST",
       headers: serviceHeaders(env),
-      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: data.targetUserId, p_target_role: data.role, p_operation: "ROLE_UPDATE" }),
+      body: JSON.stringify({
+        p_actor_id: OWNER_ID,
+        p_target_user_id: data.targetUserId,
+        p_target_role: data.role,
+        p_operation: "ROLE_UPDATE",
+      }),
     });
-    const payload = await response.json().catch(() => null) as { success?: boolean } | null;
-    if (!response.ok || payload?.success !== true) throw new Error("Administrator role could not be updated.");
+    const payload = (await response.json().catch(() => null)) as { success?: boolean } | null;
+    if (!response.ok || payload?.success !== true)
+      throw new Error("Administrator role could not be updated.");
     return { success: true as const, role: data.role };
   });
 
@@ -190,9 +239,15 @@ export const removeAdminUser = createServerFn({ method: "POST" })
     const response = await fetch(env.baseUrl + "/rest/v1/rpc/admin_manage_user_role", {
       method: "POST",
       headers: serviceHeaders(env),
-      body: JSON.stringify({ p_actor_id: OWNER_ID, p_target_user_id: data.targetUserId, p_target_role: null, p_operation: "ROLE_REVOKE" }),
+      body: JSON.stringify({
+        p_actor_id: OWNER_ID,
+        p_target_user_id: data.targetUserId,
+        p_target_role: null,
+        p_operation: "ROLE_REVOKE",
+      }),
     });
-    const payload = await response.json().catch(() => null) as { success?: boolean } | null;
-    if (!response.ok || payload?.success !== true) throw new Error("Administrator access could not be revoked.");
+    const payload = (await response.json().catch(() => null)) as { success?: boolean } | null;
+    if (!response.ok || payload?.success !== true)
+      throw new Error("Administrator access could not be revoked.");
     return { success: true as const };
   });

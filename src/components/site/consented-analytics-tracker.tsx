@@ -19,9 +19,11 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       }
       if (lastTrackedPath.current === pathname) return;
       lastTrackedPath.current = pathname;
-      void sendEvent({ data: { eventType: "page_view", pagePath: pathname, consent: true } }).catch(() => {
-        // Analytics must never interrupt navigation or surface an error to visitors.
-      });
+      void sendEvent({ data: { eventType: "page_view", pagePath: pathname, consent: true } }).catch(
+        () => {
+          // Analytics must never interrupt navigation or surface an error to visitors.
+        },
+      );
     };
 
     const trackCtaClick = (event: MouseEvent) => {
@@ -31,11 +33,21 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       const anchor = target.closest("a[href]") as HTMLAnchorElement | null;
       if (!anchor) return;
       let destination: URL;
-      try { destination = new URL(anchor.href, window.location.origin); } catch { return; }
-      if (destination.origin !== window.location.origin || !["/request-demo", "/contact"].includes(destination.pathname)) return;
-      void sendEvent({ data: { eventType: "cta_click", pagePath: pathname, consent: true } }).catch(() => {
-        // Analytics must never interrupt navigation or surface an error to visitors.
-      });
+      try {
+        destination = new URL(anchor.href, window.location.origin);
+      } catch {
+        return;
+      }
+      if (
+        destination.origin !== window.location.origin ||
+        !["/request-demo", "/contact"].includes(destination.pathname)
+      )
+        return;
+      void sendEvent({ data: { eventType: "cta_click", pagePath: pathname, consent: true } }).catch(
+        () => {
+          // Analytics must never interrupt navigation or surface an error to visitors.
+        },
+      );
     };
 
     cmp("addEventListener", ["settings", checkConsentAndTrack, true], null);

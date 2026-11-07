@@ -40,7 +40,7 @@ export function ConsentedClarityTracker() {
           const script = document.createElement("script");
           script.async = true;
           script.src = "https://www.clarity.ms/tag/" + CLARITY_PROJECT_ID + "?ref=bwt";
-          script.dataset.clarityProject = CLARITY_PROJECT_ID;
+          script.dataset["clarityProject"] = CLARITY_PROJECT_ID;
           document.head.appendChild(script);
         }
         return;
