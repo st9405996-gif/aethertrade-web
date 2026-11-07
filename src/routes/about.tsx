@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
-import { StubPage } from "@/components/site/stub-page";
+import { PageHero } from "@/components/site/section";
+import { CtaBand } from "@/components/site/cta-band";
 
 export const Route = createFileRoute("/about")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "about" } }) }),
@@ -33,12 +34,17 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   const { cmsPage } = Route.useLoaderData();
   return (
-    <StubPage
-      cmsPage={cmsPage}
-      eyebrow="About"
-      title="Building More Connected Operations for Global Trade."
-      description="Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses."
-      note="Full page in the next milestone"
-    />
+    <>
+      <PageHero
+        eyebrow="About"
+        title="Building More Connected Operations for Global Trade."
+        description="Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses."
+      />
+      <CmsPageSections page={cmsPage ?? null} />
+      <CtaBand
+        title="Start the conversation."
+        description="Tell us about your business, your operational challenges and what you want to improve."
+      />
+    </>
   );
 }
