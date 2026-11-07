@@ -49,12 +49,12 @@ begin
       select 1
       from public.content_records c
       where position(new.object_path in c.fields::text) > 0
-         or position(replace(new.object_path, '/', '%2F') in c.fields::text) > 0
+         or position(lower(replace(new.object_path, '/', '%2f')) in lower(c.fields::text)) > 0
     ) or exists (
       select 1
       from public.content_revisions r
       where position(new.object_path in r.snapshot::text) > 0
-         or position(replace(new.object_path, '/', '%2F') in r.snapshot::text) > 0
+         or position(lower(replace(new.object_path, '/', '%2f')) in lower(r.snapshot::text)) > 0
     ) then
       raise exception 'Media asset is referenced by CMS content or a saved revision'
         using errcode = '23514';
@@ -86,7 +86,7 @@ begin
     where m.deletion_status = 'pending'
       and (
         position(m.object_path in row_text) > 0
-        or position(replace(m.object_path, '/', '%2F') in row_text) > 0
+        or position(lower(replace(m.object_path, '/', '%2f')) in lower(row_text)) > 0
       )
   ) then
     raise exception 'CMS content cannot reference a media asset pending deletion'
