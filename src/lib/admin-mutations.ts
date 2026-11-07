@@ -315,6 +315,25 @@ export async function deleteWebsiteMediaAsset(
     );
   }
 
+  // Persist recovery intent before touching Storage. If this write is rejected or
+  // its outcome is ambiguous, do not remove the object.
+  await writeAdminRecord(
+    {
+      accessToken: input.accessToken,
+      path: "/rest/v1/media_assets?id=eq." + input.id + "&deletion_status=in.(active,pending)",
+      method: "PATCH",
+      body: {
+        deletion_status: "pending",
+        deletion_requested_at: new Date().toISOString(),
+      },
+      expectedId: input.id,
+      operation: "Media deletion request",
+    },
+    fetchImpl,
+  );
+
+  // The pending row is the durable recovery record. Network/storage failures leave it
+  // in place; retrying a missing object is safe and metadata deletion remains last.
   await deleteWebsiteMediaObject(input.accessToken, input.objectPath, fetchImpl);
   try {
     await deleteMediaMetadataRow(input.accessToken, input.id, fetchImpl);
@@ -322,7 +341,7 @@ export async function deleteWebsiteMediaAsset(
     const detail =
       error instanceof Error ? error.message : "The database response was unavailable.";
     throw new Error(
-      `The storage object was removed, but media metadata deletion could not be confirmed for ${input.id}. Retry the deletion to finish cleanup; no other data changed. ${detail}`,
+      `Storage cleanup is complete, but catalogue deletion is still pending for ${input.id}. Retry from the Media Library. ${detail}`,
     );
   }
 }
