@@ -50,6 +50,7 @@ import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { useWorkspace } from "@/components/admin/workspace-provider";
 import { executeAdminMutation } from "@/lib/admin-mutation-result";
 import { createCmsPagePreview } from "@/lib/cms-page-preview";
+import { matchStoredMediaUrl } from "@/lib/admin-media";
 import { GlobalSeoPanel } from "@/components/admin/global-seo-panel";
 import { getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import {
@@ -1183,7 +1184,7 @@ function RecordEditor({
                       <select
                         className={selectClass}
                         aria-label={`Section ${i + 1} image`}
-                        value={s.imageUrl || ""}
+                        value={matchStoredMediaUrl(s.imageUrl || "", workspace.data.media)}
                         onChange={(e) =>
                           setSections(
                             sections.map((x) =>
