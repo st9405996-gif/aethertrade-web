@@ -41,6 +41,7 @@ const media: MediaRecord[] = [
     url: "/api/admin-supabase/storage/v1/object/public/website-media/page/approach.png",
     bucketId: "website-media",
     objectPath: "page/approach.png",
+    deletionStatus: "active",
   },
 ];
 

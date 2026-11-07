@@ -1724,17 +1724,31 @@ function MediaLibrary() {
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => (
             <div key={r.id} className="overflow-hidden rounded-md border border-border bg-card">
-              <img
-                src={r.url}
-                alt={r.alt}
-                className="aspect-[4/3] w-full object-contain bg-muted"
-              />
+              {r.url ? (
+                <img
+                  src={r.url}
+                  alt={r.alt}
+                  className="aspect-[4/3] w-full object-contain bg-muted"
+                />
+              ) : (
+                <div
+                  role="status"
+                  className="flex aspect-[4/3] items-center justify-center bg-muted px-5 text-center text-sm text-muted-foreground"
+                >
+                  Image unavailable while deletion is pending
+                </div>
+              )}
               <div className="p-4">
                 <p className="truncate text-sm font-medium">{r.name}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {Math.round(r.size / 1024)} KB · {r.type}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">{r.alt || "Alt text not set"}</p>
+                {r.deletionStatus === "pending" && (
+                  <p role="status" className="mt-2 text-xs font-medium text-warning">
+                    Deletion pending · storage/catalogue cleanup may need a retry
+                  </p>
+                )}
                 <div className="mt-3 grid gap-2">
                   <label className="grid gap-1 text-xs text-muted-foreground">
                     Public image URL
@@ -1763,11 +1777,11 @@ function MediaLibrary() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label={"Delete " + r.name}
-                    disabled={!demoCan(workspace.role, "draft")}
+                    aria-label={r.deletionStatus === "pending" ? "Retry deletion of " + r.name : "Delete " + r.name}
+                    disabled={!demoCan(workspace.role, "draft") || busy}
                     onClick={() => setRemove(r.id)}
                   >
-                    <Trash2 />
+                    {r.deletionStatus === "pending" ? <RotateCcw /> : <Trash2 />}
                   </Button>
                 </div>
               </div>
@@ -1828,8 +1842,10 @@ function MediaLibrary() {
           <DialogHeader>
             <DialogTitle>Delete media item?</DialogTitle>
             <DialogDescription>
-              {workspace.data.media.find((r) => r.id === remove)?.name}. This removes the object
-              from Supabase Storage and deletes its catalogue record.
+              {workspace.data.media.find((r) => r.id === remove)?.name}.{" "}
+              {workspace.data.media.find((r) => r.id === remove)?.deletionStatus === "pending"
+                ? "This item already has a pending deletion request. Retry will safely resume storage and catalogue cleanup."
+                : "This marks the item for deletion, then removes its Storage object and catalogue record. CMS-referenced assets are protected."}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
@@ -1838,19 +1854,27 @@ function MediaLibrary() {
             </Button>
             <Button
               variant="destructive"
+              disabled={busy}
               onClick={async () => {
                 if (!remove) return;
+                setBusy(true);
                 try {
                   await workspace.removeMedia(remove);
                   setRemove(null);
                   toast.success("Media item deleted");
                 } catch (e) {
                   toast.error(e instanceof Error ? e.message : "Could not delete media item");
+                } finally {
+                  setBusy(false);
                 }
               }}
             >
-              <Trash2 />
-              Delete
+              {workspace.data.media.find((r) => r.id === remove)?.deletionStatus === "pending" ? (
+                <RotateCcw />
+              ) : (
+                <Trash2 />
+              )}
+              {busy ? "Working…" : workspace.data.media.find((r) => r.id === remove)?.deletionStatus === "pending" ? "Retry deletion" : "Delete"}
             </Button>
           </div>
         </DialogContent>

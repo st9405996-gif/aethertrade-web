@@ -22,6 +22,7 @@ describe("admin media record mapping", () => {
       alt: "Shipment document",
       bucketId: "website-media",
       objectPath: "user-1/photo.png",
+      deletionStatus: "active",
       url: "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
     });
   });
@@ -40,6 +41,22 @@ describe("admin media record mapping", () => {
     expect(
       mapAdminMediaRecord({ ...base, object_path: "../private/photo.png", is_public: true }).url,
     ).toBe("");
+  });
+
+  it("keeps pending rows for recovery but hides their public URL", () => {
+    const mapped = mapAdminMediaRecord({
+      id: "media-id",
+      filename: "photo.png",
+      content_type: "image/png",
+      file_size: 128,
+      alt_text: "Shipment document",
+      bucket_id: "website-media",
+      object_path: "user-1/photo.png",
+      is_public: true,
+      deletion_status: "pending",
+    });
+    expect(mapped.deletionStatus).toBe("pending");
+    expect(mapped.url).toBe("");
   });
 });
 

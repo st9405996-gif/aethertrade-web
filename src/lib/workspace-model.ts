@@ -122,6 +122,7 @@ export interface MediaRecord {
   url: string;
   bucketId: string;
   objectPath: string;
+  deletionStatus: "active" | "pending";
 }
 export interface Revision {
   id: string;
