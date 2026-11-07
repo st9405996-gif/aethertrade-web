@@ -36,6 +36,7 @@ import {
 } from "@/lib/admin-mutations";
 import { mapAdminMediaRecord } from "@/lib/admin-media";
 import { readAuditRows } from "@/lib/admin-audit";
+import { readOptionalRows, summarizeLoadFailures } from "@/lib/admin-optional-read";
 import { restoreRevisionAsDraft } from "@/lib/revision-restore";
 import {
   parseExistingSubscriberLookup,
@@ -178,6 +179,7 @@ type Ctx = {
   authError: string;
   storageError: string;
   auditError: string;
+  reloadWorkspace: () => Promise<void>;
   setRole: (r: Role) => void;
   signIn: (e: string, p: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -226,34 +228,36 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const [rs, is, ns, ms, vs, auditResult, es, subs, seoRows] = await Promise.all([
       call(c, s.access_token, "/rest/v1/content_records?select=*&order=position.asc,id.asc"),
       call(c, s.access_token, "/rest/v1/inquiries?select=*&order=created_at.desc"),
-      call(c, s.access_token, "/rest/v1/inquiry_notes?select=*&order=created_at.asc").catch(
-        () => [],
+      readOptionalRows("Inquiry notes", () =>
+        call(c, s.access_token, "/rest/v1/inquiry_notes?select=*&order=created_at.asc"),
       ),
       call(c, s.access_token, "/rest/v1/media_assets?select=*&order=filename.asc"),
-      call(c, s.access_token, "/rest/v1/content_revisions?select=*&order=created_at.desc").catch(
-        () => [],
+      readOptionalRows("Revisions", () =>
+        call(c, s.access_token, "/rest/v1/content_revisions?select=*&order=created_at.desc"),
       ),
       readAuditRows(() =>
         call(c, s.access_token, "/rest/v1/audit_logs?select=*&order=created_at.desc&limit=100"),
       ),
-      call(
-        c,
-        s.access_token,
-        "/rest/v1/analytics_events?select=*&order=created_at.desc&limit=500",
-      ).catch(() => []),
-      call(
-        c,
-        s.access_token,
-        "/rest/v1/newsletter_subscribers?select=*&order=created_at.desc",
-      ).catch(() => []),
-      call(
-        c,
-        s.access_token,
-        "/rest/v1/global_seo_settings?select=settings,is_published&id=eq.1",
-      ).catch(() => []),
+      readOptionalRows("Analytics", () =>
+        call(
+          c,
+          s.access_token,
+          "/rest/v1/analytics_events?select=*&order=created_at.desc&limit=500",
+        ),
+      ),
+      readOptionalRows("Subscribers", () =>
+        call(c, s.access_token, "/rest/v1/newsletter_subscribers?select=*&order=created_at.desc"),
+      ),
+      readOptionalRows("Global SEO settings", () =>
+        call(
+          c,
+          s.access_token,
+          "/rest/v1/global_seo_settings?select=settings,is_published&id=eq.1",
+        ),
+      ),
     ]);
-    const revisionRows = Array.isArray(vs) ? vs.map(row) : [];
-    const revisions: Revision[] = revisionRows.map((v) => {
+    const revisionRows = vs.status === "ok" ? vs.rows.map(row) : null;
+    const revisions: Revision[] | undefined = revisionRows?.map((v) => {
       const rawSnapshot = row(v["snapshot"]);
       const snapshot = row(rawSnapshot["record"] ?? v["snapshot"]);
       return {
@@ -285,8 +289,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setAuditError(auditResult.error);
     const mediaRows = Array.isArray(ms) ? ms.map(row) : [];
     const media: MediaRecord[] = mediaRows.map(mapAdminMediaRecord);
-    const analyticsRows = Array.isArray(es) ? es.map(row) : [];
-    const analytics: AnalyticsEvent[] = analyticsRows.map((e) => ({
+    const analyticsRows = es.status === "ok" ? es.rows.map(row) : null;
+    const analytics: AnalyticsEvent[] | undefined = analyticsRows?.map((e) => ({
       id: text(e, "id"),
       eventType: text(e, "event_type"),
       pagePath: text(e, "page_path"),
@@ -294,8 +298,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       consent: true,
       createdAt: text(e, "created_at"),
     }));
-    const subscriberRows = Array.isArray(subs) ? subs.map(row) : [];
-    const subscribers: Subscriber[] = subscriberRows.map((s) => ({
+    const subscriberRows = subs.status === "ok" ? subs.rows.map(row) : null;
+    const subscribers: Subscriber[] | undefined = subscriberRows?.map((s) => ({
       id: text(s, "id"),
       email: text(s, "email"),
       status: text(s, "status") as Subscriber["status"],
@@ -306,13 +310,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }));
     const recordRows = Array.isArray(rs) ? rs.map(row) : [];
     const inquiryRows = Array.isArray(is) ? is.map(row) : [];
-    const noteRows = Array.isArray(ns) ? ns.map(row) : [];
+    const noteRows = ns.status === "ok" ? ns.rows.map(row) : null;
     const auditRows = auditResult.rows;
-    setData({
+    setData((old) => ({
       records: recordRows.map(mapRecord),
-      inquiries: inquiryRows.map((i) => mapInquiry(i, noteRows)),
+      inquiries: inquiryRows.map((i) => {
+        const mapped = mapInquiry(i, noteRows ?? []);
+        // A failed notes read keeps the notes already loaded for this inquiry.
+        return noteRows
+          ? mapped
+          : { ...mapped, notes: old.inquiries.find((x) => x.id === mapped.id)?.notes ?? [] };
+      }),
       media,
-      revisions,
+      revisions: revisions ?? old.revisions,
       audit: auditRows.map((a) => {
         const details = row(a["details"]);
         const changedFields = Array.isArray(details["changed_fields"])
@@ -335,11 +345,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           changedFields,
         };
       }),
-      analytics,
-      subscribers,
-    });
-    const seoRow = Array.isArray(seoRows) ? row(seoRows[0]) : {};
-    if (Object.keys(seoRow).length) {
+      analytics: analytics ?? old.analytics,
+      subscribers: subscribers ?? old.subscribers,
+    }));
+    // A failed settings read leaves the current Global SEO settings untouched.
+    const seoRow = seoRows.status === "ok" ? row(seoRows.rows[0]) : null;
+    if (seoRow && Object.keys(seoRow).length) {
       const saved = row(seoRow["settings"]);
       setGlobalSeo({
         ...DEFAULT_GLOBAL_SEO,
@@ -350,8 +361,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       });
       setGlobalSeoPublished(seoRow["is_published"] === true);
     }
+    const failedModules = [ns, vs, es, subs, seoRows].flatMap((result) =>
+      result.status === "failed" ? [result.label] : [],
+    );
     setAuthenticated(true);
-    setStorageError("");
+    setStorageError(summarizeLoadFailures(failedModules));
   }
   async function adminRole(c: Config, s: Session) {
     const user = row(await call(c, s.access_token, "/auth/v1/user"));
@@ -480,6 +494,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   async function write(path: string, method: string, body?: unknown) {
     const s = await fresh();
     return call(cfg!, s.access_token, path, method, body);
+  }
+  async function reloadWorkspace() {
+    try {
+      const s = await fresh();
+      await load(cfg!, s);
+    } catch {
+      setStorageError("The workspace could not be reloaded. Check your connection and try again.");
+    }
   }
   async function refreshAfterWrite() {
     try {
@@ -816,6 +838,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       authError,
       storageError,
       auditError,
+      reloadWorkspace,
       setRole,
       signIn,
       signOut,
@@ -848,6 +871,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       authError,
       storageError,
       auditError,
+      reloadWorkspace,
       session,
       cfg,
     ],
