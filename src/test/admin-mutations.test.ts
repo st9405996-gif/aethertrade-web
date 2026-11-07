@@ -551,6 +551,30 @@ describe("website media object cleanup", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("allows concurrent retries to converge when Storage and metadata removal race", async () => {
+    const makeAttempt = (storageStatus: number, metadataRows: string) =>
+      vi.fn<typeof fetch>()
+        .mockResolvedValueOnce(new Response(JSON.stringify([{ id: recordId }]), { status: 200 }))
+        .mockResolvedValueOnce(new Response(null, { status: storageStatus }))
+        .mockResolvedValueOnce(new Response(metadataRows, { status: 200 }))
+        .mockResolvedValueOnce(new Response("[]", { status: 200 }));
+    const first = makeAttempt(204, JSON.stringify([{ id: recordId }]));
+    const second = makeAttempt(404, "[]");
+
+    await expect(
+      Promise.all([
+        deleteWebsiteMediaAsset(
+          { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+          first,
+        ),
+        deleteWebsiteMediaAsset(
+          { accessToken: "test-access-token", id: recordId, objectPath, referenceRecords: [] },
+          second,
+        ),
+      ]),
+    ).resolves.toEqual([undefined, undefined]);
+  });
+
   it("refuses unauthenticated deletion before any request is sent", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
     await expect(
