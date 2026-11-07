@@ -39,6 +39,7 @@ export function withSecurityHeaders(response: Response): Response {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
     if (!headers.has(name)) headers.set(name, value);
   }
+  if (!headers.has("cache-control")) headers.set("cache-control", "no-store");
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

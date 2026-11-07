@@ -16,7 +16,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { themeBootstrapScript } from "@/components/site/theme-toggle";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
-import { WorkspaceProvider } from "@/components/admin/workspace-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
@@ -289,22 +288,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WorkspaceProvider>
-        <div className="flex min-h-screen flex-col">
-          {!bareAuthPage && <Header />}
-          <main className="flex-1">
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
-            {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && (
-              <CmsPageRenderer page={cmsPage} showTitle={false} />
-            )}
-          </main>
-          {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname} />}
-          {!bareAuthPage && <ConsentedClarityTracker />}
-          {!bareAuthPage && <Footer />}
-        </div>
-        <Toaster />
-      </WorkspaceProvider>
+      <div className="flex min-h-screen flex-col">
+        {!bareAuthPage && <Header />}
+        <main className="flex-1">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          {cmsOverridesRoute && cmsPage ? <CmsPageRenderer page={cmsPage} /> : <Outlet />}
+          {!cmsOverridesRoute && !cmsContentHandledByRoute && cmsPage && hasCmsContent && (
+            <CmsPageRenderer page={cmsPage} showTitle={false} />
+          )}
+        </main>
+        {!bareAuthPage && <ConsentedAnalyticsTracker pathname={pathname} />}
+        {!bareAuthPage && <ConsentedClarityTracker />}
+        {!bareAuthPage && <Footer />}
+      </div>
+      <Toaster />
     </QueryClientProvider>
   );
 }

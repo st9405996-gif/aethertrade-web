@@ -3,10 +3,9 @@ import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
-import { CardGrid, meta } from "@/components/site/blocks";
+import { CardGrid, EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
-import { SERVICES } from "@/content/site-content";
 import { parseAvailabilityStatus } from "@/lib/availability-status";
 
 export const Route = createFileRoute("/services")({
@@ -26,27 +25,20 @@ export const Route = createFileRoute("/services")({
 });
 function ServicesPage() {
   const { items, cmsPage } = Route.useLoaderData();
-  const cards = items.length
-    ? items.map((item) => {
-        const status =
-          parseAvailabilityStatus(item.availability) ??
-          (item.availability.trim() ? undefined : "Custom Build");
-        return {
-          title: item.title,
-          body: item.body,
-          ...(status ? { status } : {}),
-          points: (item.fields["deliverables"] || "")
-            .split("\n")
-            .map((x) => x.trim())
-            .filter(Boolean),
-        };
-      })
-    : SERVICES.map((item) => ({
-        title: item.title,
-        body: item.body,
-        status: item.status,
-        points: item.deliverables,
-      }));
+  const cards = items.map((item) => {
+    const status =
+      parseAvailabilityStatus(item.availability) ??
+      (item.availability.trim() ? undefined : "Custom Build");
+    return {
+      title: item.title,
+      body: item.body,
+      ...(status ? { status } : {}),
+      points: (item.fields["deliverables"] || "")
+        .split("\n")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    };
+  });
   return (
     <>
       <PageHero
@@ -61,7 +53,11 @@ function ServicesPage() {
       <section className="container-page section-pad">
         <SectionHeader eyebrow="What we offer" title="Services" />
         <div className="mt-12">
-          <CardGrid items={cards} />
+          {cards.length ? (
+            <CardGrid items={cards} />
+          ) : (
+            <EmptyContentState>No published services are available.</EmptyContentState>
+          )}
         </div>
       </section>
       <CmsPageSections page={cmsPage} />

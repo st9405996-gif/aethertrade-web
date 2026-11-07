@@ -25,8 +25,7 @@ function asText(value: unknown): string {
 }
 function parseRecord(value: unknown, now = Date.now()): PublicContentRecord | null {
   const row = asRecord(value);
-  if (!isPublicAt(row["publication"], row["scheduled_at"], now) || row["noindex"] === true)
-    return null;
+  if (!isPublicAt(row["publication"], row["scheduled_at"], now)) return null;
   const title = asText(row["title"]).trim();
   if (!title) return null;
   const rawFields = asRecord(row["fields"]);
@@ -66,6 +65,46 @@ const inputSchema = z.object({
     "partnerships",
   ]),
 });
+export async function fetchPublishedContentRecords(
+  baseUrl: string | undefined,
+  publishableKey: string | undefined,
+  module: z.infer<typeof inputSchema>["module"],
+  fetchImpl: typeof fetch = fetch,
+  now = Date.now(),
+): Promise<PublicContentRecord[]> {
+  const normalizedBaseUrl = baseUrl?.replace(/\/+$/, "");
+  if (!normalizedBaseUrl || !publishableKey) {
+    throw new Error("Public content connection is not configured.");
+  }
+  const url = new URL(normalizedBaseUrl + "/rest/v1/content_records");
+  url.searchParams.set(
+    "select",
+    "id,module,slug,title,body,category,availability,position,publication,scheduled_at,fields",
+  );
+  url.searchParams.set("module", "eq." + module);
+  url.searchParams.set(
+    "or",
+    `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date(now).toISOString()}))`,
+  );
+  url.searchParams.set("order", "position.asc,title.asc");
+  url.searchParams.set("limit", "200");
+  const response = await fetchImpl(url, {
+    cache: "no-store",
+    headers: {
+      apikey: publishableKey,
+      Authorization: "Bearer " + publishableKey,
+      Accept: "application/json",
+    },
+  });
+  if (!response.ok)
+    throw new Error("Public content request failed with status " + response.status + ".");
+  const payload: unknown = await response.json();
+  if (!Array.isArray(payload)) throw new Error("Public content response was not a list.");
+  return payload
+    .map((item) => parseRecord(item, now))
+    .filter((item): item is PublicContentRecord => item !== null);
+}
+
 export const getPublishedContentRecords = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => {
     const parsed = inputSchema.safeParse(input);
@@ -74,35 +113,9 @@ export const getPublishedContentRecords = createServerFn({ method: "GET" })
   })
   .handler(async ({ data }) => {
     const env = readServerEnv();
-    const baseUrl = env["SUPABASE_URL"]?.replace(/\/+$/, "");
-    const publishableKey = env["SUPABASE_PUBLISHABLE_KEY"];
-    if (!baseUrl || !publishableKey)
-      throw new Error("Public content connection is not configured.");
-    const url = new URL(baseUrl + "/rest/v1/content_records");
-    url.searchParams.set(
-      "select",
-      "id,module,slug,title,body,category,availability,position,publication,scheduled_at,noindex,fields",
+    return fetchPublishedContentRecords(
+      env["SUPABASE_URL"],
+      env["SUPABASE_PUBLISHABLE_KEY"],
+      data.module,
     );
-    url.searchParams.set("module", "eq." + data.module);
-    url.searchParams.set("noindex", "eq.false");
-    url.searchParams.set(
-      "or",
-      `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date().toISOString()}))`,
-    );
-    url.searchParams.set("order", "position.asc,title.asc");
-    url.searchParams.set("limit", "200");
-    const response = await fetch(url, {
-      headers: {
-        apikey: publishableKey,
-        Authorization: "Bearer " + publishableKey,
-        Accept: "application/json",
-      },
-    });
-    if (!response.ok)
-      throw new Error("Public content request failed with status " + response.status + ".");
-    const payload: unknown = await response.json();
-    if (!Array.isArray(payload)) throw new Error("Public content response was not a list.");
-    return payload
-      .map((item) => parseRecord(item))
-      .filter((item): item is PublicContentRecord => item !== null);
   });

@@ -38,6 +38,7 @@ describe("public global SEO settings", () => {
     const url = new URL(String(requestUrl));
     expect(url.searchParams.get("id")).toBe("eq.1");
     expect(url.searchParams.get("is_published")).toBe("eq.true");
+    expect(requestInit?.cache).toBe("no-store");
     const headers = new Headers(requestInit?.headers);
     expect(headers.get("apikey")).toBe("public-test-key");
     expect(headers.get("authorization")).toBe("Bearer public-test-key");
@@ -61,21 +62,28 @@ describe("public global SEO settings", () => {
     });
   });
 
-  it("returns defaults when the request is not configured or not successful", async () => {
+  it("fails explicitly when the connection is unavailable", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response("unavailable", { status: 503 }));
 
-    await expect(readPublishedGlobalSeoSettings(undefined, "key", fetchImpl)).resolves.toEqual(
-      DEFAULT_GLOBAL_SEO,
+    await expect(readPublishedGlobalSeoSettings(undefined, "key", fetchImpl)).rejects.toThrow(
+      "not configured",
     );
     await expect(
       readPublishedGlobalSeoSettings("https://supabase.example.test", "key", fetchImpl),
-    ).resolves.toEqual(DEFAULT_GLOBAL_SEO);
+    ).rejects.toThrow("status 503");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
-  it("does not interpret malformed public responses as published settings", async () => {
+  it("uses explicit defaults only when the published settings row is absent", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response("[]", { status: 200 }));
+    await expect(
+      readPublishedGlobalSeoSettings("https://supabase.example.test", "key", fetchImpl),
+    ).resolves.toEqual(DEFAULT_GLOBAL_SEO);
+  });
+
+  it("fails explicitly for malformed public responses", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValue(
@@ -84,6 +92,6 @@ describe("public global SEO settings", () => {
 
     await expect(
       readPublishedGlobalSeoSettings("https://supabase.example.test", "key", fetchImpl),
-    ).resolves.toEqual(DEFAULT_GLOBAL_SEO);
+    ).rejects.toThrow("was not a list");
   });
 });

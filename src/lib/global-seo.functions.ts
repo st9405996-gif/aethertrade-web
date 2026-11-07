@@ -65,29 +65,32 @@ export async function readPublishedGlobalSeoSettings(
   publishableKey: string | undefined,
   fetchImpl: typeof fetch = fetch,
 ): Promise<GlobalSeoSettings> {
-  try {
-    const normalizedBaseUrl = baseUrl?.replace(/\/+$/, "");
-    if (!normalizedBaseUrl || !publishableKey) return DEFAULT_GLOBAL_SEO;
+  const normalizedBaseUrl = baseUrl?.replace(/\/+$/, "");
+  if (!normalizedBaseUrl || !publishableKey)
+    throw new Error("Public global SEO connection is not configured.");
 
-    const url = new URL(normalizedBaseUrl + "/rest/v1/global_seo_settings");
-    url.searchParams.set("select", "settings,is_published");
-    url.searchParams.set("id", "eq.1");
-    url.searchParams.set("is_published", "eq.true");
-    url.searchParams.set("limit", "1");
-    const response = await fetchImpl(url, {
-      headers: {
-        apikey: publishableKey,
-        Authorization: "Bearer " + publishableKey,
-        Accept: "application/json",
-      },
-    });
-    if (!response.ok) return DEFAULT_GLOBAL_SEO;
-    const rows: unknown = await response.json();
-    if (!Array.isArray(rows) || !rows[0] || typeof rows[0] !== "object") return DEFAULT_GLOBAL_SEO;
-    return parseGlobalSeoSettings((rows[0] as Record<string, unknown>)["settings"]);
-  } catch {
-    return DEFAULT_GLOBAL_SEO;
-  }
+  const url = new URL(normalizedBaseUrl + "/rest/v1/global_seo_settings");
+  url.searchParams.set("select", "settings,is_published");
+  url.searchParams.set("id", "eq.1");
+  url.searchParams.set("is_published", "eq.true");
+  url.searchParams.set("limit", "1");
+  const response = await fetchImpl(url, {
+    cache: "no-store",
+    headers: {
+      apikey: publishableKey,
+      Authorization: "Bearer " + publishableKey,
+      Accept: "application/json",
+    },
+  });
+  if (!response.ok)
+    throw new Error("Public global SEO request failed with status " + response.status + ".");
+  const rows: unknown = await response.json();
+  if (!Array.isArray(rows)) throw new Error("Public global SEO response was not a list.");
+  if (rows.length === 0) return DEFAULT_GLOBAL_SEO;
+  const first = rows[0];
+  if (!first || typeof first !== "object")
+    throw new Error("Public global SEO response contained an invalid record.");
+  return parseGlobalSeoSettings((first as Record<string, unknown>)["settings"]);
 }
 
 export const getGlobalSeoSettings = createServerFn({ method: "GET" }).handler(async () => {

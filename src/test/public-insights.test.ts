@@ -45,7 +45,6 @@ describe("published insights public reader", () => {
   it.each([
     ["draft", { publication: "Draft" }],
     ["future scheduled", { publication: "Scheduled", scheduled_at: "2026-11-07T00:00:00Z" }],
-    ["noindex", { noindex: true }],
     ["missing noindex evidence", { noindex: undefined }],
     ["invalid slug", { slug: "Trade Operations" }],
     ["missing body", { body: "   " }],
@@ -53,7 +52,7 @@ describe("published insights public reader", () => {
     expect(parsePublishedInsight({ ...insightRow, ...overrides }, now)).toBeNull();
   });
 
-  it("queries only insights eligible by publication time and uses the publishable key", async () => {
+  it("keeps published noindex articles visible while using the publishable key", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify([
@@ -70,6 +69,7 @@ describe("published insights public reader", () => {
             publication: "Scheduled",
             scheduled_at: "2026-11-06T13:00:00.000Z",
           },
+          { ...insightRow, slug: "noindex-article", noindex: true },
           { ...insightRow, slug: "unknown-noindex", noindex: null },
           { ...insightRow, slug: "draft", publication: "Draft" },
         ]),
@@ -85,14 +85,19 @@ describe("published insights public reader", () => {
         fetchImpl,
         now,
       ),
-    ).resolves.toMatchObject([{ slug: "trade-operations" }, { slug: "scheduled-now" }]);
+    ).resolves.toMatchObject([
+      { slug: "trade-operations", noindex: false },
+      { slug: "scheduled-now", noindex: false },
+      { slug: "noindex-article", noindex: true },
+    ]);
 
     const [requestUrl, requestInit] = fetchImpl.mock.calls[0] ?? [];
     const url = new URL(String(requestUrl));
     expect(url.searchParams.get("module")).toBe("eq.insights");
     expect(url.searchParams.get("slug")).toBe("eq.trade-operations");
-    expect(url.searchParams.get("noindex")).toBe("eq.false");
+    expect(url.searchParams.get("noindex")).toBeNull();
     expect(url.searchParams.get("or")).toContain("2026-11-06T12:00:00.000Z");
+    expect(requestInit?.cache).toBe("no-store");
     const headers = new Headers(requestInit?.headers);
     expect(headers.get("apikey")).toBe("public-test-key");
     expect(headers.get("authorization")).toBe("Bearer public-test-key");

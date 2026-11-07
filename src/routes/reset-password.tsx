@@ -1,11 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
-import ResetPage from "@/components/admin/reset-preview";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
+
+const AdminResetRoute = lazy(() =>
+  import.meta.env.DEV || __ADMIN_DEMO__
+    ? import("@/components/admin/admin-auth-routes").then((module) => ({
+        default: module.AdminResetRoute,
+      }))
+    : Promise.resolve({ default: () => <></> }),
+);
+
 export const Route = createFileRoute("/reset-password")({
+  beforeLoad: () => {
+    if (!(import.meta.env.DEV || __ADMIN_DEMO__)) throw notFound();
+  },
   head: () => ({
     meta: [
       { title: "Reset Administrator Password — AETHER-TRADE" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: ResetPage,
+  component: () => (
+    <Suspense
+      fallback={<div className="container-page py-16 text-sm text-muted-foreground">Loading…</div>}
+    >
+      <AdminResetRoute />
+    </Suspense>
+  ),
 });
