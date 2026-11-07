@@ -8,7 +8,7 @@ recorded below and was made with explicit approval.
 
 | Location | Files | Notes |
 |---|---|---|
-| `supabase/migrations/` | 7 timestamped files (2026-11-05 to 2026-11-06) | Public policies, settings view, CMS metadata, FK indexes, public career listing view |
+| `supabase/migrations/` | 8 timestamped files (2026-11-05 to 2026-11-06) | Public policies, settings view, CMS metadata, FK indexes, public career listing view |
 | `docs/database/` | 001 to 010 | Foundation, existing content, inquiry delivery, submission quota, grant hardening, trigger execute revokes, search growth center, owner-only access, permission-check execution, audit change details |
 
 None of `docs/database/001–010` exists in `supabase/migrations/`. Repo notes say those
@@ -64,3 +64,17 @@ direct select on `content_records`.
 
 No migration was applied to production. Any further schema change needs approval and a
 rollback plan.
+
+
+## Media deletion recovery migration — prepared, not applied
+
+- Added `supabase/migrations/20261107100000_media_asset_deletion_recovery.sql`.
+- Adds durable `media_assets.deletion_status` and `deletion_requested_at` state,
+  a restrictive anonymous-read policy for pending rows, and database guards that
+  serialize deletion intent against CMS writes and reject new references to pending
+  media.
+- The migration has **not** been applied to staging or production. Recheck the actual
+  staging schema, policies, trigger inventory and admin-role RLS visibility first.
+- No production database write or deployment was performed.
+- See `docs/media-asset-deletion-recovery.md` for workflow, security model, rollback
+  constraints and required staging verification.
