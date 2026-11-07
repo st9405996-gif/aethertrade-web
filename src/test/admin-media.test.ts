@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapAdminMediaRecord } from "@/lib/admin-media";
+import { mapAdminMediaRecord, matchStoredMediaUrl } from "@/lib/admin-media";
 
 describe("admin media record mapping", () => {
   it("lists public media with a same-origin URL and saved alt text", () => {
@@ -40,5 +40,27 @@ describe("admin media record mapping", () => {
     expect(
       mapAdminMediaRecord({ ...base, object_path: "../private/photo.png", is_public: true }).url,
     ).toBe("");
+  });
+});
+
+describe("stored section image matching", () => {
+  const OBJECT = "user-1/0b1c-photo.png";
+  const proxy = "/api/admin-supabase/storage/v1/object/public/website-media/" + OBJECT;
+
+  it("maps a legacy direct Supabase URL to the matching catalogue entry", () => {
+    const legacy = `https://project.supabase.co/storage/v1/object/public/website-media/${OBJECT}?t=1`;
+    expect(matchStoredMediaUrl(legacy, [{ url: proxy, objectPath: OBJECT }])).toBe(proxy);
+  });
+
+  it("does not match a different object that merely shares a suffix", () => {
+    const other = `https://project.supabase.co/storage/v1/object/public/website-media/x-${OBJECT}`;
+    expect(matchStoredMediaUrl(other, [{ url: proxy, objectPath: OBJECT }])).toBe(other);
+  });
+
+  it("returns empty and unknown values unchanged", () => {
+    expect(matchStoredMediaUrl("", [])).toBe("");
+    expect(matchStoredMediaUrl("https://other.example/x.png", [])).toBe(
+      "https://other.example/x.png",
+    );
   });
 });

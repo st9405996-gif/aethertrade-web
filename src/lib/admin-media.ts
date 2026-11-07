@@ -33,3 +33,20 @@ export function mapAdminMediaRecord(value: unknown): MediaRecord {
     url: source["is_public"] === true ? publicMediaProxyUrl(bucketId, objectPath) : "",
   };
 }
+
+/**
+ * Maps a stored section image value, which may be a legacy direct Supabase URL,
+ * to the catalogue entry it points at, so the picker shows the selected image.
+ * Unknown values are returned unchanged.
+ */
+export function matchStoredMediaUrl(
+  stored: string,
+  media: ReadonlyArray<Pick<MediaRecord, "url" | "objectPath">>,
+): string {
+  if (!stored) return "";
+  const path = stored.split(/[?#]/)[0] ?? "";
+  const hit = media.find(
+    (m) => m.url && m.objectPath && path.endsWith("/website-media/" + m.objectPath),
+  );
+  return hit ? hit.url : stored;
+}
