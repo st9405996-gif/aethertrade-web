@@ -129,6 +129,8 @@ For every CMS-backed module, the requested uniquely identifiable staging create 
 | SEO checks | Passed for 15 configured public URLs |
 | Production build, flag unset | Passed; Admin implementation chunks absent from public assets |
 | Production build, `VITE_ENABLE_ADMIN_DEMO=true` | Passed; Admin workspace/auth route chunks emitted |
+| Post-push Cloudflare check | Workers preview build succeeded for commit `851357bb65f84ba995ca33707a6680ef4501bb8a`; the preview site itself was not opened. |
+| GitHub Actions | No run for this commit; the checked-in workflow excludes this stabilization branch. GitHub CLI was unauthenticated; public GitHub status APIs were used. |
 | Browser | Production public and signed-in Admin responsive checks completed; see matrix below. Physical Android device not tested. |
 | Supabase CRUD/publish/RLS/Storage | Not tested; no authorized connection |
 | Production write/deployment | Not performed |
