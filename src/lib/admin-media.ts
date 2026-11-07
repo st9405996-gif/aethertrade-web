@@ -30,7 +30,11 @@ export function mapAdminMediaRecord(value: unknown): MediaRecord {
     alt: text(source, "alt_text"),
     bucketId,
     objectPath,
-    url: source["is_public"] === true ? publicMediaProxyUrl(bucketId, objectPath) : "",
+    deletionStatus: source["deletion_status"] === "pending" ? "pending" : "active",
+    url:
+      source["is_public"] === true && source["deletion_status"] !== "pending"
+        ? publicMediaProxyUrl(bucketId, objectPath)
+        : "",
   };
 }
 
