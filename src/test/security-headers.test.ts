@@ -15,12 +15,20 @@ describe("withSecurityHeaders", () => {
     expect(secured.headers.get("x-content-type-options")).toBe("nosniff");
     expect(secured.headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
     expect(secured.headers.get("strict-transport-security")).toContain("max-age=");
+    expect(secured.headers.get("cache-control")).toBe("no-store");
     expect(await secured.text()).toBe("<h1>ok</h1>");
   });
 
   it("does not overwrite a header a route has already set", () => {
     const original = new Response("x", { headers: { "x-frame-options": "SAMEORIGIN" } });
     expect(withSecurityHeaders(original).headers.get("x-frame-options")).toBe("SAMEORIGIN");
+  });
+
+  it("preserves explicit cache policies for public media responses", () => {
+    const original = new Response("image", {
+      headers: { "cache-control": "public, max-age=300" },
+    });
+    expect(withSecurityHeaders(original).headers.get("cache-control")).toBe("public, max-age=300");
   });
 
   it("prohibits framing and restricts object embedding in the content security policy", () => {

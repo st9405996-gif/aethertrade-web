@@ -150,6 +150,13 @@ async function dynamicSeoDocument(
   const baseUrl = config["SUPABASE_URL"]?.replace(/\/+$/, "");
   const key = config["SUPABASE_PUBLISHABLE_KEY"];
   if (!baseUrl || !key) return null;
+  const contentType =
+    pathname === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/plain; charset=utf-8";
+  const unavailable = () =>
+    new Response("Dynamic SEO document is temporarily unavailable.", {
+      status: 503,
+      headers: { "content-type": contentType, "cache-control": "no-store" },
+    });
   try {
     const headers = { apikey: key, Authorization: "Bearer " + key, Accept: "application/json" };
     const recordsUrl = new URL(baseUrl + "/rest/v1/content_records");
@@ -171,12 +178,12 @@ async function dynamicSeoDocument(
     settingsUrl.searchParams.set("is_published", "eq.true");
     settingsUrl.searchParams.set("limit", "1");
     const [recordsResponse, settingsResponse] = await Promise.all([
-      fetch(recordsUrl, { headers }),
-      fetch(settingsUrl, { headers }),
+      fetch(recordsUrl, { headers, cache: "no-store" }),
+      fetch(settingsUrl, { headers, cache: "no-store" }),
     ]);
-    if (!recordsResponse.ok) return null;
+    if (!recordsResponse.ok || !settingsResponse.ok) return unavailable();
     const payload: unknown = await recordsResponse.json();
-    if (!Array.isArray(payload)) return null;
+    if (!Array.isArray(payload)) return unavailable();
     const records = payload.flatMap((value) => {
       if (!value || typeof value !== "object") return [];
       const row = value as Record<string, unknown>;
@@ -205,30 +212,29 @@ async function dynamicSeoDocument(
     let siteUrl = "https://aethertrade.cloud";
     let description =
       "AETHER-TRADE helps businesses organize global trade operations through document intelligence and workflow automation.";
-    if (settingsResponse.ok) {
-      const settingsPayload: unknown = await settingsResponse.json();
-      const first = Array.isArray(settingsPayload) ? settingsPayload[0] : null;
-      const saved =
-        first && typeof first === "object" ? (first as Record<string, unknown>)["settings"] : null;
-      if (saved && typeof saved === "object") {
-        const value = saved as Record<string, unknown>;
-        if (typeof value["siteName"] === "string" && value["siteName"].trim())
-          siteName = value["siteName"].trim().slice(0, 120);
-        if (typeof value["siteUrl"] === "string") {
-          try {
-            const candidate = new URL(value["siteUrl"]);
-            if (candidate.protocol === "https:" && candidate.hostname === "aethertrade.cloud")
-              siteUrl = candidate.origin;
-          } catch {
-            /* retain production origin */
-          }
+    const settingsPayload: unknown = await settingsResponse.json();
+    if (!Array.isArray(settingsPayload)) return unavailable();
+    const first = settingsPayload[0];
+    const saved =
+      first && typeof first === "object" ? (first as Record<string, unknown>)["settings"] : null;
+    if (saved && typeof saved === "object") {
+      const value = saved as Record<string, unknown>;
+      if (typeof value["siteName"] === "string" && value["siteName"].trim())
+        siteName = value["siteName"].trim().slice(0, 120);
+      if (typeof value["siteUrl"] === "string") {
+        try {
+          const candidate = new URL(value["siteUrl"]);
+          if (candidate.protocol === "https:" && candidate.hostname === "aethertrade.cloud")
+            siteUrl = candidate.origin;
+        } catch {
+          /* retain production origin */
         }
-        if (
-          typeof value["organizationDescription"] === "string" &&
-          value["organizationDescription"].trim()
-        )
-          description = value["organizationDescription"].trim().slice(0, 500);
       }
+      if (
+        typeof value["organizationDescription"] === "string" &&
+        value["organizationDescription"].trim()
+      )
+        description = value["organizationDescription"].trim().slice(0, 500);
     }
     const body =
       pathname === "/sitemap.xml"
@@ -237,16 +243,13 @@ async function dynamicSeoDocument(
     return new Response(body, {
       status: 200,
       headers: {
-        "content-type":
-          pathname === "/sitemap.xml"
-            ? "application/xml; charset=utf-8"
-            : "text/plain; charset=utf-8",
-        "cache-control": "public, max-age=0, s-maxage=60",
+        "content-type": contentType,
+        "cache-control": "no-store",
       },
     });
   } catch (error) {
     console.error("Dynamic SEO document generation failed", error);
-    return null;
+    return unavailable();
   }
 }
 

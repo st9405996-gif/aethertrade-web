@@ -3,7 +3,7 @@ import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
-import { FaqList, meta } from "@/components/site/blocks";
+import { EmptyContentState, FaqList, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { resolvePublicFaqs } from "@/lib/public-faqs";
 
@@ -51,7 +51,11 @@ function FaqsPage() {
         description="What we do, what we don't, and how working with us starts."
       />
       <section className="container-page section-pad">
-        <FaqList items={faqs} />
+        {faqs.length ? (
+          <FaqList items={faqs} />
+        ) : (
+          <EmptyContentState>No published FAQs are available.</EmptyContentState>
+        )}
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand

@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { FAQS } from "@/content/site-content";
 import { resolvePublicFaqs } from "@/lib/public-faqs";
 
 describe("resolvePublicFaqs", () => {
-  it("uses the static FAQs when CMS items are missing or empty", () => {
-    expect(resolvePublicFaqs(undefined)).toBe(FAQS);
-    expect(resolvePublicFaqs([])).toBe(FAQS);
+  it("returns no public FAQ content when the published CMS result is empty", () => {
+    expect(resolvePublicFaqs(undefined)).toEqual([]);
+    expect(resolvePublicFaqs([])).toEqual([]);
   });
 
   it("maps published CMS FAQ titles and bodies", () => {

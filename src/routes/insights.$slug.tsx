@@ -52,6 +52,7 @@ export const Route = createFileRoute("/insights/$slug")({
       meta: [
         { title },
         { name: "description", content: description },
+        ...(loaderData.noindex ? [{ name: "robots", content: "noindex, nofollow" }] : []),
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },

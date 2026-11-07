@@ -16,18 +16,9 @@ import { getPublishedContentRecords } from "@/lib/public-content-records.functio
 import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
 import { filterCareersLinks } from "@/lib/careers-visibility";
 
-export const NAV_ITEMS = [
-  { label: "Platform", to: "/platform" },
-  { label: "Solutions", to: "/solutions" },
-  { label: "Automations", to: "/automations" },
-  { label: "Services", to: "/services" },
-  { label: "Insights", to: "/insights" },
-  { label: "About", to: "/about" },
-] as const;
-
 export function Header() {
   const [open, setOpen] = useState(false);
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ["public-navigation"],
     queryFn: () => getPublishedContentRecords({ data: { module: "navigation" } }),
   });
@@ -35,13 +26,20 @@ export function Header() {
     queryKey: ["public-website-settings"],
     queryFn: () => getPublicWebsiteSettings(),
   });
-  const configured = data
-    ?.filter(
-      (item) => item.category.toLowerCase() === "header" && item.fields["visible"] !== "false",
-    )
-    .map((item) => ({ label: item.title, to: item.body.trim() }))
-    .filter((item) => item.to.startsWith("/") && !item.to.startsWith("//"));
-  const items = filterCareersLinks(configured?.length ? configured : NAV_ITEMS, siteSettings);
+  const configured = !isError
+    ? data
+        ?.filter(
+          (item) => item.category.toLowerCase() === "header" && item.fields["visible"] !== "false",
+        )
+        .map((item) => ({ label: item.title, to: item.body.trim() }))
+        .filter((item) => item.to.startsWith("/") && !item.to.startsWith("//"))
+    : undefined;
+  const items = filterCareersLinks(configured ?? [], siteSettings);
+  const navigationMessage = isError
+    ? "Navigation links could not be loaded."
+    : data && items.length === 0
+      ? "No navigation links are published."
+      : "";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-md">
@@ -58,6 +56,11 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {navigationMessage && (
+            <span role="status" className="px-3 py-2 text-sm text-muted-foreground">
+              {navigationMessage}
+            </span>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="hero" size="sm" asChild className="hidden sm:inline-flex">
@@ -95,6 +98,11 @@ export function Header() {
                     </Link>
                   </SheetClose>
                 ))}
+                {navigationMessage && (
+                  <p role="status" className="px-3 py-3 text-sm text-muted-foreground">
+                    {navigationMessage}
+                  </p>
+                )}
                 <SheetClose asChild>
                   <Link
                     to="/contact"

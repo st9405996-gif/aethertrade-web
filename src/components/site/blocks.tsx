@@ -62,6 +62,17 @@ export function PlaceholderNote({ children }: { children: React.ReactNode }) {
   );
 }
 
+export function EmptyContentState({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      role="status"
+      className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground"
+    >
+      {children}
+    </p>
+  );
+}
+
 export function meta(title: string, description: string) {
   const t = `${title} — AETHER-TRADE`;
   return {

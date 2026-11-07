@@ -54,6 +54,7 @@ describe("public CMS page reader", () => {
     expect(url.searchParams.get("slug")).toBe("eq.custom-page");
     expect(url.searchParams.get("limit")).toBe("1");
     expect(url.searchParams.get("or")).toContain("publication.eq.Published");
+    expect(requestInit?.cache).toBe("no-store");
     const requestHeaders = new Headers(requestInit?.headers);
     expect(requestHeaders.get("apikey")).toBe(publishableKey);
     expect(requestHeaders.get("authorization")).toBe("Bearer " + publishableKey);
@@ -186,6 +187,16 @@ describe("public CMS page reader", () => {
     await expect(
       fetchPublishedCmsPage(baseUrl, publishableKey, "custom-page", fetchImpl, now),
     ).resolves.toMatchObject({ slug: "custom-page" });
+  });
+
+  it("keeps a published noindex page publicly accessible", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse([pageRecord({ noindex: true })]));
+
+    await expect(
+      fetchPublishedCmsPage(baseUrl, publishableKey, "custom-page", fetchImpl, now),
+    ).resolves.toMatchObject({ slug: "custom-page", noindex: true });
   });
 
   it("uses the /pages/:slug canonical for dynamic pages without changing fixed-route defaults", () => {

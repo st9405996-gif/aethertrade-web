@@ -19,6 +19,7 @@ export interface PublishedInsight {
   author: string;
   geoSummary: string;
   aeoQuestions: AeoQuestion[];
+  noindex: boolean;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -56,7 +57,7 @@ export function parsePublishedInsight(value: unknown, now = Date.now()): Publish
     !title.trim() ||
     !body.trim() ||
     !isPublicAt(row["publication"], row["scheduled_at"], now) ||
-    row["noindex"] !== false
+    typeof row["noindex"] !== "boolean"
   ) {
     return null;
   }
@@ -72,11 +73,12 @@ export function parsePublishedInsight(value: unknown, now = Date.now()): Publish
     author: asText(fields?.["author"]),
     geoSummary: asText(fields?.["geoSummary"]).trim().slice(0, 1200),
     aeoQuestions: parseAeoQuestions(fields?.["aeoQuestions"]),
+    noindex: row["noindex"],
   };
 }
 
 /**
- * Reads only public, published, indexable insight records.
+ * Reads only public, published insight records; noindex controls indexing, not visibility.
  * Uses the publishable key so Supabase RLS remains the authorization boundary.
  * The service-role key is deliberately never read or used here.
  */
@@ -102,13 +104,13 @@ export async function fetchPublishedInsights(
     "or",
     `(publication.eq.Published,and(publication.eq.Scheduled,scheduled_at.lte.${new Date(now).toISOString()}))`,
   );
-  url.searchParams.set("noindex", "eq.false");
   url.searchParams.set("order", "position.asc,slug.asc");
   url.searchParams.set("limit", "100");
   if (slug) url.searchParams.set("slug", `eq.${slug}`);
 
   const response = await fetchImpl(url, {
     method: "GET",
+    cache: "no-store",
     headers: {
       apikey: publishableKey,
       Authorization: `Bearer ${publishableKey}`,

@@ -1,29 +1,25 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useWorkspace } from "@/components/admin/workspace-provider";
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
-export const Route = createFileRoute("/admin")({ component: AdminGate });
+const AdminRoute = lazy(() =>
+  import.meta.env.DEV || __ADMIN_DEMO__
+    ? import("@/components/admin/admin-route").then((module) => ({ default: module.AdminRoute }))
+    : Promise.resolve({ default: () => <></> }),
+);
 
-function AdminGate() {
-  const { ready, authenticated, role } = useWorkspace();
-  const navigate = useNavigate();
-  const ownerAuthorized = authenticated && role === "Super Admin";
-
-  useEffect(() => {
-    if (ready && !ownerAuthorized) {
-      void navigate({ to: "/auth", replace: true });
-    }
-  }, [ready, ownerAuthorized, navigate]);
-
-  if (!ready) {
-    return (
-      <div className="container-page py-20 text-sm text-muted-foreground">
-        Verifying owner administrator access…
-      </div>
-    );
-  }
-
-  if (!ownerAuthorized) return null;
-
-  return <Outlet />;
-}
+export const Route = createFileRoute("/admin")({
+  beforeLoad: () => {
+    if (!(import.meta.env.DEV || __ADMIN_DEMO__)) throw notFound();
+  },
+  component: () => (
+    <Suspense
+      fallback={
+        <div className="container-page py-20 text-sm text-muted-foreground">
+          Loading administrator access…
+        </div>
+      }
+    >
+      <AdminRoute />
+    </Suspense>
+  ),
+});

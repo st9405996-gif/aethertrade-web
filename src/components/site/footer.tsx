@@ -6,48 +6,8 @@ import { getPublishedContentRecords } from "@/lib/public-content-records.functio
 import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
 import { filterCareersLinks } from "@/lib/careers-visibility";
 
-const COLUMNS: { heading: string; links: { label: string; to: string }[] }[] = [
-  {
-    heading: "Platform",
-    links: [
-      { label: "Platform", to: "/platform" },
-      { label: "How It Works", to: "/how-it-works" },
-      { label: "Solutions", to: "/solutions" },
-      { label: "Industries", to: "/industries" },
-    ],
-  },
-  {
-    heading: "Services",
-    links: [
-      { label: "Automation Catalogue", to: "/automations" },
-      { label: "Custom Solutions", to: "/custom-solutions" },
-      { label: "Services", to: "/services" },
-      { label: "Insights", to: "/insights" },
-    ],
-  },
-  {
-    heading: "Company",
-    links: [
-      { label: "About", to: "/about" },
-      { label: "Partnerships", to: "/partnerships" },
-      { label: "Careers", to: "/careers" },
-      { label: "FAQs", to: "/faqs" },
-      { label: "Contact", to: "/contact" },
-      { label: "Book an Operations Audit", to: "/request-demo" },
-    ],
-  },
-  {
-    heading: "Legal",
-    links: [
-      { label: "Privacy Policy", to: "/privacy-policy" },
-      { label: "Terms of Use", to: "/terms" },
-      { label: "Cookie Policy", to: "/cookie-policy" },
-    ],
-  },
-];
-
 export function Footer() {
-  const { data } = useQuery({
+  const { data, isError: navigationError } = useQuery({
     queryKey: ["public-footer-navigation"],
     queryFn: () => getPublishedContentRecords({ data: { module: "navigation" } }),
   });
@@ -55,11 +15,11 @@ export function Footer() {
     queryKey: ["public-website-settings"],
     queryFn: () => getPublicWebsiteSettings(),
   });
-  const { data: brandRecords } = useQuery({
+  const { data: brandRecords, isError: brandingError } = useQuery({
     queryKey: ["public-branding"],
     queryFn: () => getPublishedContentRecords({ data: { module: "branding" } }),
   });
-  const brand = brandRecords?.[0];
+  const brand = brandingError ? undefined : brandRecords?.[0];
   const email = brand?.fields["email"]?.trim() || "";
   const phone = brand?.fields["phone"]?.trim() || "";
   const address = brand?.fields["address"]?.trim() || "";
@@ -67,23 +27,21 @@ export function Footer() {
     .split("\n")
     .map((value) => value.trim())
     .filter((value) => value.startsWith("https://"));
-  const footerItems = data
-    ?.filter(
-      (item) => item.category.toLowerCase() === "footer" && item.fields["visible"] !== "false",
-    )
-    .map((item) => ({
-      label: item.title,
-      to: item.body.trim(),
-      heading: item.fields["group"] || "Company",
-    }))
-    .filter((item) => item.to.startsWith("/") && !item.to.startsWith("//"));
+  const footerItems = !navigationError
+    ? data
+        ?.filter(
+          (item) => item.category.toLowerCase() === "footer" && item.fields["visible"] !== "false",
+        )
+        .map((item) => ({
+          label: item.title,
+          to: item.body.trim(),
+          heading: item.fields["group"] || "Company",
+        }))
+        .filter((item) => item.to.startsWith("/") && !item.to.startsWith("//"))
+    : undefined;
   const visibleFooterItems = footerItems
     ? filterCareersLinks(footerItems, siteSettings)
     : undefined;
-  const fallbackColumns = COLUMNS.map((col) => ({
-    ...col,
-    links: filterCareersLinks(col.links, siteSettings),
-  })).filter((col) => col.links.length > 0);
   const columns = visibleFooterItems?.length
     ? Array.from(new Set(visibleFooterItems.map((item) => item.heading))).map((heading) => ({
         heading,
@@ -91,13 +49,23 @@ export function Footer() {
           .filter((item) => item.heading === heading)
           .map(({ label, to }) => ({ label, to })),
       }))
-    : fallbackColumns;
+    : [];
+  const navigationMessage = navigationError
+    ? "Footer navigation could not be loaded."
+    : data && columns.length === 0
+      ? "No footer navigation links are published."
+      : "";
   return (
     <footer className="border-t border-border bg-card/40">
       <div className="container-page py-14">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div className="space-y-4">
             <Logo />
+            {brandingError && (
+              <p role="status" className="text-sm text-muted-foreground">
+                Contact details could not be loaded.
+              </p>
+            )}
             {email && (
               <p className="text-sm text-muted-foreground">
                 <a href={"mailto:" + email} className="hover:text-foreground">
@@ -150,6 +118,11 @@ export function Footer() {
               </ul>
             </nav>
           ))}
+          {navigationMessage && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {navigationMessage}
+            </p>
+          )}
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} AETHER-TRADE. All rights reserved.</p>

@@ -135,6 +135,7 @@ export async function fetchPublishedCmsPage(
   url.searchParams.set("limit", "1");
 
   const response = await fetchImpl(url, {
+    cache: "no-store",
     method: "GET",
     headers: {
       apikey: publishableKey,

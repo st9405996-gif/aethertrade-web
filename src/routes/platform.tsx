@@ -3,10 +3,9 @@ import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
-import { CardGrid, meta } from "@/components/site/blocks";
+import { CardGrid, EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
-import { PLATFORM_MODULES } from "@/content/site-content";
 import { parseAvailabilityStatus } from "@/lib/availability-status";
 
 export const Route = createFileRoute("/platform")({
@@ -26,22 +25,20 @@ export const Route = createFileRoute("/platform")({
 });
 function PlatformPage() {
   const { items, cmsPage } = Route.useLoaderData();
-  const cards = items.length
-    ? items.map((item) => {
-        const status =
-          parseAvailabilityStatus(item.availability) ??
-          (item.availability.trim() ? undefined : "Custom Build");
-        return {
-          title: item.title,
-          body: item.body,
-          ...(status ? { status } : {}),
-          points: (item.fields["capabilities"] || "")
-            .split("\n")
-            .map((x) => x.trim())
-            .filter(Boolean),
-        };
-      })
-    : PLATFORM_MODULES.map((item) => ({ ...item }));
+  const cards = items.map((item) => {
+    const status =
+      parseAvailabilityStatus(item.availability) ??
+      (item.availability.trim() ? undefined : "Custom Build");
+    return {
+      title: item.title,
+      body: item.body,
+      ...(status ? { status } : {}),
+      points: (item.fields["capabilities"] || "")
+        .split("\n")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    };
+  });
   return (
     <>
       <PageHero
@@ -60,7 +57,11 @@ function PlatformPage() {
           description="Every engagement is scoped around your systems, operational constraints and measurable outcomes."
         />
         <div className="mt-12">
-          <CardGrid items={cards} />
+          {cards.length ? (
+            <CardGrid items={cards} />
+          ) : (
+            <EmptyContentState>No published platform content is available.</EmptyContentState>
+          )}
         </div>
       </section>
       <section className="border-t border-border">
