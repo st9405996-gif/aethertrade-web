@@ -30,6 +30,20 @@ describe("timestamped Supabase migrations", () => {
     );
   });
 
+  it("adds durable media deletion state without granting public access", () => {
+    const migration = files.find((file) => file.includes("media_asset_deletion_recovery"));
+    expect(migration).toBeDefined();
+    const sql = readFileSync(join(migrationsDir, migration as string), "utf8").toLowerCase();
+    expect(sql).toContain("add column if not exists deletion_status");
+    expect(sql).toContain("add column if not exists deletion_requested_at");
+    expect(sql).toContain("as restrictive");
+    expect(sql).toContain("to anon");
+    expect(sql).toContain("guard_media_asset_deletion_request");
+    expect(sql).toContain("reject_pending_media_references");
+    expect(sql).not.toMatch(/grant\\s+[^;]*\\s+to\\s+anon/);
+    expect(sql).not.toMatch(/security\\s+definer/);
+  });
+
   it("does not reintroduce direct anonymous access to careers content rows", () => {
     for (const file of files) {
       const sql = readFileSync(join(migrationsDir, file), "utf8").toLowerCase();
