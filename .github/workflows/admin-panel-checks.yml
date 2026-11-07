@@ -34,3 +34,6 @@ jobs:
         run: bun run seo:check
       - name: Production build
         run: bun run build
+      - name: TypeScript check (report-only until baseline debt is resolved)
+        run: bun run tsc --noEmit
+        continue-on-error: true
