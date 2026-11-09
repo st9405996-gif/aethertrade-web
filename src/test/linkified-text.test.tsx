@@ -20,12 +20,12 @@ describe("LinkifiedText", () => {
   });
 
   it("turns web addresses into safe external links and keeps trailing punctuation", () => {
-    render(<p><LinkifiedText text="Visit https://example.com/about." /></p>);
+    const { container } = render(<p><LinkifiedText text="Visit https://example.com/about." /></p>);
     const link = screen.getByRole("link", { name: "https://example.com/about" });
     expect(link).toHaveAttribute("href", "https://example.com/about");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
-    expect(screen.getByText(".")).toBeInTheDocument();
+    expect(container.querySelector("p")?.textContent).toBe("Visit https://example.com/about.");
   });
 
   it("does not convert unsupported schemes into links", () => {
