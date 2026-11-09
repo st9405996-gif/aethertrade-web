@@ -1,14 +1,9 @@
 import { lazy, Suspense } from "react";
 import type { ModuleId } from "@/lib/workspace-model";
-const LazyAdminWorkspace = lazy(() =>
-  import.meta.env.DEV || __ADMIN_DEMO__
-    ? import("@/components/admin/admin-workspace").then((m) => ({ default: m.AdminWorkspace }))
-    : Promise.resolve({ default: UnavailableAdminWorkspace }),
-);
 
-function UnavailableAdminWorkspace(_props: { module?: ModuleId }) {
-  return <></>;
-}
+const LazyAdminWorkspace = lazy(() =>
+  import("@/components/admin/admin-workspace").then((m) => ({ default: m.AdminWorkspace })),
+);
 
 export function AdminWorkspaceRoute({ module }: { module?: ModuleId }) {
   return (
