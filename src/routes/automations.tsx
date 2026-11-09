@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
@@ -45,9 +45,12 @@ function AutomationsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Automation catalogue"
-        title="Custom Automation for Real Trade Workflows."
-        description="Explore example workflows. We adapt architecture, integrations and approval controls to your business during an operations audit."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Automation catalogue",
+          title: "Custom Automation for Real Trade Workflows.",
+          description:
+            "Explore example workflows. We adapt architecture, integrations and approval controls to your business during an operations audit.",
+        })}
       />
       <section className="container-page section-pad">
         <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
@@ -121,8 +124,10 @@ function AutomationsPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Need something not listed?"
-        description="Custom automations and AI agents are built to your workflow."
+        {...cmsCta(cmsPage, {
+          title: "Need something not listed?",
+          description: "Custom automations and AI agents are built to your workflow.",
+        })}
       />
     </>
   );

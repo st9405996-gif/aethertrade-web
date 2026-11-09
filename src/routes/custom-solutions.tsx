@@ -1,5 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import {
+  getPublishedCmsPage,
+  mergeCmsHead,
+  cmsHero,
+  cmsCta,
+  cmsGroup,
+} from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
@@ -86,9 +92,12 @@ function CustomSolutionsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Custom solutions"
-        title="Automation for the Way Your Business Actually Works."
-        description="We design and build custom automations, connected workflows and AI agents for importers, exporters, freight forwarders, logistics operators and other businesses. Start with one process or scope a connected system across your team."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Custom solutions",
+          title: "Automation for the Way Your Business Actually Works.",
+          description:
+            "We design and build custom automations, connected workflows and AI agents for importers, exporters, freight forwarders, logistics operators and other businesses. Start with one process or scope a connected system across your team.",
+        })}
       >
         <Button asChild variant="hero">
           <Link to="/request-demo" search={{ automation: undefined }}>
@@ -107,7 +116,10 @@ function CustomSolutionsPage() {
           description="Every engagement is scoped around the client's process, tools, access permissions and desired outcome."
         />
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {WORKFLOW_AREAS.map((item) => (
+          {(cmsGroup(cmsPage, "workflow-areas").length
+            ? cmsGroup(cmsPage, "workflow-areas")
+            : WORKFLOW_AREAS
+          ).map((item) => (
             <article key={item.title} className="rounded-xl border border-border bg-card p-6">
               <h2 className="text-lg font-semibold">{item.title}</h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.body}</p>
@@ -123,7 +135,10 @@ function CustomSolutionsPage() {
             title="From process discovery to a working system."
           />
           <ol className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {DELIVERY_STEPS.map(([title, body], index) => (
+            {(cmsGroup(cmsPage, "delivery-steps").length
+              ? cmsGroup(cmsPage, "delivery-steps").map((s) => [s.title, s.body] as const)
+              : DELIVERY_STEPS
+            ).map(([title, body], index) => (
               <li key={title} className="rounded-xl border border-border bg-background p-6">
                 <p className="eyebrow">Step 0{index + 1}</p>
                 <h2 className="mt-2 text-lg font-semibold">{title}</h2>
@@ -141,31 +156,41 @@ function CustomSolutionsPage() {
           description="We agree data access, system permissions, review requirements and responsibilities before building. AI outputs and consequential operational actions remain subject to the client's approval rules."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-border p-5">
-            <h3 className="font-semibold">Client-approved access</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Connections are made only to systems and data the client authorizes.
-            </p>
-          </div>
-          <div className="rounded-lg border border-border p-5">
-            <h3 className="font-semibold">Human approval points</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Agents can prepare and route work; approvals stay with designated people.
-            </p>
-          </div>
-          <div className="rounded-lg border border-border p-5">
-            <h3 className="font-semibold">Scoped delivery</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Integrations, timelines and outcomes are confirmed in a written project scope.
-            </p>
-          </div>
+          {(cmsGroup(cmsPage, "responsible-build").length
+            ? cmsGroup(cmsPage, "responsible-build")
+            : [
+                {
+                  id: "rb-1",
+                  title: "Client-approved access",
+                  body: "Connections are made only to systems and data the client authorizes.",
+                },
+                {
+                  id: "rb-2",
+                  title: "Human approval points",
+                  body: "Agents can prepare and route work; approvals stay with designated people.",
+                },
+                {
+                  id: "rb-3",
+                  title: "Scoped delivery",
+                  body: "Integrations, timelines and outcomes are confirmed in a written project scope.",
+                },
+              ]
+          ).map((item) => (
+            <div key={item.id} className="rounded-lg border border-border p-5">
+              <h3 className="font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Tell us which workflow is slowing your team down."
-        description="We can assess one process, propose a focused pilot and define what a successful automation should achieve."
+        {...cmsCta(cmsPage, {
+          title: "Tell us which workflow is slowing your team down.",
+          description:
+            "We can assess one process, propose a focused pilot and define what a successful automation should achieve.",
+        })}
       />
     </>
   );

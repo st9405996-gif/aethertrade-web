@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
@@ -42,9 +42,11 @@ function RequestDemoPage() {
   return (
     <>
       <PageHero
-        eyebrow="Book an operations audit"
-        title="AETHER-TRADE for your operations."
-        description="Tell us about your business and the workflow you want to improve. No account required."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Book an operations audit",
+          title: "AETHER-TRADE for your operations.",
+          description: "Tell us about your business and the workflow you want to improve. No account required.",
+        })}
       />
       <CmsPageSections page={cmsPage} />
       <InquiryForm kind="demo" automation={automation} />

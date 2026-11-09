@@ -1,31 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
-import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import {
-  ArrowRight,
-  FolderX,
-  Repeat2,
-  Split,
-  CircleAlert,
-  SearchX,
-  FolderTree,
-  ScanSearch,
-  GitCompareArrows,
-  ClipboardCheck,
-  UserCheck,
-  BarChart3,
-  PackageCheck,
-  Ship,
-  Building2,
-  Users,
-  Network,
-  Landmark,
-  Workflow,
-  Bot,
-  Plug,
-  LayoutDashboard,
-  ShieldCheck,
-} from "lucide-react";
+  getPublishedCmsPage,
+  mergeCmsHead,
+  cmsHero,
+  cmsCta,
+  cmsGroup,
+  type PublishedCmsPage,
+} from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
+import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
+import { resolvePublicFaqs } from "@/lib/public-faqs";
+import { ArrowRight } from "lucide-react";
+import { CmsIcon } from "@/components/site/cms-icon";
 import heroImage from "@/assets/hero-global-trade.jpg";
 import { SectionHeader } from "@/components/site/section";
 import { WorkflowDemo } from "@/components/site/workflow-demo";
@@ -40,7 +26,10 @@ import {
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 
 export const Route = createFileRoute("/")({
-  loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }) }),
+  loader: async () => ({
+    cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }),
+    faqItems: await getPublishedContentRecords({ data: { module: "faqs" } }),
+  }),
   head: ({ loaderData }) =>
     mergeCmsHead(
       (() => ({
@@ -70,27 +59,27 @@ export const Route = createFileRoute("/")({
 
 const CHALLENGES = [
   {
-    icon: FolderX,
+    icon: "FolderX",
     title: "Documents scattered across email and systems",
     body: "Invoices, packing lists and transport documents live in inboxes and drives instead of a connected case.",
   },
   {
-    icon: Repeat2,
+    icon: "Repeat2",
     title: "Repetitive manual checking",
     body: "Skilled staff spend hours re-reading and cross-checking the same fields on every shipment.",
   },
   {
-    icon: Split,
+    icon: "Split",
     title: "Shipment details fragmented across teams",
     body: "Operations, finance and customer service each hold a different piece of the same story.",
   },
   {
-    icon: CircleAlert,
+    icon: "CircleAlert",
     title: "Missing or inconsistent information",
     body: "Conflicting values surface late — when they are most expensive to fix.",
   },
   {
-    icon: SearchX,
+    icon: "SearchX",
     title: "Exceptions difficult to track",
     body: "When something doesn't line up, there is no clear trail of what was checked and by whom.",
   },
@@ -98,22 +87,22 @@ const CHALLENGES = [
 
 const APPROACH = [
   {
-    icon: FolderTree,
+    icon: "FolderTree",
     title: "Trade Operations",
     body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
   },
   {
-    icon: ScanSearch,
+    icon: "ScanSearch",
     title: "Document Intelligence",
     body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
   },
   {
-    icon: Workflow,
+    icon: "Workflow",
     title: "Workflow Automation",
     body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
   },
   {
-    icon: LayoutDashboard,
+    icon: "LayoutDashboard",
     title: "Operational Visibility",
     body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
   },
@@ -121,22 +110,22 @@ const APPROACH = [
 
 const CAPABILITIES = [
   {
-    icon: FolderTree,
+    icon: "FolderTree",
     title: "Trade Operations",
     body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
   },
   {
-    icon: ScanSearch,
+    icon: "ScanSearch",
     title: "Document Intelligence",
     body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
   },
   {
-    icon: Workflow,
+    icon: "Workflow",
     title: "Workflow Automation",
     body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
   },
   {
-    icon: LayoutDashboard,
+    icon: "LayoutDashboard",
     title: "Operational Visibility",
     body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
   },
@@ -144,32 +133,32 @@ const CAPABILITIES = [
 
 const AUDIENCES = [
   {
-    icon: PackageCheck,
+    icon: "PackageCheck",
     title: "Importers",
     body: "Organize incoming documents, spot inconsistencies early and improve visibility over each shipment.",
   },
   {
-    icon: Ship,
+    icon: "Ship",
     title: "Exporters",
     body: "Review shipment information before dispatch and retain structured review records.",
   },
   {
-    icon: Landmark,
+    icon: "Landmark",
     title: "Customs brokers",
     body: "Reduce repetitive document review and prepare organized findings for authorized staff review.",
   },
   {
-    icon: Network,
+    icon: "Network",
     title: "Freight forwarders",
     body: "Coordinate document sets, track exceptions and improve operational visibility.",
   },
   {
-    icon: Users,
+    icon: "Users",
     title: "Trade operations teams",
     body: "Monitor cases, recurring issues and team workload from one workspace.",
   },
   {
-    icon: Plug,
+    icon: "Plug",
     title: "Logistics technology providers",
     body: "Explore approved integrations and workflow extensions with your platform.",
   },
@@ -177,73 +166,78 @@ const AUDIENCES = [
 
 const TRUST = [
   {
-    icon: UserCheck,
+    icon: "UserCheck",
     title: "Human-controlled AI",
     body: "AI organizes, extracts and flags. People review, decide and act. Consequential decisions stay with authorized staff.",
   },
   {
-    icon: ClipboardCheck,
+    icon: "ClipboardCheck",
     title: "Evidence before conclusions",
     body: "Findings are presented with document references, so a discrepancy is a review finding — never an automatic verdict.",
   },
   {
-    icon: ShieldCheck,
+    icon: "ShieldCheck",
     title: "Honest capability labelling",
     body: "We agree scope and deliverables up front, then test each workflow with your team before handover.",
   },
 ];
 
-const FAQS = [
+const CUSTOM_SERVICES = [
   {
-    q: "What does AETHER-TRADE do?",
-    a: "We automate global trade operations. Our flagship platform organizes trade documentation, extracts structured shipment information, cross-checks documents and prepares evidence-backed findings for human review. Alongside the platform, we build custom automation — AI agents, workflow automation and business process automation — for trade and logistics businesses.",
+    icon: "Bot",
+    title: "Custom AI agents",
+    body: "Purpose-built agents for your documents, systems and approval rules.",
   },
   {
-    q: "Do you handle customs clearance or submit declarations?",
-    a: "No. AETHER-TRADE does not clear shipments, submit customs declarations or interface with government systems. We help your team organize, review and automate the documentation work that surrounds trade operations.",
+    icon: "Workflow",
+    title: "Workflow automation",
+    body: "End-to-end automation for recurring operational processes.",
   },
   {
-    q: "Does the AI replace our staff?",
-    a: "No. The platform is built around human review: findings are presented with evidence and routed to your team, and people make the consequential decisions.",
+    icon: "Plug",
+    title: "System integrations",
+    body: "ERP, TMS and CRM connections through approved APIs and webhooks.",
   },
   {
-    q: "Which systems can AETHER-TRADE connect to?",
-    a: "Integrations are scoped per engagement — commonly email, shared drives, ERPs, TMSs and CRMs through approved APIs and webhooks. Every integration is agreed with you during scoping; we don't claim integrations we haven't built.",
-  },
-  {
-    q: "How do engagements work?",
-    a: "We start with an operations audit, document the current workflow, agree measurable outcomes and then scope a custom engineering engagement. Deliverables and integrations are confirmed before work begins.",
-  },
-  {
-    q: "How do we get started?",
-    a: "Book an operations audit. We review your current document workflow, identify friction points and define a practical first phase. No account is required.",
+    icon: "Building2",
+    title: "Process automation",
+    body: "Business process automation across trade operations and back office.",
   },
 ];
 
 function HomePage() {
-  const { cmsPage } = Route.useLoaderData();
+  const { cmsPage, faqItems } = Route.useLoaderData();
   return (
     <>
-      <Hero />
-      <Challenges />
-      <Approach />
+      <Hero cmsPage={cmsPage ?? null} />
+      <Challenges cmsPage={cmsPage ?? null} />
+      <Approach cmsPage={cmsPage ?? null} />
       <WorkflowSection />
-      <Capabilities />
-      <Audiences />
+      <Capabilities cmsPage={cmsPage ?? null} />
+      <Audiences cmsPage={cmsPage ?? null} />
       <CataloguePreview />
-      <CustomServices />
-      <TrustGovernance />
-      <FaqSection />
-      <CmsPageSections page={cmsPage} />
+      <CustomServices cmsPage={cmsPage ?? null} />
+      <TrustGovernance cmsPage={cmsPage ?? null} />
+      <FaqSection items={faqItems} />
+      <CmsPageSections page={cmsPage ?? null} />
       <CtaBand
-        title="Bring Your Trade Operations Into One Connected Workflow."
-        description="Tell us about your business, your operational challenges and what you want to improve — we'll show you what a connected workflow could look like."
+        {...cmsCta(cmsPage, {
+          title: "Bring Your Trade Operations Into One Connected Workflow.",
+          description:
+            "Tell us about your business, your operational challenges and what you want to improve — we'll show you what a connected workflow could look like.",
+        })}
       />
     </>
   );
 }
 
-function Hero() {
+function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const hero = cmsHero(cmsPage, {
+    eyebrow: "Global trade technology & automation company",
+    title: "Global Trade Operations. Connected by Intelligence.",
+    description:
+      "We engineer custom document intelligence and end-to-end workflow automation for mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry and customs friction.",
+  });
   return (
     <section className="relative isolate overflow-hidden">
       <img
@@ -260,17 +254,15 @@ function Hero() {
       />
       <div className="container-page section-pad relative">
         <div className="max-w-2xl">
-          <p className="eyebrow mb-4">Global trade technology & automation company</p>
+          <p className="eyebrow mb-4">{hero.eyebrow}</p>
           <h1 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-            Global Trade Operations. Connected by Intelligence.
+            {hero.title}
           </h1>
           <p className="mt-5 text-lg font-medium text-primary">
             Custom document intelligence and workflow automation for global trade.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            We engineer custom document intelligence and end-to-end workflow automation for
-            mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry
-            and customs friction.
+            {hero.description}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
@@ -289,7 +281,10 @@ function Hero() {
   );
 }
 
-function Challenges() {
+function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "challenges").length
+    ? cmsGroup(cmsPage, "challenges")
+    : CHALLENGES;
   return (
     <section className="section-pad" aria-labelledby="challenges-title">
       <div className="container-page">
@@ -299,12 +294,12 @@ function Challenges() {
           description="Before any automation, teams face the same five frictions on every shipment."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
-          {CHALLENGES.map((c) => (
+          {items.map((c, i) => (
             <article
-              key={c.title}
+              key={i}
               className="card-elevated flex flex-col gap-3 p-5 transition-colors hover:border-primary/40"
             >
-              <c.icon className="size-5 text-primary" />
+              <CmsIcon name={c.icon} className="size-5 text-primary" />
               <h3 className="text-sm font-semibold leading-snug">{c.title}</h3>
               <p className="text-xs leading-relaxed text-muted-foreground">{c.body}</p>
             </article>
@@ -315,7 +310,8 @@ function Challenges() {
   );
 }
 
-function Approach() {
+function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "approach").length ? cmsGroup(cmsPage, "approach") : APPROACH;
   return (
     <section
       className="section-pad border-y border-border bg-secondary/30"
@@ -327,10 +323,10 @@ function Approach() {
           title="Four capabilities, one connected workflow."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {APPROACH.map((a) => (
-            <article key={a.title} className="card-elevated flex flex-col gap-3 p-6">
+          {items.map((a, i) => (
+            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <a.icon className="size-5 text-primary" />
+                <CmsIcon name={a.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{a.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{a.body}</p>
@@ -359,7 +355,10 @@ function WorkflowSection() {
   );
 }
 
-function Capabilities() {
+function Capabilities({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "capabilities").length
+    ? cmsGroup(cmsPage, "capabilities")
+    : CAPABILITIES;
   return (
     <section
       className="section-pad border-y border-border bg-secondary/30"
@@ -371,14 +370,14 @@ function Capabilities() {
           title="Systems engineered around your operations."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CAPABILITIES.map((c) => (
+          {items.map((c, i) => (
             <article
-              key={c.title}
+              key={i}
               className="card-elevated flex flex-col gap-3 p-6 transition-colors hover:border-primary/40"
             >
               <div className="flex items-center justify-between">
                 <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                  <c.icon className="size-5 text-primary" />
+                  <CmsIcon name={c.icon} className="size-5 text-primary" />
                 </span>
               </div>
               <h3 className="text-base font-semibold">{c.title}</h3>
@@ -398,7 +397,8 @@ function Capabilities() {
   );
 }
 
-function Audiences() {
+function Audiences({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "audiences").length ? cmsGroup(cmsPage, "audiences") : AUDIENCES;
   return (
     <section className="section-pad" aria-labelledby="solutions-title">
       <div className="container-page">
@@ -407,14 +407,14 @@ function Audiences() {
           title="Built for the businesses that move global trade."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {AUDIENCES.map((s) => (
+          {items.map((s, i) => (
             <Link
-              key={s.title}
+              key={i}
               to="/solutions"
               className="card-elevated group flex flex-col gap-3 p-6 transition-colors hover:border-primary/40"
             >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <s.icon className="size-5 text-primary" />
+                <CmsIcon name={s.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{s.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{s.body}</p>
@@ -479,7 +479,10 @@ function CataloguePreview() {
   );
 }
 
-function CustomServices() {
+function CustomServices({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "custom-services").length
+    ? cmsGroup(cmsPage, "custom-services")
+    : CUSTOM_SERVICES;
   return (
     <section className="section-pad" aria-labelledby="services-title">
       <div className="container-page">
@@ -503,30 +506,9 @@ function CustomServices() {
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              {
-                icon: Bot,
-                title: "Custom AI agents",
-                body: "Purpose-built agents for your documents, systems and approval rules.",
-              },
-              {
-                icon: Workflow,
-                title: "Workflow automation",
-                body: "End-to-end automation for recurring operational processes.",
-              },
-              {
-                icon: Plug,
-                title: "System integrations",
-                body: "ERP, TMS and CRM connections through approved APIs and webhooks.",
-              },
-              {
-                icon: Building2,
-                title: "Process automation",
-                body: "Business process automation across trade operations and back office.",
-              },
-            ].map((s) => (
-              <article key={s.title} className="card-elevated flex flex-col gap-3 p-5">
-                <s.icon className="size-5 text-primary" />
+            {items.map((s, i) => (
+              <article key={i} className="card-elevated flex flex-col gap-3 p-5">
+                <CmsIcon name={s.icon} className="size-5 text-primary" />
                 <h3 className="text-sm font-semibold">{s.title}</h3>
                 <p className="text-xs leading-relaxed text-muted-foreground">{s.body}</p>
               </article>
@@ -538,7 +520,8 @@ function CustomServices() {
   );
 }
 
-function TrustGovernance() {
+function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
+  const items = cmsGroup(cmsPage, "trust").length ? cmsGroup(cmsPage, "trust") : TRUST;
   return (
     <section
       className="section-pad border-y border-border bg-secondary/30"
@@ -547,10 +530,10 @@ function TrustGovernance() {
       <div className="container-page">
         <SectionHeader eyebrow="Trust & governance" title="Intelligence with people in control." />
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          {TRUST.map((t) => (
-            <article key={t.title} className="card-elevated flex flex-col gap-3 p-6">
+          {items.map((t, i) => (
+            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <t.icon className="size-5 text-primary" />
+                <CmsIcon name={t.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{t.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{t.body}</p>
@@ -562,14 +545,16 @@ function TrustGovernance() {
   );
 }
 
-function FaqSection() {
+function FaqSection({ items }: { items: Awaited<ReturnType<typeof getPublishedContentRecords>> }) {
+  const faqs = resolvePublicFaqs(items);
+  if (!faqs.length) return null;
   return (
     <section className="section-pad" aria-labelledby="faq-title">
       <div className="container-page">
         <SectionHeader eyebrow="FAQ" title="Frequently asked questions." />
         <div className="mx-auto mt-10 max-w-3xl">
           <Accordion type="single" collapsible className="w-full">
-            {FAQS.map((f, i) => (
+            {faqs.map((f, i) => (
               <AccordionItem key={f.q} value={`faq-${i}`}>
                 <AccordionTrigger className="text-left text-base hover:no-underline">
                   {f.q}

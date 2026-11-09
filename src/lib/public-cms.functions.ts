@@ -10,6 +10,10 @@ export interface CmsPageSection {
   body: string;
   imageUrl: string;
   imageAlt: string;
+  /** Optional lucide icon name (e.g. "ShieldCheck"), used by homepage/landing section groups. */
+  icon: string;
+  /** Optional group tag (e.g. "challenges", "approach") so one page can hold several distinct, CMS-editable section groups. */
+  group: string;
 }
 export interface PublishedCmsPage {
   slug: string;
@@ -20,6 +24,45 @@ export interface PublishedCmsPage {
   canonical: string;
   noindex: boolean;
   sections: CmsPageSection[];
+  /** Editable hero block. Falls back to each page's built-in default copy when empty. */
+  heroEyebrow: string;
+  heroTitle: string;
+  heroDescription: string;
+  /** Editable closing CTA band. Falls back to each page's built-in default copy when empty. */
+  ctaTitle: string;
+  ctaDescription: string;
+}
+/** Returns the CMS value when editors have set one, otherwise the page's built-in default. */
+export function cmsText(value: string | undefined, fallback: string): string {
+  return value && value.trim() ? value : fallback;
+}
+/** Sections belonging to one named group (e.g. "challenges"), in their saved order. Empty when editors haven't added any for this group yet, so callers can fall back to a built-in default. */
+export function cmsGroup(
+  page: PublishedCmsPage | null | undefined,
+  group: string,
+): CmsPageSection[] {
+  return (page?.sections ?? []).filter((section) => section.group === group);
+}
+/** Builds PageHero props, preferring the CMS "Pages & sections" record's hero fields over the page's built-in default copy. */
+export function cmsHero(
+  page: PublishedCmsPage | null | undefined,
+  fallback: { eyebrow?: string; title: string; description?: string },
+): { eyebrow: string; title: string; description: string } {
+  return {
+    eyebrow: cmsText(page?.heroEyebrow, fallback.eyebrow ?? ""),
+    title: cmsText(page?.heroTitle, fallback.title),
+    description: cmsText(page?.heroDescription, fallback.description ?? ""),
+  };
+}
+/** Builds CtaBand props, preferring the CMS "Pages & sections" record's CTA fields over the page's built-in default copy. */
+export function cmsCta(
+  page: PublishedCmsPage | null | undefined,
+  fallback: { title: string; description: string },
+): { title: string; description: string } {
+  return {
+    title: cmsText(page?.ctaTitle, fallback.title),
+    description: cmsText(page?.ctaDescription, fallback.description),
+  };
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -63,13 +106,15 @@ function parseSections(value: unknown, baseUrl: string): CmsPageSection[] {
     }
   }
   if (!Array.isArray(entries)) return [];
-  return entries.slice(0, 30).flatMap((entry, index) => {
+  return entries.slice(0, 60).flatMap((entry, index) => {
     const item = asRecord(entry);
     if (!item) return [];
     const title = asText(item["title"]).trim().slice(0, 160);
     const body = asText(item["body"]).trim().slice(0, 10000);
     const imageUrl = safeImageUrl(item["imageUrl"], baseUrl);
     const imageAlt = asText(item["imageAlt"]).trim().slice(0, 500) || title;
+    const icon = asText(item["icon"]).trim().slice(0, 60);
+    const group = asText(item["group"]).trim().slice(0, 60);
     if (!title && !body && !imageUrl) return [];
     return [
       {
@@ -78,6 +123,8 @@ function parseSections(value: unknown, baseUrl: string): CmsPageSection[] {
         body,
         imageUrl,
         imageAlt,
+        icon,
+        group,
       },
     ];
   });
@@ -98,6 +145,11 @@ function parsePage(value: unknown, baseUrl: string, now = Date.now()): Published
     canonical: asText(row["canonical"]).trim().slice(0, 500),
     noindex: row["noindex"] === true,
     sections: parseSections(fields?.["sections"], baseUrl),
+    heroEyebrow: asText(fields?.["heroEyebrow"]).trim().slice(0, 80),
+    heroTitle: asText(fields?.["heroTitle"]).trim().slice(0, 160),
+    heroDescription: asText(fields?.["heroDescription"]).trim().slice(0, 500),
+    ctaTitle: asText(fields?.["ctaTitle"]).trim().slice(0, 160),
+    ctaDescription: asText(fields?.["ctaDescription"]).trim().slice(0, 500),
   };
 }
 

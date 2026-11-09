@@ -994,6 +994,10 @@ interface PageSection {
   body: string;
   imageUrl?: string;
   imageAlt?: string;
+  /** Lucide icon name, e.g. "ShieldCheck". Used by homepage/landing section groups. */
+  icon?: string;
+  /** Groups this section into a named block (e.g. "challenges", "faq"). Leave blank for a normal ordered section. */
+  group?: string;
 }
 function RecordEditor({
   initial,
@@ -1109,6 +1113,8 @@ function RecordEditor({
                         body: "",
                         imageUrl: "",
                         imageAlt: "",
+                        icon: "",
+                        group: "",
                       },
                     ])
                   }
@@ -1184,6 +1190,39 @@ function RecordEditor({
                       )
                     }
                   />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-2 text-sm">
+                      Group (optional — ties this section to a homepage/landing block, e.g.
+                      "challenges", "approach", "trust")
+                      <Input
+                        aria-label={`Section ${i + 1} group`}
+                        placeholder="e.g. challenges"
+                        value={s.group || ""}
+                        onChange={(e) =>
+                          setSections(
+                            sections.map((x) =>
+                              x.id === s.id ? { ...x, group: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm">
+                      Icon (optional — Lucide icon name, e.g. "ShieldCheck")
+                      <Input
+                        aria-label={`Section ${i + 1} icon`}
+                        placeholder="e.g. ShieldCheck"
+                        value={s.icon || ""}
+                        onChange={(e) =>
+                          setSections(
+                            sections.map((x) =>
+                              x.id === s.id ? { ...x, icon: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                  </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="grid gap-2 text-sm">
                       Section image
@@ -1777,7 +1816,11 @@ function MediaLibrary() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    aria-label={r.deletionStatus === "pending" ? "Retry deletion of " + r.name : "Delete " + r.name}
+                    aria-label={
+                      r.deletionStatus === "pending"
+                        ? "Retry deletion of " + r.name
+                        : "Delete " + r.name
+                    }
                     disabled={!demoCan(workspace.role, "draft") || busy}
                     onClick={() => setRemove(r.id)}
                   >
@@ -1874,7 +1917,11 @@ function MediaLibrary() {
               ) : (
                 <Trash2 />
               )}
-              {busy ? "Working…" : workspace.data.media.find((r) => r.id === remove)?.deletionStatus === "pending" ? "Retry deletion" : "Delete"}
+              {busy
+                ? "Working…"
+                : workspace.data.media.find((r) => r.id === remove)?.deletionStatus === "pending"
+                  ? "Retry deletion"
+                  : "Delete"}
             </Button>
           </div>
         </DialogContent>

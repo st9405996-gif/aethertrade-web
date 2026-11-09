@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
@@ -24,8 +24,12 @@ function PrivacyPage() {
   return (
     <>
       <LegalPage
-        title="Privacy Policy."
-        intro="This notice describes how the AETHER-TRADE website handles information submitted through its forms and technical information collected when you visit the website."
+        {...cmsHero(cmsPage, {
+          title: "Privacy Policy.",
+          description:
+            "This notice describes how the AETHER-TRADE website handles information submitted through its forms and technical information collected when you visit the website.",
+        })}
+        cmsBody={cmsPage?.body}
       >
         <h2>Information submitted through our forms</h2>
         <p>

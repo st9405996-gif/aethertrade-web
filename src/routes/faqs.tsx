@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
@@ -46,9 +46,11 @@ function FaqsPage() {
   return (
     <>
       <PageHero
-        eyebrow="FAQs"
-        title="Straight Answers."
-        description="What we do, what we don't, and how working with us starts."
+        {...cmsHero(cmsPage, {
+          eyebrow: "FAQs",
+          title: "Straight Answers.",
+          description: "What we do, what we don't, and how working with us starts.",
+        })}
       />
       <section className="container-page section-pad">
         {faqs.length ? (
@@ -59,8 +61,10 @@ function FaqsPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Still have a question?"
-        description="Ask us directly — we'll give you a straight answer."
+        {...cmsCta(cmsPage, {
+          title: "Still have a question?",
+          description: "Ask us directly — we'll give you a straight answer.",
+        })}
       />
     </>
   );

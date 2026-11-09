@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
@@ -22,8 +22,12 @@ function TermsPage() {
   return (
     <>
       <LegalPage
-        title="Terms of Use."
-        intro="These terms cover use of this website. Any services or implementation work would be governed by a separate written agreement."
+        {...cmsHero(cmsPage, {
+          title: "Terms of Use.",
+          description:
+            "These terms cover use of this website. Any services or implementation work would be governed by a separate written agreement.",
+        })}
+        cmsBody={cmsPage?.body}
       >
         <h2>About this website</h2>
         <p>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
@@ -30,9 +30,12 @@ function PartnershipsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Partnerships"
-        title="Build Better Trade Operations Together."
-        description="We're open to working with organizations that serve importers, exporters and logistics businesses."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Partnerships",
+          title: "Build Better Trade Operations Together.",
+          description:
+            "We're open to working with organizations that serve importers, exporters and logistics businesses.",
+        })}
       />
       <section className="container-page section-pad space-y-8">
         <CardGrid items={cards} />
@@ -42,8 +45,10 @@ function PartnershipsPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Interested in partnering?"
-        description="Get in touch and tell us how you'd like to work together."
+        {...cmsCta(cmsPage, {
+          title: "Interested in partnering?",
+          description: "Get in touch and tell us how you'd like to work together.",
+        })}
       />
     </>
   );

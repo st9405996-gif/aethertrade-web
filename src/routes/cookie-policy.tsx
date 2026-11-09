@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { meta } from "@/components/site/blocks";
 import { LegalPage } from "@/components/site/legal-page";
@@ -22,8 +22,12 @@ function CookiePolicyPage() {
   return (
     <>
       <LegalPage
-        title="Cookie & Browser Storage Policy."
-        intro="AETHER-TRADE uses browser storage for essential preferences and administrator sign-in. With your permission, the website also uses analytics tools to understand website usage and improve its pages."
+        {...cmsHero(cmsPage, {
+          title: "Cookie & Browser Storage Policy.",
+          description:
+            "AETHER-TRADE uses browser storage for essential preferences and administrator sign-in. With your permission, the website also uses analytics tools to understand website usage and improve its pages.",
+        })}
+        cmsBody={cmsPage?.body}
       >
         <h2>Browser storage used by the website</h2>
         <ul>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
@@ -36,14 +36,20 @@ function AboutPage() {
   return (
     <>
       <PageHero
-        eyebrow="About"
-        title="Building More Connected Operations for Global Trade."
-        description="Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses."
+        {...cmsHero(cmsPage, {
+          eyebrow: "About",
+          title: "Building More Connected Operations for Global Trade.",
+          description:
+            "Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses.",
+        })}
       />
       <CmsPageSections page={cmsPage ?? null} />
       <CtaBand
-        title="Start the conversation."
-        description="Tell us about your business, your operational challenges and what you want to improve."
+        {...cmsCta(cmsPage, {
+          title: "Start the conversation.",
+          description:
+            "Tell us about your business, your operational challenges and what you want to improve.",
+        })}
       />
     </>
   );

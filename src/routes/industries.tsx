@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero } from "@/components/site/section";
@@ -27,9 +27,11 @@ function IndustriesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Industries"
-        title="Every Sector Trades Differently."
-        description="The documents and exceptions vary by industry. These are the patterns we design around."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Industries",
+          title: "Every Sector Trades Differently.",
+          description: "The documents and exceptions vary by industry. These are the patterns we design around.",
+        })}
       />
       <section className="container-page section-pad">
         {cards.length ? (
@@ -40,8 +42,10 @@ function IndustriesPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Tell us about your sector."
-        description="We'll map your document and exception patterns."
+        {...cmsCta(cmsPage, {
+          title: "Tell us about your sector.",
+          description: "We'll map your document and exception patterns.",
+        })}
       />
     </>
   );

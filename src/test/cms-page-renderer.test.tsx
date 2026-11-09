@@ -18,8 +18,15 @@ const page: PublishedCmsPage = {
       body: "Review the uploaded document.",
       imageUrl: "/api/admin-supabase/storage/v1/object/public/website-media/user-1/photo.png",
       imageAlt: "Bill of lading",
+      icon: "",
+      group: "",
     },
   ],
+  heroEyebrow: "",
+  heroTitle: "",
+  heroDescription: "",
+  ctaTitle: "",
+  ctaDescription: "",
 };
 
 describe("CMS page renderer media", () => {
