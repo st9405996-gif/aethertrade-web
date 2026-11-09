@@ -20,18 +20,23 @@ export function Footer() {
   });
   const brand = brandingError ? undefined : brandRecords?.[0];
   const emails = (brand?.fields["email"] || "")
-    .split(/[\\n,;]+/)
+    .split(/[\n,;]+/)
     .map((value) => value.trim())
-    .filter((value) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value));
+    .filter((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
   const phones = (brand?.fields["phone"] || "")
-    .split(/[\\n,;]+/)
+    .split(/[\n,;]+/)
     .map((value) => value.trim())
-    .filter((value) => (value.match(/\\d/g) || []).length >= 8);
+    .filter((value) => (value.match(/\d/g) || []).length >= 8);
   const address = brand?.fields["address"]?.trim() || "";
   const socialLinks = (brand?.fields["social"] || "")
     .split("\n")
-    .map((value) => value.trim())
-    .filter((value) => value.startsWith("https://"));
+    .map((value) => {
+      const [label, rawUrl] = value.includes("|") ? value.split("|", 2) : ["", value];
+      const url = rawUrl.trim();
+      if (!url.startsWith("https://")) return null;
+      return { label: label.trim() || new URL(url).hostname.replace(/^www\./, ""), url };
+    })
+    .filter((value): value is { label: string; url: string } => value !== null);
   const footerItems = !navigationError
     ? data
         ?.filter(
