@@ -28,5 +28,12 @@ const SERVER_BINDING_KEYS = [
 export function readServerEnv(): Record<string, string | undefined> {
   const runtime = typeof process !== "undefined" && process.env ? process.env : {};
 
-  return Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, runtime[key]]));
+  const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, runtime[key]]));
+
+  return {
+    ...bindings,
+    SUPABASE_URL: runtime.VITE_SUPABASE_URL ?? runtime.SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY:
+      runtime.VITE_SUPABASE_PUBLISHABLE_KEY ?? runtime.SUPABASE_PUBLISHABLE_KEY,
+  };
 }
