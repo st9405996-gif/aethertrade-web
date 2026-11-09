@@ -34,7 +34,12 @@ export function Footer() {
       const [label, rawUrl] = value.includes("|") ? value.split("|", 2) : ["", value];
       const url = rawUrl.trim();
       if (!url.startsWith("https://")) return null;
-      return { label: label.trim() || new URL(url).hostname.replace(/^www\./, ""), url };
+      try {
+        const parsed = new URL(url);
+        return { label: label.trim() || parsed.hostname.replace(/^www\./, ""), url: parsed.href };
+      } catch {
+        return null;
+      }
     })
     .filter((value): value is { label: string; url: string } => value !== null);
   const footerItems = !navigationError
@@ -85,7 +90,7 @@ export function Footer() {
             ))}
             {phones.map((phone) => (
               <p key={phone} className="text-sm text-muted-foreground">
-                <a href={"tel:" + phone.replace(/[^+0-9]/g, "")} className="hover:text-foreground">
+                <a href={"tel:" + phone.replace(/[^+0-9]/g, "").replace(/^00/, "+")} className="hover:text-foreground">
                   {phone}
                 </a>
               </p>
