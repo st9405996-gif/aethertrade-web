@@ -1,5 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import {
+  getPublishedCmsPage,
+  mergeCmsHead,
+  cmsHero,
+  cmsCta,
+  cmsGroup,
+} from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
@@ -42,9 +48,12 @@ function PlatformPage() {
   return (
     <>
       <PageHero
-        eyebrow="The platform"
-        title="Automation Engineering for Connected Trade Operations."
-        description="We design and implement document intelligence, controlled rule engines and connected workflows around your existing systems and approval processes."
+        {...cmsHero(cmsPage, {
+          eyebrow: "The platform",
+          title: "Automation Engineering for Connected Trade Operations.",
+          description:
+            "We design and implement document intelligence, controlled rule engines and connected workflows around your existing systems and approval processes.",
+        })}
       >
         <Button variant="outline" asChild>
           <Link to="/how-it-works">See how engagements work</Link>
@@ -66,31 +75,39 @@ function PlatformPage() {
       </section>
       <section className="border-t border-border">
         <div className="container-page section-pad grid gap-8 md:grid-cols-3">
-          {[
-            [
-              "Human review by design",
-              "AI identifies and compares; people approve. Every decision is attributable.",
-            ],
-            [
-              "Evidence, not guesses",
-              "Flags point to the exact document and field so reviewers can verify quickly.",
-            ],
-            [
-              "Fits around your tools",
-              "Built to work alongside email, spreadsheets and existing systems.",
-            ],
-          ].map(([title, body]) => (
-            <div key={title}>
-              <h3 className="font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+          {(cmsGroup(cmsPage, "platform-principles").length
+            ? cmsGroup(cmsPage, "platform-principles")
+            : [
+                {
+                  id: "fallback-1",
+                  title: "Human review by design",
+                  body: "AI identifies and compares; people approve. Every decision is attributable.",
+                },
+                {
+                  id: "fallback-2",
+                  title: "Evidence, not guesses",
+                  body: "Flags point to the exact document and field so reviewers can verify quickly.",
+                },
+                {
+                  id: "fallback-3",
+                  title: "Fits around your tools",
+                  body: "Built to work alongside email, spreadsheets and existing systems.",
+                },
+              ]
+          ).map((item) => (
+            <div key={item.id}>
+              <h3 className="font-semibold">{item.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
             </div>
           ))}
         </div>
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Map the highest-friction workflow in your operation."
-        description="We'll walk through the modules most relevant to your workflows."
+        {...cmsCta(cmsPage, {
+          title: "Map the highest-friction workflow in your operation.",
+          description: "We'll walk through the modules most relevant to your workflows.",
+        })}
       />
     </>
   );

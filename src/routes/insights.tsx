@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
@@ -34,9 +34,11 @@ function InsightsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Insights"
-        title="Notes on Running Better Trade Operations."
-        description="Practical perspectives on documents, workflows and where AI genuinely helps."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Insights",
+          title: "Notes on Running Better Trade Operations.",
+          description: "Practical perspectives on documents, workflows and where AI genuinely helps.",
+        })}
       />
       <section className="container-page section-pad space-y-8">
         {articles.length === 0 ? (
@@ -79,8 +81,10 @@ function InsightsPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Have a question we should write about?"
-        description="Tell us what your team is wrestling with."
+        {...cmsCta(cmsPage, {
+          title: "Have a question we should write about?",
+          description: "Tell us what your team is wrestling with.",
+        })}
       />
     </>
   );

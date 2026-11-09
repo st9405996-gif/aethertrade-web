@@ -5,30 +5,38 @@ import { Button } from "@/components/ui/button";
 import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
 import { isCareersEnabled, careersRobotsMeta } from "@/lib/careers-visibility";
 import { getPublishedCareerListings } from "@/lib/public-careers.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
+import { CmsPageSections } from "@/components/site/cms-page-renderer";
 
 export const Route = createFileRoute("/careers")({
   loader: async () => {
     const settings = await getPublicWebsiteSettings();
     const openings = isCareersEnabled(settings) ? await getPublishedCareerListings() : [];
-    return { settings, openings };
+    const cmsPage = await getPublishedCmsPage({ data: { slug: "careers" } });
+    return { settings, openings, cmsPage };
   },
   head: ({ loaderData }) => {
     const base = meta("Careers", "Careers at AETHER-TRADE.");
     const robots = careersRobotsMeta(loaderData?.settings);
-    return robots ? { ...base, meta: [...base.meta, robots] } : base;
+    return mergeCmsHead(
+      robots ? { ...base, meta: [...base.meta, robots] } : base,
+      loaderData?.cmsPage,
+    );
   },
   component: CareersPage,
 });
 
 function CareersPage() {
-  const { settings, openings } = Route.useLoaderData();
+  const { settings, openings, cmsPage } = Route.useLoaderData();
   const careersEnabled = isCareersEnabled(settings);
   return (
     <>
       <PageHero
-        eyebrow="Careers"
-        title="Work on the Future of Trade Operations."
-        description="Roles at AETHER-TRADE will be listed here when they are open."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Careers",
+          title: "Work on the Future of Trade Operations.",
+          description: "Roles at AETHER-TRADE will be listed here when they are open.",
+        })}
       />
       <section className="container-page section-pad space-y-6">
         {careersEnabled && openings.length ? (
@@ -60,6 +68,7 @@ function CareersPage() {
           </>
         )}
       </section>
+      <CmsPageSections page={cmsPage ?? null} />
     </>
   );
 }

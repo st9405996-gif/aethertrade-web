@@ -213,6 +213,11 @@ describe("public CMS page reader", () => {
       canonical: "",
       noindex: false,
       sections: [],
+      heroEyebrow: "",
+      heroTitle: "",
+      heroDescription: "",
+      ctaTitle: "",
+      ctaDescription: "",
     };
 
     expect(mergeCmsHead(base, page).links).toEqual([

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero } from "@/lib/public-cms.functions";
 import { PageHero } from "@/components/site/section";
 import { InquiryForm } from "@/components/site/inquiry-form";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
@@ -35,9 +35,12 @@ function ContactPage() {
   return (
     <>
       <PageHero
-        eyebrow="Contact"
-        title="Talk to AETHER-TRADE."
-        description="Trade operations, automation and custom solutions — start a focused conversation."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Contact",
+          title: "Talk to AETHER-TRADE.",
+          description:
+            "Trade operations, automation and custom solutions — start a focused conversation.",
+        })}
       />
       <CmsPageSections page={cmsPage} />
       <InquiryForm kind="contact" />

@@ -62,8 +62,15 @@ describe("createCmsPagePreview", () => {
           body: "Operational automation",
           imageUrl: media[0]!.url,
           imageAlt: "Operations dashboard",
+          icon: "",
+          group: "",
         },
       ],
+      heroEyebrow: "",
+      heroTitle: "",
+      heroDescription: "",
+      ctaTitle: "",
+      ctaDescription: "",
     });
   });
 
@@ -82,8 +89,24 @@ describe("createCmsPagePreview", () => {
     };
 
     expect(createCmsPagePreview(source, media)?.sections).toEqual([
-      { id: "section-0", title: "External", body: "", imageUrl: "", imageAlt: "External" },
-      { id: "section-1", title: "Unregistered", body: "", imageUrl: "", imageAlt: "Unregistered" },
+      {
+        id: "section-0",
+        title: "External",
+        body: "",
+        imageUrl: "",
+        imageAlt: "External",
+        icon: "",
+        group: "",
+      },
+      {
+        id: "section-1",
+        title: "Unregistered",
+        body: "",
+        imageUrl: "",
+        imageAlt: "Unregistered",
+        icon: "",
+        group: "",
+      },
     ]);
   });
 

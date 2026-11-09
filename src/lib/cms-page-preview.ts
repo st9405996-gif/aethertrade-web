@@ -31,6 +31,8 @@ function parseSections(value: unknown, media: readonly MediaRecord[]): CmsPageSe
     const candidateUrl = text(entry["imageUrl"], 500);
     const imageUrl = knownMediaUrls.has(candidateUrl) ? candidateUrl : "";
     const imageAlt = text(entry["imageAlt"], 500) || title;
+    const icon = text(entry["icon"], 60);
+    const group = text(entry["group"], 60);
     if (!title && !body && !imageUrl) return [];
 
     return [
@@ -40,6 +42,8 @@ function parseSections(value: unknown, media: readonly MediaRecord[]): CmsPageSe
         body,
         imageUrl,
         imageAlt,
+        icon,
+        group,
       },
     ];
   });
@@ -60,5 +64,10 @@ export function createCmsPagePreview(
     canonical: text(record.canonical, 500),
     noindex: record.noindex,
     sections: parseSections(record.fields["sections"], media),
+    heroEyebrow: text(record.fields["heroEyebrow"], 80),
+    heroTitle: text(record.fields["heroTitle"], 160),
+    heroDescription: text(record.fields["heroDescription"], 500),
+    ctaTitle: text(record.fields["ctaTitle"], 160),
+    ctaDescription: text(record.fields["ctaDescription"], 500),
   };
 }

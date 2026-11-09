@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { meta } from "@/components/site/blocks";
@@ -26,9 +26,12 @@ function HowItWorksPage() {
   return (
     <>
       <PageHero
-        eyebrow="How it works"
-        title="Start Small. Prove Value. Then Expand."
-        description="Every engagement begins with one workflow, a clear goal and a measured pilot — not a big-bang rollout."
+        {...cmsHero(cmsPage, {
+          eyebrow: "How it works",
+          title: "Start Small. Prove Value. Then Expand.",
+          description:
+            "Every engagement begins with one workflow, a clear goal and a measured pilot — not a big-bang rollout.",
+        })}
       />
       <section className="container-page section-pad">
         <SectionHeader
@@ -61,8 +64,10 @@ function HowItWorksPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Pick the first workflow together."
-        description="Tell us where your team loses the most time."
+        {...cmsCta(cmsPage, {
+          title: "Pick the first workflow together.",
+          description: "Tell us where your team loses the most time.",
+        })}
       />
     </>
   );

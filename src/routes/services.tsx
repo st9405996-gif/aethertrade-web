@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getPublishedCmsPage, mergeCmsHead } from "@/lib/public-cms.functions";
+import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { PageHero, SectionHeader } from "@/components/site/section";
@@ -42,9 +42,12 @@ function ServicesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Services"
-        title="Hands-On Help to Modernize Trade Operations."
-        description="Alongside the platform, we work directly with your team to assess, build and pilot the workflows that matter most."
+        {...cmsHero(cmsPage, {
+          eyebrow: "Services",
+          title: "Hands-On Help to Modernize Trade Operations.",
+          description:
+            "Alongside the platform, we work directly with your team to assess, build and pilot the workflows that matter most.",
+        })}
       >
         <Button variant="outline" asChild>
           <Link to="/custom-solutions">About custom solutions</Link>
@@ -62,8 +65,10 @@ function ServicesPage() {
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
-        title="Start with an operations assessment."
-        description="A clear picture of where automation will — and won't — help."
+        {...cmsCta(cmsPage, {
+          title: "Start with an operations assessment.",
+          description: "A clear picture of where automation will — and won't — help.",
+        })}
       />
     </>
   );
