@@ -6,7 +6,7 @@ import type { PublishedCmsPage } from "@/lib/public-cms.functions";
 const page: PublishedCmsPage = {
   slug: "custom-page",
   title: "Custom Page",
-  body: "",
+  body: "Contact support@aethertrade.cloud or visit https://aethertrade.cloud/help.",
   seoTitle: "",
   seoDescription: "",
   canonical: "",
@@ -40,5 +40,13 @@ describe("CMS page renderer media", () => {
     );
     expect(image).toHaveAttribute("loading", "lazy");
     expect(screen.getByText("Bill of lading")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "support@aethertrade.cloud" })).toHaveAttribute(
+      "href",
+      "mailto:support@aethertrade.cloud",
+    );
+    expect(screen.getByRole("link", { name: "https://aethertrade.cloud/help" })).toHaveAttribute(
+      "href",
+      "https://aethertrade.cloud/help",
+    );
   });
 });
