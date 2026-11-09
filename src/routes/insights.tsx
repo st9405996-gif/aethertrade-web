@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero } from "@/components/site/section";
@@ -30,6 +30,10 @@ export const Route = createFileRoute("/insights")({
 
 function InsightsPage() {
   const { articles, cmsPage } = Route.useLoaderData();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isInsightsIndex = pathname === "/insights" || pathname === "/insights/";
+
+  if (!isInsightsIndex) return <Outlet />;
 
   return (
     <>
