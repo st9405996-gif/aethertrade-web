@@ -19,8 +19,14 @@ export function Footer() {
     queryFn: () => getPublishedContentRecords({ data: { module: "branding" } }),
   });
   const brand = brandingError ? undefined : brandRecords?.[0];
-  const email = brand?.fields["email"]?.trim() || "";
-  const phone = brand?.fields["phone"]?.trim() || "";
+  const emails = (brand?.fields["email"] || "")
+    .split(/[\\n,;]+/)
+    .map((value) => value.trim())
+    .filter((value) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value));
+  const phones = (brand?.fields["phone"] || "")
+    .split(/[\\n,;]+/)
+    .map((value) => value.trim())
+    .filter((value) => (value.match(/\\d/g) || []).length >= 8);
   const address = brand?.fields["address"]?.trim() || "";
   const socialLinks = (brand?.fields["social"] || "")
     .split("\n")
@@ -65,20 +71,20 @@ export function Footer() {
                 Contact details could not be loaded.
               </p>
             )}
-            {email && (
-              <p className="text-sm text-muted-foreground">
+            {emails.map((email) => (
+              <p key={email} className="text-sm text-muted-foreground">
                 <a href={"mailto:" + email} className="hover:text-foreground">
                   {email}
                 </a>
               </p>
-            )}
-            {phone && (
-              <p className="text-sm text-muted-foreground">
+            ))}
+            {phones.map((phone) => (
+              <p key={phone} className="text-sm text-muted-foreground">
                 <a href={"tel:" + phone.replace(/[^+0-9]/g, "")} className="hover:text-foreground">
                   {phone}
                 </a>
               </p>
-            )}
+            ))}
             {address && (
               <p className="max-w-xs whitespace-pre-wrap text-sm text-muted-foreground">
                 {address}
@@ -86,7 +92,7 @@ export function Footer() {
             )}
             {socialLinks.length > 0 && (
               <div className="flex flex-wrap gap-3">
-                {socialLinks.map((url, index) => (
+                {socialLinks.map(({ label, url }) => (
                   <a
                     key={url}
                     href={url}
@@ -94,7 +100,7 @@ export function Footer() {
                     rel="noopener noreferrer"
                     className="text-xs text-muted-foreground underline-offset-4 hover:underline"
                   >
-                    Social link {index + 1}
+                    {label}
                   </a>
                 ))}
               </div>
