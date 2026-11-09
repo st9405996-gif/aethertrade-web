@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPublishedCmsPage, type PublishedCmsPage } from "@/lib/public-cms.functions";
+import { LinkifiedText } from "@/components/site/linkified-text";
 
 export function CmsPageSections({ page }: { page: PublishedCmsPage | null }) {
   if (!page || (!page.body.trim() && !page.sections.length)) return null;
@@ -29,7 +30,7 @@ export function CmsPageRenderer({
       )}
       {hasBody && (
         <div className="max-w-4xl whitespace-pre-wrap text-base leading-8 text-muted-foreground">
-          {page.body}
+          <LinkifiedText text={page.body} />
         </div>
       )}
       {sections.map((section, index) => (
@@ -45,7 +46,7 @@ export function CmsPageRenderer({
             )}
             {section.body && (
               <p className="whitespace-pre-wrap text-base leading-8 text-muted-foreground">
-                {section.body}
+                <LinkifiedText text={section.body} />
               </p>
             )}
           </div>
