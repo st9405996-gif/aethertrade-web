@@ -2,8 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 /**
- * AETHER-TRADE identity: an engineered A monogram crossed by the original
- * sweeping global orbit mark. Uses semantic theme tokens for light and dark UI.
+ * AETHER-TRADE identity: an engineered A monogram crossed by a global orbit.
+ * Uses semantic theme tokens so the mark stays legible in light and dark UI.
  */
 export function Logo({ className }: { className?: string }) {
   return (
@@ -21,18 +21,17 @@ export function Logo({ className }: { className?: string }) {
       >
         <path d="M22 4.5 5.5 38h8.1L22 21.1 30.4 38h8.1L22 4.5Z" className="fill-foreground" />
         <path d="M16.4 28.7h11.2l3.1 6.2H13.3l3.1-6.2Z" className="fill-primary" />
-        <path
-          d="M2.5 29.2C8.4 18.1 21.2 12.2 40.5 8.1"
+        <ellipse
+          cx="22"
+          cy="22"
+          rx="20"
+          ry="8.1"
+          transform="rotate(-34 22 22)"
           className="stroke-primary"
-          strokeWidth="3.1"
+          strokeWidth="1.8"
           strokeLinecap="round"
         />
-        <path
-          d="M3.1 29.6C11.1 35.2 25.4 30.5 39.4 9.2"
-          className="stroke-foreground"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-        />
+        <circle cx="35.1" cy="10.7" r="2.6" className="fill-primary" />
       </svg>
       <span className="flex min-w-0 flex-col leading-none">
         <span className="whitespace-nowrap text-[0.93rem] font-semibold tracking-[0.12em] text-foreground">
