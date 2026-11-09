@@ -1,4 +1,3 @@
-import { adminDemoEnabled } from "@/lib/site-mode";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/site/logo";
 import { useQuery } from "@tanstack/react-query";
@@ -126,11 +125,6 @@ export function Footer() {
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} AETHER-TRADE. All rights reserved.</p>
-          {adminDemoEnabled && (
-            <Link to="/admin" className="text-primary hover:underline">
-              Admin demo workspace
-            </Link>
-          )}
           <p className="font-mono tracking-widest">GLOBAL TRADE TECHNOLOGY & AUTOMATION</p>
         </div>
       </div>
