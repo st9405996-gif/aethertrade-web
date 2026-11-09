@@ -1,5 +1,5 @@
 const LINK_PATTERN =
-  /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:\+|00|0)(?:[\s().-]*\d){8,14})/gi;
+  /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:\+|00|0)(?:[\s().-]*\d){9,14})/gi;
 
 function trimUrlPunctuation(value: string) {
   return value.replace(/[.,!?;:]+$/, "").replace(/[)]+$/, "");
