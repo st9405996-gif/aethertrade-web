@@ -6,6 +6,7 @@ const original = {
   key: process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   legacyUrl: process.env.SUPABASE_URL,
   legacyKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
 };
 
 afterEach(() => {
@@ -14,6 +15,7 @@ afterEach(() => {
     ["VITE_SUPABASE_PUBLISHABLE_KEY", original.key],
     ["SUPABASE_URL", original.legacyUrl],
     ["SUPABASE_PUBLISHABLE_KEY", original.legacyKey],
+    ["SUPABASE_SERVICE_ROLE_KEY", original.serviceRoleKey],
   ] as const) {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
