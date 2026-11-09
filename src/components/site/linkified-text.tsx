@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 const LINK_PATTERN =
   /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:\+|00|0)(?:[\s().-]*\d){9,14})/gi;
 
@@ -34,7 +36,7 @@ export function LinkifiedText({ text }: { text: string }) {
       const url = trimUrlPunctuation(value);
       const href = url.startsWith("www.") ? `https://${url}` : url;
       nodes.push(
-        <React.Fragment key={index}>
+        <Fragment key={index}>
           <a
             href={href}
             target="_blank"
@@ -44,7 +46,7 @@ export function LinkifiedText({ text }: { text: string }) {
             {url}
           </a>
           {value.slice(url.length)}
-        </React.Fragment>,
+        </Fragment>,
       );
     }
     cursor = index + value.length;
