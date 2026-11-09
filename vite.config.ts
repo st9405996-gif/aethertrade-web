@@ -6,19 +6,10 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Admin demo is compiled out of production unless the BUILD environment sets
-// VITE_ENABLE_ADMIN_DEMO=true explicitly. A .env file is not used for this flag.
-const ADMIN_DEMO = process.env["VITE_ENABLE_ADMIN_DEMO"] === "true";
-
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
-  },
-  vite: {
-    define: {
-      __ADMIN_DEMO__: JSON.stringify(ADMIN_DEMO),
-    },
   },
 });
