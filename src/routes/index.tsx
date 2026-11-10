@@ -44,13 +44,13 @@ export const Route = createFileRoute("/")({
           {
             name: "description",
             content:
-              "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for mid-market importers, exporters and logistics enterprises.",
+              "AETHER-TRADE builds AI agents, connected workflows, and operational automation for mid-market importers, exporters, and logistics enterprises.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
             property: "og:description",
             content:
-              "Custom document intelligence. Connected workflows. Human-controlled automation.",
+              "AI agents. Connected workflows. Human-controlled automation.",
           },
           { property: "og:type", content: "website" },
           { name: "twitter:card", content: "summary_large_image" },
@@ -240,7 +240,7 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
     eyebrow: "Global trade technology & automation company",
     title: "Global Trade Operations. Connected by Intelligence.",
     description:
-      "We engineer custom document intelligence and end-to-end workflow automation for mid-market importers, exporters, and logistics enterprises. Eliminate manual data entry and customs friction.",
+      "We build AI agents, connected workflows, and operational automations for global trade and logistics teams. Reduce repetitive work, improve visibility, and keep people in control.",
   });
   return (
     <section className="relative isolate overflow-hidden">
@@ -263,7 +263,7 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
             {hero.title}
           </h1>
           <p className="mt-5 text-lg font-medium text-primary">
-            Custom document intelligence and workflow automation for global trade.
+            AI agents, connected workflows, and automation for global trade and logistics.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
             {hero.description}
