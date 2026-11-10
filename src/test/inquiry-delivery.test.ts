@@ -141,6 +141,10 @@ describe("deliverInquiry (mocked providers; not verified against real accounts)"
     const confirmBody = JSON.parse((emailCalls[1]![1] as RequestInit).body as string);
     expect(confirmBody.to).toEqual(["reviewer@example.com"]);
     expect(confirmBody.text).toContain(result.reference);
+    expect(confirmBody.text).toContain("Syed Mohammad Adyan");
+    expect(confirmBody.text).toContain("Founder & CEO | AETHER-TRADE");
+    expect(confirmBody.text).toContain("business@aethertrade.cloud");
+    expect(confirmBody.text).toContain("https://aethertrade.cloud");
   });
 
   it("routes demo and sales inquiries to the sales mailbox", async () => {

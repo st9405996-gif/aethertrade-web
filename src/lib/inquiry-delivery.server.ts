@@ -207,6 +207,12 @@ function confirmationText(reference: string): string {
     `We have received your inquiry. Your reference number is ${reference}. Please keep it for your records.`,
     "",
     "This message confirms receipt only. Please do not send confidential trade documents or sensitive shipment details.",
+    "",
+    "Best regards,",
+    "Syed Mohammad Adyan",
+    "Founder & CEO | AETHER-TRADE",
+    "Email: business@aethertrade.cloud",
+    "Website: https://aethertrade.cloud",
   ].join("\n");
 }
 
