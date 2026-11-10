@@ -29,6 +29,7 @@ export const Route = createFileRoute("/")({
   loader: async () => ({
     cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }),
     faqItems: await getPublishedContentRecords({ data: { module: "faqs" } }),
+    workflowRecords: await getPublishedContentRecords({ data: { module: "workflow" } }),
   }),
   head: ({ loaderData }) =>
     mergeCmsHead(
@@ -206,13 +207,13 @@ const CUSTOM_SERVICES = [
 ];
 
 function HomePage() {
-  const { cmsPage, faqItems } = Route.useLoaderData();
+  const { cmsPage, faqItems, workflowRecords } = Route.useLoaderData();
   return (
     <>
       <Hero cmsPage={cmsPage ?? null} />
       <Challenges cmsPage={cmsPage ?? null} />
       <Approach cmsPage={cmsPage ?? null} />
-      <WorkflowSection />
+      <WorkflowSection workflowRecords={workflowRecords} />
       <Capabilities cmsPage={cmsPage ?? null} />
       <Audiences cmsPage={cmsPage ?? null} />
       <CataloguePreview />
@@ -338,7 +339,7 @@ function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
   );
 }
 
-function WorkflowSection() {
+function WorkflowSection({ workflowRecords }: { workflowRecords: Awaited<ReturnType<typeof getPublishedContentRecords>> }) {
   return (
     <section className="section-pad" aria-labelledby="workflow-title">
       <div className="container-page">
@@ -348,7 +349,7 @@ function WorkflowSection() {
           description="An illustrative eight-step example of a tailored document workflow. Sample data only; not a live integration."
         />
         <div className="mt-12">
-          <WorkflowDemo />
+          <WorkflowDemo workflowRecords={workflowRecords} />
         </div>
       </div>
     </section>
