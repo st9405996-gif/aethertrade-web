@@ -80,4 +80,15 @@ describe("published public content reader", () => {
       fetchPublishedContentRecords(baseUrl, publishableKey, "services", malformedFetch),
     ).rejects.toThrow("was not a list");
   });
+
+  it("allows the public reader to request workflow demo records", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify([row({ module: "workflow", slug: "shipment-follow-up" })]), { status: 200 }),
+    );
+    await expect(
+      fetchPublishedContentRecords(baseUrl, publishableKey, "workflow", fetchImpl, now),
+    ).resolves.toMatchObject([{ module: "workflow", slug: "shipment-follow-up" }]);
+    const [requestUrl] = fetchImpl.mock.calls[0] ?? [];
+    expect(new URL(String(requestUrl)).searchParams.get("module")).toBe("eq.workflow");
+  });
 });
