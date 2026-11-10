@@ -14,7 +14,7 @@ export interface CmsPageSection {
   icon: string;
   /** Optional group tag (e.g. "challenges", "approach") so one page can hold several distinct, CMS-editable section groups. */
   group: string;
-  hidden: boolean;
+  hidden?: boolean;
 }
 export interface PublishedCmsPage {
   slug: string;
