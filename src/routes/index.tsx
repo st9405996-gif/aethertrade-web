@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
+import { DetailCard } from "@/components/site/detail-card";
 
 export const Route = createFileRoute("/")({
   loader: async () => ({
@@ -281,14 +282,16 @@ function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
           {items.map((c, i) => (
-            <article
+            <DetailCard
               key={i}
-              className="card-elevated flex flex-col gap-3 p-5 transition-colors hover:border-primary/40"
-            >
-              <CmsIcon name={c.icon} className="size-5 text-primary" />
-              <h3 className="text-sm font-semibold leading-snug">{c.title}</h3>
-              <p className="text-xs leading-relaxed text-muted-foreground">{c.body}</p>
-            </article>
+              icon={c.icon}
+              title={c.title}
+              body={c.body}
+              details={[
+                "This is a common operational friction, not a claim that every business has the same process.",
+                "During an Operations Audit, the team's current steps, information sources and approval requirements can be mapped before any automation is proposed.",
+              ]}
+            />
           ))}
         </div>
       </div>
@@ -310,13 +313,24 @@ function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((a, i) => (
-            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
+            <Link
+              key={i}
+              to={
+                a.title === "Workflow Automation"
+                  ? "/services"
+                  : "/platform"
+              }
+              className="card-elevated group flex h-full flex-col gap-3 p-6 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                 <CmsIcon name={a.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{a.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{a.body}</p>
-            </article>
+              <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm text-primary">
+                Explore details <ArrowRight className="size-4" />
+              </span>
+            </Link>
           ))}
         </div>
       </div>
@@ -466,11 +480,16 @@ function CustomServices({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {items.map((s, i) => (
-              <article key={i} className="card-elevated flex flex-col gap-3 p-5">
-                <CmsIcon name={s.icon} className="size-5 text-primary" />
-                <h3 className="text-sm font-semibold">{s.title}</h3>
-                <p className="text-xs leading-relaxed text-muted-foreground">{s.body}</p>
-              </article>
+              <DetailCard
+                key={i}
+                icon={s.icon}
+                title={s.title}
+                body={s.body}
+                details={[
+                  "The exact workflow, system access and approval steps are agreed with the client before implementation.",
+                  "A focused pilot can be scoped around one process before considering a wider rollout.",
+                ]}
+              />
             ))}
           </div>
         </div>
@@ -490,13 +509,20 @@ function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         <SectionHeader eyebrow="How we work" title="Intelligence with people in control." />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((t, i) => (
-            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
+            <Link
+              key={i}
+              to="/how-it-works"
+              className="card-elevated group flex h-full flex-col gap-3 p-6 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                 <CmsIcon name={t.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{t.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{t.body}</p>
-            </article>
+              <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm text-primary">
+                How it works <ArrowRight className="size-4" />
+              </span>
+            </Link>
           ))}
         </div>
       </div>
