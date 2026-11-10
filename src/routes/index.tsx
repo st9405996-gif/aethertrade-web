@@ -287,10 +287,32 @@ function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
               icon={c.icon}
               title={c.title}
               body={c.body}
-              details={[
-                "This is a common operational friction, not a claim that every business has the same process.",
-                "During an Operations Audit, the team's current steps, information sources and approval requirements can be mapped before any automation is proposed.",
-              ]}
+              details={
+                c.title === "Documents scattered across email and systems"
+                  ? [
+                      "A scoped workflow can bring approved documents and related shipment information into one case record.",
+                      "Data sources, access permissions and retention requirements are agreed before connecting systems.",
+                    ]
+                  : c.title === "Repetitive manual checking"
+                    ? [
+                        "Field extraction and cross-document comparisons can surface values that need attention.",
+                        "Reviewers verify flagged information before consequential actions are approved.",
+                      ]
+                    : c.title === "Shipment details fragmented across teams"
+                      ? [
+                          "A shared case view can bring agreed shipment information and team hand-offs together.",
+                          "Ownership, visibility and access are defined with the teams involved.",
+                        ]
+                      : c.title === "Missing or inconsistent information"
+                        ? [
+                            "Agreed rules can flag missing fields or conflicting values before the next hand-off.",
+                            "Exceptions are routed for human review instead of being silently accepted.",
+                          ]
+                        : [
+                            "Review records can capture what was checked and the evidence used.",
+                            "Escalation steps and responsibility are agreed during project scoping.",
+                          ]
+              }
             />
           ))}
         </div>
@@ -485,10 +507,27 @@ function CustomServices({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
                 icon={s.icon}
                 title={s.title}
                 body={s.body}
-                details={[
-                  "The exact workflow, system access and approval steps are agreed with the client before implementation.",
-                  "A focused pilot can be scoped around one process before considering a wider rollout.",
-                ]}
+                details={
+                  s.title === "Custom AI agents"
+                    ? [
+                        "Agents are scoped for specific tasks, approved information sources and permitted actions.",
+                        "Consequential actions remain subject to the client's human approval rules.",
+                      ]
+                    : s.title === "Workflow automation"
+                      ? [
+                          "Recurring process steps can be mapped and automated around agreed business rules.",
+                          "Exceptions and approval hand-offs remain visible to the responsible team.",
+                        ]
+                      : s.title === "System integrations"
+                        ? [
+                            "Connections are scoped around approved APIs and webhooks.",
+                            "System access, permissions and data responsibilities are agreed before implementation.",
+                          ]
+                        : [
+                            "Repeatable operational and back-office tasks can be assessed for automation.",
+                            "A focused one-workflow pilot can be used before considering a wider rollout.",
+                          ]
+                }
               />
             ))}
           </div>
