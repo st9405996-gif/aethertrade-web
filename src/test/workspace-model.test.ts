@@ -14,6 +14,7 @@ import {
   filterInquiries,
   availabilityValues,
   inquiryValues,
+  modules,
   type Inquiry,
 } from "@/lib/workspace-model";
 
@@ -67,6 +68,8 @@ describe("Disconnected workspace business rules", () => {
       "Closed",
       "Rejected",
     ]));
+  it("registers workflow demos as an editable CMS content module", () =>
+    expect(modules).toContainEqual(["workflow", "Workflow demos", "Content"]));
   it("keeps Careers unpublished by default", () =>
     expect(
       createDemoWorkspace().records.find((r) => r.module === "pages" && r.title === "Careers")
