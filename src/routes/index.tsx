@@ -29,7 +29,10 @@ export const Route = createFileRoute("/")({
   loader: async () => ({
     cmsPage: await getPublishedCmsPage({ data: { slug: "home" } }),
     faqItems: await getPublishedContentRecords({ data: { module: "faqs" } }),
-    workflowRecords: await getPublishedContentRecords({ data: { module: "workflow" } }),
+    workflowRecords: await getPublishedContentRecords({ data: { module: "workflow" } }).catch((error: unknown) => {
+      console.error("Homepage workflow CMS unavailable; using the legacy illustrative workflow.", error);
+      return [];
+    }),
   }),
   head: ({ loaderData }) =>
     mergeCmsHead(
