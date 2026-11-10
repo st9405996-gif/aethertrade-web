@@ -345,7 +345,7 @@ function Capabilities() {
   return (
     <section className="border-y border-border bg-secondary/30 py-6" aria-label="Platform">
       <div className="container-page flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">Explore the platform.</p>
+        <p className="eyebrow">Platform</p>
         <Button variant="outline-hero" asChild>
           <Link to="/platform">
             Explore the platform <ArrowRight />
@@ -487,7 +487,7 @@ function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       aria-labelledby="trust-title"
     >
       <div className="container-page">
-        <SectionHeader eyebrow="Trust & governance" title="Intelligence with people in control." />
+        <SectionHeader eyebrow="How we work" title="Intelligence with people in control." />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((t, i) => (
             <article key={i} className="card-elevated flex flex-col gap-3 p-6">
