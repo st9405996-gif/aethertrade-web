@@ -1,4 +1,15 @@
-import { Check } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { StatusBadge, type AvailabilityStatus } from "@/components/site/status-badge";
 import {
   Accordion,
@@ -16,10 +27,14 @@ export function CardGrid({
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((it) => (
-        <article key={it.title} className="h-full">
-          <details className="group h-full rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/50">
-            <summary className="flex h-full cursor-pointer list-none flex-col">
-              <div className="mb-3 flex items-start justify-between gap-3">
+        <Dialog key={it.title}>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="flex h-full w-full flex-col rounded-xl border border-border bg-card p-6 text-left transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`View details: ${it.title}`}
+            >
+              <div className="mb-3 flex w-full items-start justify-between gap-3">
                 <h3 className="text-lg font-semibold tracking-tight">{it.title}</h3>
                 {it.status ? <StatusBadge status={it.status} className="shrink-0" /> : null}
               </div>
@@ -34,27 +49,37 @@ export function CardGrid({
                 </ul>
               ) : null}
               <span className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-medium text-primary">
-                View details <span aria-hidden="true">↗</span>
+                View details <ArrowUpRight className="size-4" />
               </span>
-            </summary>
-            <div className="mt-5 border-t border-border pt-4">
-              {it.points?.length ? (
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {it.points.map((p) => (
-                    <li key={p} className="flex gap-2">
-                      <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" /> {p}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm leading-relaxed text-muted-foreground">{it.body}</p>
-              )}
-              <a href="/request-demo" className="mt-5 inline-flex text-sm font-medium text-primary hover:underline">
-                Discuss this with our team →
-              </a>
-            </div>
-          </details>
-        </article>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{it.title}</DialogTitle>
+              <DialogDescription className="pt-2 leading-relaxed">{it.body}</DialogDescription>
+            </DialogHeader>
+            {it.points?.length ? (
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {it.points.map((p) => (
+                  <li key={p} className="flex gap-2">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" /> {p}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                The exact requirements and workflow can be reviewed with your team and scoped before any implementation is proposed.
+              </p>
+            )}
+            <DialogFooter>
+              <Button asChild>
+                <Link to="/request-demo" search={{ automation: undefined }}>
+                  Discuss this with our team
+                </Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ))}
     </div>
   );
