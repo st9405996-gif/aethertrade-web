@@ -1,4 +1,6 @@
 import { useState, type ComponentType } from "react";
+import type { PublicContentRecord } from "@/lib/public-content-records.functions";
+import { parseWorkflowDemoRecord, type WorkflowDemoConfig, type WorkflowPanelConfig, type WorkflowPanelItem } from "@/lib/workflow-demo-config";
 import {
   Inbox,
   Files,
@@ -332,7 +334,7 @@ const PANELS: Record<FlowKey, Record<number, React.ReactNode>> = {
   },
 };
 
-export function WorkflowDemo() {
+function LegacyWorkflowDemo() {
   const [flow, setFlow] = useState<FlowKey>("normal");
   const [active, setActive] = useState(1);
 
@@ -476,6 +478,238 @@ export function WorkflowDemo() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+const WORKFLOW_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  Inbox,
+  Files,
+  ScanSearch,
+  ListTree,
+  Table2,
+  GitCompareArrows,
+  ClipboardCheck,
+  UserCheck,
+  TriangleAlert,
+  Clock,
+  MailCheck,
+  ClipboardList,
+  Send,
+  CheckCircle2,
+};
+
+function CmsPanel({ config }: { config: WorkflowPanelConfig }) {
+  const rows = config.rows ?? config.items ?? [];
+  const toneClass = (tone: WorkflowPanelItem["tone"]) =>
+    tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : tone === "primary" ? "text-primary" : "text-muted-foreground";
+  return (
+    <Panel title={config.title}>
+      {config.type === "inbox" && (
+        <div className="rounded-lg border border-border bg-card/60 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium">{config.subject}</p>
+            <span className="font-mono text-[0.65rem] text-muted-foreground">{config.time}</span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">{config.body}</p>
+          {!!config.attachments?.length && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {config.attachments.map((file) => (
+                <span key={file} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 font-mono text-[0.7rem]">
+                  <Files className="size-3 text-primary" /> {file}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {(config.type === "list" || config.type === "timeline") && (
+        <>
+          <ul className="space-y-2">
+            {rows.map((item) => (
+              <li key={item.label} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/60 px-3 py-2.5">
+                <span className="text-xs">{item.label}</span>
+                <span className={cn("font-mono text-[0.7rem]", toneClass(item.tone))}>{item.value}</span>
+              </li>
+            ))}
+          </ul>
+          {config.note && <p className="mt-3 text-xs text-muted-foreground">{config.note}</p>}
+        </>
+      )}
+      {config.type === "classification" && (
+        <ul className="space-y-2">
+          {rows.map((item) => (
+            <li key={item.label} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5">
+              <span className="font-mono text-xs">{item.label}</span>
+              <span className={cn("text-xs", toneClass(item.tone))}>{item.value}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {config.type === "fields" && (
+        <>
+          <div className="rounded-lg border border-border bg-card/60 px-3">
+            {rows.map((item) => <FieldRow key={item.label} label={item.label} value={item.value} />)}
+          </div>
+          {config.note && <p className="mt-3 font-mono text-[0.7rem] text-muted-foreground">{config.note}</p>}
+        </>
+      )}
+      {config.type === "table" && (
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-secondary/50 font-mono uppercase tracking-wider text-muted-foreground">
+              <tr>{(config.columns ?? []).map((column) => <th key={column} className="px-3 py-2 font-normal">{column}</th>)}</tr>
+            </thead>
+            <tbody className="[&_td]:border-t [&_td]:border-border/60">
+              {(config.tableRows ?? []).map((row, index) => (
+                <tr key={index} className={row.ok === false ? "bg-warning/5" : ""}>
+                  {row.cells.map((cell, cellIndex) => (
+                    <td key={cellIndex} className={cn("px-3 py-2", cellIndex === 0 ? "font-mono" : "text-muted-foreground", cellIndex === row.cells.length - 1 ? "font-mono" : "")}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {config.type === "alert" && (
+        <>
+          <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+            <div className="flex items-start gap-2.5">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
+              <div>
+                <p className="text-sm font-medium">{config.heading}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{config.body}</p>
+              </div>
+            </div>
+            {!!config.evidence?.length && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {config.evidence.map((item) => <span key={item} className="rounded-md border border-border bg-background px-2 py-1 font-mono text-[0.7rem]">{item}</span>)}
+              </div>
+            )}
+          </div>
+          {config.note && <p className="mt-3 text-xs text-muted-foreground">{config.note}</p>}
+        </>
+      )}
+      {config.type === "review" && (
+        <>
+          <ul className="space-y-2">
+            {rows.map((item) => (
+              <li key={item.label} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5">
+                <span className="text-xs">{item.label}</span>
+                <span className="font-mono text-[0.7rem] text-muted-foreground">{item.value}</span>
+              </li>
+            ))}
+          </ul>
+          {!!config.actions?.length && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {config.actions.map((action, index) => <span key={action} className={cn("rounded-md border px-2.5 py-1 font-mono text-[0.7rem]", index === 0 ? "border-success/30 bg-success/10 text-success" : "border-border text-muted-foreground")}>{action}</span>)}
+            </div>
+          )}
+          {config.note && <p className="mt-3 text-xs text-muted-foreground">{config.note}</p>}
+        </>
+      )}
+      {config.type === "message" && (
+        <div className="rounded-lg border border-border bg-card/60 p-4">
+          <p className="text-sm font-medium">{config.heading}</p>
+          {config.body && <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">{config.body}</p>}
+          {config.status && <p className="mt-3 inline-flex items-center gap-2 font-mono text-[0.7rem] text-success"><CheckCircle2 className="size-3.5" />{config.status}</p>}
+          {config.note && <p className="mt-3 text-xs text-muted-foreground">{config.note}</p>}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function CmsWorkflowView({ config }: { config: WorkflowDemoConfig }) {
+  const [flow, setFlow] = useState<"normal" | "exception">("normal");
+  const [active, setActive] = useState(1);
+  const stepsForFlow = flow === "normal"
+    ? config.steps
+    : config.steps.filter((step) => config.exceptionSteps.includes(step.id));
+  const panelConfig = (flow === "exception" ? config.exceptionPanels : config.standardPanels).find((panel) => panel.step === active)
+    ?? config.standardPanels.find((panel) => panel.step === active);
+  const panel = panelConfig ? <CmsPanel config={panelConfig} /> : null;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Workflow scenario" className="inline-flex rounded-lg border border-border bg-card p-1">
+          {([["normal", "Standard flow"], ["exception", "Exception flow"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={flow === key}
+              onClick={() => { setFlow(key); setActive(key === "exception" ? (config.exceptionSteps[0] ?? 1) : 1); }}
+              className={cn("rounded-md px-3 py-1.5 font-mono text-xs transition-colors cursor-pointer", flow === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}
+            >{label}</button>
+          ))}
+        </div>
+        <p className="font-mono text-[0.7rem] uppercase tracking-widest text-muted-foreground">Illustrative demonstration</p>
+      </div>
+      <div className="grid gap-5">
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Workflow steps">
+          {stepsForFlow.map((step) => {
+            const Icon = WORKFLOW_ICONS[step.icon] ?? Files;
+            const isActive = step.id === active;
+            const isDone = stepsForFlow.findIndex((item) => item.id === item.id) >= 0 && step.id < active;
+            return (
+              <li key={step.id} className="relative z-10">
+                <button type="button" onClick={() => setActive(step.id)} aria-current={isActive ? "step" : undefined} className={cn("flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors cursor-pointer", isActive ? "border-primary/50 bg-primary/10" : "border-transparent hover:bg-accent/60")}>
+                  <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full border font-mono text-xs", isActive ? "border-primary bg-primary text-primary-foreground" : isDone ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground")}>{isDone ? <span aria-hidden>✓</span> : step.id}</span>
+                  <Icon className={cn("size-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-sm", isActive ? "text-foreground" : "text-muted-foreground")}>{step.label}</span>
+                </button>
+              </li>
+            );
+          })}
+          {flow === "normal" && (
+            <li className="relative z-10 mt-2">
+              <button type="button" onClick={() => { setFlow("exception"); setActive(config.exceptionSteps[0] ?? 1); }} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-warning/40 px-3 py-3 text-left transition-colors hover:bg-warning/5 cursor-pointer">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-warning/40 bg-warning/10 text-warning"><TriangleAlert className="size-4" /></span>
+                <span className="text-sm text-muted-foreground">{config.exceptionEntryLabel}<span className="block font-mono text-[0.7rem] uppercase tracking-wider text-warning">{config.exceptionEntryHint}</span></span>
+              </button>
+            </li>
+          )}
+        </ol>
+        <div>
+          {panel}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">Step {active} of {config.steps.length} · sample data for illustration</p>
+            <Button variant="outline" size="sm" onClick={() => {
+              const ids = stepsForFlow.map((step) => step.id);
+              const index = ids.indexOf(active);
+              setActive(index >= 0 && index < ids.length - 1 ? ids[index + 1]! : ids[0] ?? 1);
+            }}>Next step <ArrowRight /></Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function WorkflowDemo({ workflowRecords = [] }: { workflowRecords?: PublicContentRecord[] }) {
+  const configs = workflowRecords.map(parseWorkflowDemoRecord).filter((config): config is WorkflowDemoConfig => config !== null);
+  const [selected, setSelected] = useState("document-reconciliation");
+  const config = configs.find((item) => item.id === selected) ?? configs[0];
+  if (!config) return <LegacyWorkflowDemo />;
+  return (
+    <div className="space-y-4">
+      <div role="tablist" aria-label="Example workflow" className="flex flex-wrap gap-2">
+        {configs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={item.id === config.id}
+            onClick={() => setSelected(item.id)}
+            className={cn("rounded-lg border px-3 py-2 text-sm transition-colors", item.id === config.id ? "border-primary/50 bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:bg-accent/60")}
+          >{item.title}</button>
+        ))}
+      </div>
+      <CmsWorkflowView key={config.id} config={config} />
     </div>
   );
 }
