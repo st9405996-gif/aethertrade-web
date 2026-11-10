@@ -63,6 +63,7 @@ const inputSchema = z.object({
     "automations",
     "faqs",
     "partnerships",
+    "workflow",
   ]),
 });
 export async function fetchPublishedContentRecords(
