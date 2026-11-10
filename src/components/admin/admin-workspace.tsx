@@ -83,6 +83,7 @@ const icons = {
   overview: LayoutDashboard,
   pages: Files,
   automations: Workflow,
+  workflow: Workflow,
   platform: Workflow,
   services: BriefcaseBusiness,
   insights: BookOpen,
@@ -1062,6 +1063,17 @@ function RecordEditor({
       setError("Canonical URL must be an absolute HTTPS address.");
       return;
     }
+    if (record.module === "workflow") {
+      try {
+        const config = JSON.parse(record.fields["workflowConfig"] || "{}") as Record<string, unknown>;
+        if (!Array.isArray(config["steps"]) || !Array.isArray(config["standardPanels"]) || !Array.isArray(config["exceptionPanels"])) {
+          throw new Error("The workflow configuration is missing required arrays.");
+        }
+      } catch {
+        setError("Workflow configuration must be valid JSON containing steps, standardPanels and exceptionPanels arrays.");
+        return;
+      }
+    }
     try {
       await workspace.save({ ...record, ...result.data });
       onSaved();
@@ -1272,6 +1284,11 @@ function RecordEditor({
       )}
       {tab === "Fields" && (
         <>
+          {record.module === "workflow" && (
+            <p className="rounded-md border border-border bg-secondary/30 p-3 text-xs leading-relaxed text-muted-foreground">
+              Edit the workflowConfig JSON below to change step labels, sample panels, standard flow and exception flow. Keep the required arrays intact. Changes are stored in the CMS and displayed on the homepage after publication.
+            </p>
+          )}
           {Object.keys(record.fields)
             .filter((k) => k !== "sections")
             .map((k) => (
@@ -1292,7 +1309,8 @@ function RecordEditor({
                   </select>
                 ) : (
                   <Textarea
-                    rows={3}
+                    rows={k === "workflowConfig" ? 18 : 3}
+                    className={k === "workflowConfig" ? "font-mono text-xs" : undefined}
                     value={record.fields[k]}
                     onChange={(e) =>
                       setRecord({ ...record, fields: { ...record.fields, [k]: e.target.value } })
