@@ -54,6 +54,7 @@ export const modules = [
   ["pages", "Pages & sections", "Content"],
   ["platform", "Platform", "Content"],
   ["automations", "Automations", "Content"],
+  ["workflow", "Workflow demos", "Content"],
   ["services", "Services", "Content"],
   ["solutions", "Solutions", "Content"],
   ["industries", "Industries", "Content"],
