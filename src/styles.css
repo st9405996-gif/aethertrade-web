@@ -170,18 +170,15 @@
 }
 
 @utility section-pad {
-  padding-block: clamp(4rem, 9vw, 7rem);
+  /* Compact, consistent rhythm: 44px on small screens, capped at 80px on wide screens. */
+  padding-block: clamp(2.75rem, 5vw, 5rem);
 }
 
 @utility container-page {
   margin-inline: auto;
   width: 100%;
-  max-width: 80rem;
-  padding-inline: 1.25rem;
-
-  @media (width >= 40rem) {
-    padding-inline: 2rem;
-  }
+  max-width: 88rem;
+  padding-inline: clamp(1rem, 2.5vw, 2.5rem);
 }
 
 /* Soft radial accent used behind section content. */
@@ -254,5 +251,57 @@
       background-color 180ms ease,
       border-color 180ms ease,
       box-shadow 180ms ease;
+  }
+}
+
+
+/* ---- Responsive layout safeguards and refined vertical rhythm ---- */
+@layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 320px;
+  }
+
+  body,
+  main,
+  section {
+    min-width: 0;
+  }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  a,
+  button {
+    overflow-wrap: break-word;
+  }
+}
+
+/* Reduce oversized gaps between section headings and their content without
+   changing copy, section order, or component behaviour. */
+.section-pad .mt-12 {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+@media (max-width: 639px) {
+  .container-page {
+    padding-inline: 1rem;
+  }
+
+  .section-pad {
+    padding-block: 2.75rem;
+  }
+
+  .section-pad .mt-12 {
+    margin-top: 1.75rem;
   }
 }
