@@ -18,6 +18,7 @@ export function CmsPageRenderer({
   const sections = page.sections.filter(
     (section) => !section.hidden && (section.title || section.body || section.imageUrl),
   );
+  if (!hasBody && !sections.length) return null;
   return (
     <section className="container-page space-y-10 py-12 md:py-16">
       {showTitle && (
