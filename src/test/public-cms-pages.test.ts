@@ -150,6 +150,30 @@ describe("public CMS page reader", () => {
     ).resolves.toMatchObject({ sections: [section] });
   });
 
+  it("preserves hidden state for CMS sections so placeholders stay unpublished", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse([
+        pageRecord({
+          fields: {
+            sections: [
+              { id: "founder-note", title: "Founder note", body: "", hidden: true },
+              { id: "case-studies", title: "Future case studies", body: "Approved cases only.", hidden: false },
+            ],
+          },
+        }),
+      ]),
+    );
+
+    await expect(
+      fetchPublishedCmsPage(baseUrl, publishableKey, "custom-page", fetchImpl, now),
+    ).resolves.toMatchObject({
+      sections: [
+        { id: "founder-note", hidden: true },
+        { id: "case-studies", hidden: false },
+      ],
+    });
+  });
+
   it("rejects malformed slugs before making a request", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
 
