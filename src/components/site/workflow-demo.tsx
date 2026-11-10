@@ -698,8 +698,10 @@ function CmsWorkflowView({ config }: { config: WorkflowDemoConfig }) {
 export function WorkflowDemo({ workflowRecords = [] }: { workflowRecords?: PublicContentRecord[] }) {
   const configs = workflowRecords.map(parseWorkflowDemoRecord).filter((config): config is WorkflowDemoConfig => config !== null);
   const [selected, setSelected] = useState("document-reconciliation");
-  const config = configs.find((item) => item.id === selected) ?? configs[0];
-  if (!config) return <LegacyWorkflowDemo />;
+  const documentReconciliation = configs.find((item) => item.id === "document-reconciliation");
+  const config = configs.find((item) => item.id === selected) ?? documentReconciliation;
+  // Keep the original demo as the safe default if the CMS record is missing or invalid.
+  if (!documentReconciliation || !config) return <LegacyWorkflowDemo />;
   return (
     <div className="space-y-4">
       <div role="tablist" aria-label="Example workflow" className="flex flex-wrap gap-2">
