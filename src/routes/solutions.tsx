@@ -6,6 +6,16 @@ import { PageHero, SectionHeader } from "@/components/site/section";
 import { EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
+import { ArrowUpRight, Check } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const lines = (value: string) =>
   value
@@ -54,13 +64,17 @@ function SolutionsPage() {
         <SectionHeader eyebrow="By business type" title="Who we help" />
         {records.length ? (
           records.map((item) => (
-            <article
-              key={item.slug}
-              id={item.slug}
-              className="grid gap-6 rounded-xl border border-border bg-card p-6 md:grid-cols-3"
-            >
+            <Dialog key={item.slug}>
+              <article
+                id={item.slug}
+                className="grid gap-6 rounded-xl border border-border bg-card p-6 md:grid-cols-3"
+              >
               <div>
-                <h3 className="text-xl font-semibold">{item.title}</h3>
+                <DialogTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-2 text-left text-xl font-semibold hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {item.title} <ArrowUpRight className="size-4" />
+                  </button>
+                </DialogTrigger>
                 <p className="mt-2 text-sm text-muted-foreground">{item.audience}</p>
               </div>
               <div>
@@ -79,7 +93,45 @@ function SolutionsPage() {
                   ))}
                 </ul>
               </div>
-            </article>
+              </article>
+              <DialogContent className="max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{item.title}</DialogTitle>
+                  <DialogDescription className="pt-2 leading-relaxed">{item.audience}</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-sm font-semibold">Common challenges</p>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {item.challenges.map((value) => (
+                        <li key={value} className="flex gap-2">
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                          <span>{value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-semibold">How we help</p>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {item.helps.map((value) => (
+                        <li key={value} className="flex gap-2">
+                          <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                          <span>{value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button asChild>
+                    <Link to="/request-demo" search={{ automation: undefined }}>
+                      Discuss your requirements
+                    </Link>
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           ))
         ) : (
           <EmptyContentState>No published solutions are available.</EmptyContentState>

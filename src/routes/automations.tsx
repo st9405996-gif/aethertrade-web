@@ -7,6 +7,16 @@ import { PageHero } from "@/components/site/section";
 import { EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
+import { ArrowUpRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/automations")({
   loader: async () => ({
@@ -69,12 +79,16 @@ function AutomationsPage() {
         {filtered.length ? (
           <div className="grid gap-5 md:grid-cols-2">
             {filtered.map((item) => (
-              <article
-                key={item.slug}
-                className="flex flex-col rounded-xl border border-border bg-card p-6"
-              >
+              <Dialog key={item.slug}>
+                <article
+                  className="flex flex-col rounded-xl border border-border bg-card p-6"
+                >
                 <p className="eyebrow mb-1">{item.category}</p>
-                <h2 className="text-lg font-semibold">{item.name}</h2>
+                <DialogTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-2 text-left text-lg font-semibold hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {item.name} <ArrowUpRight className="size-4" />
+                  </button>
+                </DialogTrigger>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Availability: {item.availability}
                 </p>
@@ -115,7 +129,47 @@ function AutomationsPage() {
                     </Link>
                   </Button>
                 </div>
-              </article>
+                </article>
+                <DialogContent className="max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{item.name}</DialogTitle>
+                    <DialogDescription className="pt-2 leading-relaxed">
+                      {item.problem || item.whatItDoes}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <dl className="space-y-3 text-sm">
+                    <div>
+                      <dt className="font-medium">What it does</dt>
+                      <dd className="text-muted-foreground">{item.whatItDoes}</dd>
+                    </div>
+                    {item.exampleWorkflow ? (
+                      <div>
+                        <dt className="font-medium">Example workflow</dt>
+                        <dd className="text-muted-foreground">{item.exampleWorkflow}</dd>
+                      </div>
+                    ) : null}
+                    {item.deploymentModel ? (
+                      <div>
+                        <dt className="font-medium">Deployment</dt>
+                        <dd className="text-muted-foreground">{item.deploymentModel}</dd>
+                      </div>
+                    ) : null}
+                    {item.integrations.length ? (
+                      <div>
+                        <dt className="font-medium">Integrations</dt>
+                        <dd className="text-muted-foreground">{item.integrations.join(", ")}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  <DialogFooter>
+                    <Button asChild>
+                      <Link to="/request-demo" search={{ automation: item.slug }}>
+                        Book an Operations Audit
+                      </Link>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             ))}
           </div>
         ) : (

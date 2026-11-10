@@ -10,6 +10,7 @@ import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
+import { DetailCard } from "@/components/site/detail-card";
 
 const WORKFLOW_AREAS = [
   {
@@ -120,10 +121,11 @@ function CustomSolutionsPage() {
             ? cmsGroup(cmsPage, "workflow-areas")
             : WORKFLOW_AREAS
           ).map((item) => (
-            <article key={item.title} className="rounded-xl border border-border bg-card p-6">
-              <h2 className="text-lg font-semibold">{item.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.body}</p>
-            </article>
+            <DetailCard
+              key={item.title}
+              title={item.title}
+              body={item.body}
+            />
           ))}
         </div>
       </section>

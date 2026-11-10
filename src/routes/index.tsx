@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
+import { DetailCard } from "@/components/site/detail-card";
 
 export const Route = createFileRoute("/")({
   loader: async () => ({
@@ -281,14 +282,38 @@ function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
           {items.map((c, i) => (
-            <article
+            <DetailCard
               key={i}
-              className="card-elevated flex flex-col gap-3 p-5 transition-colors hover:border-primary/40"
-            >
-              <CmsIcon name={c.icon} className="size-5 text-primary" />
-              <h3 className="text-sm font-semibold leading-snug">{c.title}</h3>
-              <p className="text-xs leading-relaxed text-muted-foreground">{c.body}</p>
-            </article>
+              icon={c.icon}
+              title={c.title}
+              body={c.body}
+              details={
+                c.title === "Documents scattered across email and systems"
+                  ? [
+                      "A scoped workflow can bring approved documents and related shipment information into one case record.",
+                      "Data sources, access permissions and retention requirements are agreed before connecting systems.",
+                    ]
+                  : c.title === "Repetitive manual checking"
+                    ? [
+                        "Field extraction and cross-document comparisons can surface values that need attention.",
+                        "Reviewers verify flagged information before consequential actions are approved.",
+                      ]
+                    : c.title === "Shipment details fragmented across teams"
+                      ? [
+                          "A shared case view can bring agreed shipment information and team hand-offs together.",
+                          "Ownership, visibility and access are defined with the teams involved.",
+                        ]
+                      : c.title === "Missing or inconsistent information"
+                        ? [
+                            "Agreed rules can flag missing fields or conflicting values before the next hand-off.",
+                            "Exceptions are routed for human review instead of being silently accepted.",
+                          ]
+                        : [
+                            "Review records can capture what was checked and the evidence used.",
+                            "Escalation steps and responsibility are agreed during project scoping.",
+                          ]
+              }
+            />
           ))}
         </div>
       </div>
@@ -310,13 +335,24 @@ function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((a, i) => (
-            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
+            <Link
+              key={i}
+              to={
+                a.title === "Workflow Automation"
+                  ? "/services"
+                  : "/platform"
+              }
+              className="card-elevated group flex h-full flex-col gap-3 p-6 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                 <CmsIcon name={a.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{a.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{a.body}</p>
-            </article>
+              <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm text-primary">
+                Explore details <ArrowRight className="size-4" />
+              </span>
+            </Link>
           ))}
         </div>
       </div>
@@ -466,11 +502,33 @@ function CustomServices({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {items.map((s, i) => (
-              <article key={i} className="card-elevated flex flex-col gap-3 p-5">
-                <CmsIcon name={s.icon} className="size-5 text-primary" />
-                <h3 className="text-sm font-semibold">{s.title}</h3>
-                <p className="text-xs leading-relaxed text-muted-foreground">{s.body}</p>
-              </article>
+              <DetailCard
+                key={i}
+                icon={s.icon}
+                title={s.title}
+                body={s.body}
+                details={
+                  s.title === "Custom AI agents"
+                    ? [
+                        "Agents are scoped for specific tasks, approved information sources and permitted actions.",
+                        "Consequential actions remain subject to the client's human approval rules.",
+                      ]
+                    : s.title === "Workflow automation"
+                      ? [
+                          "Recurring process steps can be mapped and automated around agreed business rules.",
+                          "Exceptions and approval hand-offs remain visible to the responsible team.",
+                        ]
+                      : s.title === "System integrations"
+                        ? [
+                            "Connections are scoped around approved APIs and webhooks.",
+                            "System access, permissions and data responsibilities are agreed before implementation.",
+                          ]
+                        : [
+                            "Repeatable operational and back-office tasks can be assessed for automation.",
+                            "A focused one-workflow pilot can be used before considering a wider rollout.",
+                          ]
+                }
+              />
             ))}
           </div>
         </div>
@@ -490,13 +548,20 @@ function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
         <SectionHeader eyebrow="How we work" title="Intelligence with people in control." />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((t, i) => (
-            <article key={i} className="card-elevated flex flex-col gap-3 p-6">
+            <Link
+              key={i}
+              to="/how-it-works"
+              className="card-elevated group flex h-full flex-col gap-3 p-6 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                 <CmsIcon name={t.icon} className="size-5 text-primary" />
               </span>
               <h3 className="text-base font-semibold">{t.title}</h3>
               <p className="text-sm leading-relaxed text-muted-foreground">{t.body}</p>
-            </article>
+              <span className="mt-auto inline-flex items-center gap-1 pt-2 text-sm text-primary">
+                How it works <ArrowRight className="size-4" />
+              </span>
+            </Link>
           ))}
         </div>
       </div>
