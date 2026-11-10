@@ -14,6 +14,7 @@ export interface CmsPageSection {
   icon: string;
   /** Optional group tag (e.g. "challenges", "approach") so one page can hold several distinct, CMS-editable section groups. */
   group: string;
+  hidden?: boolean;
 }
 export interface PublishedCmsPage {
   slug: string;
@@ -115,6 +116,7 @@ function parseSections(value: unknown, baseUrl: string): CmsPageSection[] {
     const imageAlt = asText(item["imageAlt"]).trim().slice(0, 500) || title;
     const icon = asText(item["icon"]).trim().slice(0, 60);
     const group = asText(item["group"]).trim().slice(0, 60);
+    const hidden = item["hidden"] === true;
     if (!title && !body && !imageUrl) return [];
     return [
       {
@@ -125,6 +127,7 @@ function parseSections(value: unknown, baseUrl: string): CmsPageSection[] {
         imageAlt,
         icon,
         group,
+        hidden,
       },
     ];
   });

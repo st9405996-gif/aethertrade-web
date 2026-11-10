@@ -112,29 +112,6 @@ const APPROACH = [
   },
 ];
 
-const CAPABILITIES = [
-  {
-    icon: "FolderTree",
-    title: "Trade Operations",
-    body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
-  },
-  {
-    icon: "ScanSearch",
-    title: "Document Intelligence",
-    body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
-  },
-  {
-    icon: "Workflow",
-    title: "Workflow Automation",
-    body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
-  },
-  {
-    icon: "LayoutDashboard",
-    title: "Operational Visibility",
-    body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
-  },
-];
-
 const AUDIENCES = [
   {
     icon: "PackageCheck",
@@ -170,19 +147,24 @@ const AUDIENCES = [
 
 const TRUST = [
   {
-    icon: "UserCheck",
-    title: "Human-controlled AI",
-    body: "AI organizes, extracts and flags. People review, decide and act. Consequential decisions stay with authorized staff.",
-  },
-  {
     icon: "ClipboardCheck",
-    title: "Evidence before conclusions",
-    body: "Findings are presented with document references, so a discrepancy is a review finding — never an automatic verdict.",
+    title: "Paid Operations Audit",
+    body: "Every engagement starts with a paid Operations Audit to understand the workflow and define the scope.",
   },
   {
-    icon: "ShieldCheck",
-    title: "Honest capability labelling",
-    body: "We agree scope and deliverables up front, then test each workflow with your team before handover.",
+    icon: "Workflow",
+    title: "One-workflow pilot",
+    body: "We start with a pilot on one workflow before considering a wider rollout.",
+  },
+  {
+    icon: "UserCheck",
+    title: "Human approval points",
+    body: "Every automation includes human approval points. People review and authorize consequential actions.",
+  },
+  {
+    icon: "FileCheck",
+    title: "Agreed scope before building",
+    body: "Scope and deliverables are agreed before implementation begins.",
   },
 ];
 
@@ -217,7 +199,7 @@ function HomePage() {
       <Challenges cmsPage={cmsPage ?? null} />
       <Approach cmsPage={cmsPage ?? null} />
       <WorkflowSection workflowRecords={workflowRecords} />
-      <Capabilities cmsPage={cmsPage ?? null} />
+      <Capabilities />
       <Audiences cmsPage={cmsPage ?? null} />
       <CataloguePreview />
       <CustomServices cmsPage={cmsPage ?? null} />
@@ -359,43 +341,16 @@ function WorkflowSection({ workflowRecords }: { workflowRecords: Awaited<ReturnT
   );
 }
 
-function Capabilities({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
-  const items = cmsGroup(cmsPage, "capabilities").length
-    ? cmsGroup(cmsPage, "capabilities")
-    : CAPABILITIES;
+function Capabilities() {
   return (
-    <section
-      className="section-pad border-y border-border bg-secondary/30"
-      aria-labelledby="capabilities-title"
-    >
-      <div className="container-page">
-        <SectionHeader
-          eyebrow="Engineering capabilities"
-          title="Systems engineered around your operations."
-        />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((c, i) => (
-            <article
-              key={i}
-              className="card-elevated flex flex-col gap-3 p-6 transition-colors hover:border-primary/40"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                  <CmsIcon name={c.icon} className="size-5 text-primary" />
-                </span>
-              </div>
-              <h3 className="text-base font-semibold">{c.title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{c.body}</p>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8 text-center">
-          <Button variant="outline-hero" asChild>
-            <Link to="/platform">
-              Explore the platform <ArrowRight />
-            </Link>
-          </Button>
-        </div>
+    <section className="border-y border-border bg-secondary/30 py-6" aria-label="Platform">
+      <div className="container-page flex flex-wrap items-center justify-between gap-4">
+        <p className="eyebrow">Platform</p>
+        <Button variant="outline-hero" asChild>
+          <Link to="/platform">
+            Explore the platform <ArrowRight />
+          </Link>
+        </Button>
       </div>
     </section>
   );
@@ -532,8 +487,8 @@ function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       aria-labelledby="trust-title"
     >
       <div className="container-page">
-        <SectionHeader eyebrow="Trust & governance" title="Intelligence with people in control." />
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
+        <SectionHeader eyebrow="How we work" title="Intelligence with people in control." />
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((t, i) => (
             <article key={i} className="card-elevated flex flex-col gap-3 p-6">
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10">

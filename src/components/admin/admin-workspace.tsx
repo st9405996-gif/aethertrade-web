@@ -999,6 +999,7 @@ interface PageSection {
   icon?: string;
   /** Groups this section into a named block (e.g. "challenges", "faq"). Leave blank for a normal ordered section. */
   group?: string;
+  hidden?: boolean;
 }
 function RecordEditor({
   initial,
@@ -1202,6 +1203,20 @@ function RecordEditor({
                       )
                     }
                   />
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={s.hidden ?? false}
+                      onChange={(e) =>
+                        setSections(
+                          sections.map((x) =>
+                            x.id === s.id ? { ...x, hidden: e.target.checked } : x,
+                          ),
+                        )
+                      }
+                    />
+                    Hidden from the public page
+                  </label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="grid gap-2 text-sm">
                       Group (optional — ties this section to a homepage/landing block, e.g.
