@@ -12,6 +12,11 @@ import {
   UserCheck,
   TriangleAlert,
   ArrowRight,
+  Clock,
+  MailCheck,
+  ClipboardList,
+  Send,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -654,7 +659,7 @@ function CmsWorkflowView({ config }: { config: WorkflowDemoConfig }) {
           {stepsForFlow.map((step) => {
             const Icon = WORKFLOW_ICONS[step.icon] ?? Files;
             const isActive = step.id === active;
-            const isDone = stepsForFlow.findIndex((item) => item.id === item.id) >= 0 && step.id < active;
+            const isDone = step.id < active;
             return (
               <li key={step.id} className="relative z-10">
                 <button type="button" onClick={() => setActive(step.id)} aria-current={isActive ? "step" : undefined} className={cn("flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors cursor-pointer", isActive ? "border-primary/50 bg-primary/10" : "border-transparent hover:bg-accent/60")}>
