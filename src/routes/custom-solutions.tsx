@@ -125,10 +125,6 @@ function CustomSolutionsPage() {
               key={item.title}
               title={item.title}
               body={item.body}
-              details={[
-                "The exact tasks, data sources, system permissions and human checkpoints are defined during scoping.",
-                "Implementation is agreed around the client's existing process and tested against the approved requirements.",
-              ]}
             />
           ))}
         </div>
