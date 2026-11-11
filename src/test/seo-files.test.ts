@@ -73,7 +73,7 @@ describe("SEO files", () => {
 
     const files = new Set(readdirSync(routesDir).map(routePathOf));
     for (const path of llmsPaths) {
-      expect(files.has(path), `missing route for ${path}`).toBe(true);
+      expect(hasRoute(path, files), `missing route for ${path}`).toBe(true);
     }
   });
 
