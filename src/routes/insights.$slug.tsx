@@ -1,13 +1,17 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { getPublishedInsight } from "@/lib/public-insights.functions";
+import { getGlobalSeoSettings } from "@/lib/global-seo.functions";
 
 const SITE_URL = "https://aethertrade.cloud";
 
 export const Route = createFileRoute("/insights/$slug")({
   loader: async ({ params }) => {
-    const article = await getPublishedInsight({ data: { slug: params.slug } });
+    const [article, seo] = await Promise.all([
+      getPublishedInsight({ data: { slug: params.slug } }),
+      getGlobalSeoSettings(),
+    ]);
     if (!article) throw notFound();
-    return article;
+    return { article, sameAs: seo.sameAs };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
@@ -22,25 +26,31 @@ export const Route = createFileRoute("/insights/$slug")({
       {
         "@context": "https://schema.org",
         "@type": "Article",
-        headline: loaderData.title,
+        headline: article.title,
         description,
         mainEntityOfPage: canonical,
-        author: loaderData.author
-          ? { "@type": "Organization", name: loaderData.author }
-          : { "@type": "Organization", name: "AETHER-TRADE" },
+        datePublished: article.datePublished || undefined,
+        dateModified: article.dateModified || undefined,
+        author: {
+          "@type": "Organization",
+          name: article.author || "AETHER-TRADE",
+          url: SITE_URL,
+          ...(loaderData.sameAs.length ? { sameAs: loaderData.sameAs } : {}),
+        },
         publisher: {
           "@type": "Organization",
           name: "AETHER-TRADE",
           url: SITE_URL,
+          ...(loaderData.sameAs.length ? { sameAs: loaderData.sameAs } : {}),
         },
       },
     ];
 
-    if (loaderData.aeoQuestions.length > 0) {
+    if (article.aeoQuestions.length > 0) {
       graph.push({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        mainEntity: loaderData.aeoQuestions.map(({ question, answer }) => ({
+        mainEntity: article.aeoQuestions.map(({ question, answer }) => ({
           "@type": "Question",
           name: question,
           acceptedAnswer: { "@type": "Answer", text: answer },
@@ -114,9 +124,11 @@ function InsightArticlePage() {
       <header className="mb-10 mt-8 space-y-4">
         {article.category ? <p className="eyebrow">{article.category}</p> : null}
         <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{article.title}</h1>
-        {article.author ? (
-          <p className="text-sm text-muted-foreground">By {article.author}</p>
-        ) : null}
+        <p className="text-sm text-muted-foreground">
+          By {article.author || "AETHER-TRADE"}
+          {article.datePublished ? ` · Published ${new Date(article.datePublished).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
+          {article.dateModified && article.dateModified !== article.datePublished ? ` · Updated ${new Date(article.dateModified).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
+        </p>
       </header>
       {article.geoSummary ? (
         <aside className="mb-8 rounded-lg border border-border bg-card p-5">
