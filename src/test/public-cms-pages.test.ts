@@ -223,7 +223,61 @@ describe("public CMS page reader", () => {
     ).resolves.toMatchObject({ slug: "custom-page", noindex: true });
   });
 
-  it("uses the /pages/:slug canonical for dynamic pages without changing fixed-route defaults", () => {
+  it("adds a self-canonical even without CMS data and normalizes www CMS canonicals", () => {
+    const base = {
+      meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
+      links: [] as { rel?: string; href?: string }[],
+    };
+    expect(mergeCmsHead(base, null, { fallbackPath: "/platform" }).links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/platform" },
+    ]);
+
+    const page: PublishedCmsPage = {
+      slug: "platform",
+      title: "Platform",
+      body: "Public platform content",
+      seoTitle: "",
+      seoDescription: "",
+      canonical: "https://www.aethertrade.cloud/platform",
+      noindex: false,
+      sections: [],
+      heroEyebrow: "",
+      heroTitle: "",
+      heroDescription: "",
+      ctaTitle: "",
+      ctaDescription: "",
+    };
+    expect(mergeCmsHead(base, page).links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/platform" },
+    ]);
+  });
+
+  it("rejects a CMS canonical that points a distinct page to the homepage", () => {
+    const base = {
+      meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
+      links: [] as { rel?: string; href?: string }[],
+    };
+    const page: PublishedCmsPage = {
+      slug: "platform",
+      title: "Platform",
+      body: "Public platform content",
+      seoTitle: "",
+      seoDescription: "",
+      canonical: "https://www.aethertrade.cloud/",
+      noindex: false,
+      sections: [],
+      heroEyebrow: "",
+      heroTitle: "",
+      heroDescription: "",
+      ctaTitle: "",
+      ctaDescription: "",
+    };
+    expect(mergeCmsHead(base, page).links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/platform" },
+    ]);
+  });
+
+  it("uses the /pages/:slug canonical for dynamic CMS pages", () => {
     const base = {
       meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
       links: [] as { rel?: string; href?: string }[],
@@ -243,10 +297,6 @@ describe("public CMS page reader", () => {
       ctaTitle: "",
       ctaDescription: "",
     };
-
-    expect(mergeCmsHead(base, page).links).toEqual([
-      { rel: "canonical", href: "https://aethertrade.cloud/custom-page" },
-    ]);
     expect(mergeCmsHead(base, page, { fallbackPath: "/pages/custom-page" }).links).toEqual([
       { rel: "canonical", href: "https://aethertrade.cloud/pages/custom-page" },
     ]);
