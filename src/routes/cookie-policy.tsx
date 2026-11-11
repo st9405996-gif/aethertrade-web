@@ -13,6 +13,7 @@ export const Route = createFileRoute("/cookie-policy")({
         "How AETHER-TRADE uses browser storage, consent preferences, analytics and essential website security features.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/cookie-policy" },
     ),
   component: CookiePolicyPage,
 });
