@@ -74,11 +74,11 @@ export const Route = createFileRoute("/insights/$slug")({
 });
 
 function renderInlineMarkdown(text: string) {
-  const tokenPattern = /(\\*\\*[^*]+\\*\\*|\\*[^*]+\\*|\\[[^\\]]+\\]\\([^)]+\\))/g;
+  const tokenPattern = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
   return text.split(tokenPattern).filter(Boolean).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={index} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>;
     if (part.startsWith("*") && part.endsWith("*")) return <em key={index}>{part.slice(1, -1)}</em>;
-    const match = part.match(/^\\[([^\\]]+)\\]\\(([^)]+)\\)$/);
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (!match) return part;
     const [, label, href] = match;
     const safeHref = (href.startsWith("/") && !href.startsWith("//")) || href.startsWith("https://");
@@ -88,9 +88,9 @@ function renderInlineMarkdown(text: string) {
 }
 
 function renderArticleBlock(block: string, index: number) {
-  const lines = block.split("\\n");
-  if (lines.every((line) => /^[-*]\\s+/.test(line))) return <ul key={index} className="list-disc space-y-2 pl-6">{lines.map((line, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(line.replace(/^[-*]\\s+/, ""))}</li>)}</ul>;
-  if (lines.every((line) => /^\\d+\\.\\s+/.test(line))) return <ol key={index} className="list-decimal space-y-2 pl-6">{lines.map((line, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(line.replace(/^\\d+\\.\\s+/, ""))}</li>)}</ol>;
+  const lines = block.split("\n");
+  if (lines.every((line) => /^[-*]\s+/.test(line))) return <ul key={index} className="list-disc space-y-2 pl-6">{lines.map((line, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(line.replace(/^[-*]\s+/, ""))}</li>)}</ul>;
+  if (lines.every((line) => /^\d+\.\s+/.test(line))) return <ol key={index} className="list-decimal space-y-2 pl-6">{lines.map((line, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(line.replace(/^\d+\.\s+/, ""))}</li>)}</ol>;
   if (block.startsWith("### ")) return <h3 key={index} className="pt-4 text-lg font-semibold leading-7 text-foreground">{renderInlineMarkdown(block.slice(4))}</h3>;
   if (block.startsWith("## ")) return <h2 key={index} className="pt-6 text-2xl font-semibold leading-tight text-foreground">{renderInlineMarkdown(block.slice(3))}</h2>;
   return <p key={index}>{lines.map((line, lineIndex) => <span key={lineIndex}>{lineIndex > 0 ? " " : ""}{renderInlineMarkdown(line)}</span>)}</p>;
