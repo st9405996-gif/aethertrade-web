@@ -9,13 +9,20 @@ const robots = readFileSync("public/robots.txt", "utf8");
 const llms = readFileSync("public/llms.txt", "utf8");
 
 for (const page of config.pages.filter((entry) => entry.indexable)) {
-  const url = config.site.url.replace(/\/+$/, "") + (page.path === "/" ? "/" : page.path);
+  const url = config.site.url.replace(/\\/+$/, "") + (page.path === "/" ? "/" : page.path);
   if (!sitemap.includes(`<loc>${url}</loc>`)) errors.push(`Sitemap is missing ${page.path}`);
 }
-if (!robots.includes(`Sitemap: ${config.site.url.replace(/\/+$/, "")}/sitemap.xml`)) {
+for (const page of config.pages.filter((entry) => !entry.indexable)) {
+  const url = config.site.url.replace(/\\/+$/, "") + (page.path === "/" ? "/" : page.path);
+  if (sitemap.includes(`<loc>${url}</loc>`)) errors.push(`Sitemap must omit non-indexable path ${page.path}`);
+}
+if (!robots.includes(`Sitemap: ${config.site.url.replace(/\\/+$/, "")}/sitemap.xml`)) {
   errors.push("robots.txt must reference the canonical sitemap URL.");
 }
-if (!llms.startsWith(`# ${config.site.name}\n`))
+if (!/^User-agent: OAI-SearchBot\\s*\\nAllow: \/\\s*$/m.test(robots)) {
+  errors.push("robots.txt must explicitly allow OAI-SearchBot for ChatGPT search discovery.");
+}
+if (!llms.startsWith(`# ${config.site.name}\\n`))
   errors.push("llms.txt is missing the site heading.");
 if (/&(?!amp;|lt;|gt;|quot;|apos;)/.test(sitemap))
   errors.push("Sitemap contains an unescaped XML ampersand.");
