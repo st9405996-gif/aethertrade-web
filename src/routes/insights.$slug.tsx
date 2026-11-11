@@ -16,12 +16,13 @@ export const Route = createFileRoute("/insights/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) return {};
 
-    const title = loaderData.seoTitle || `${loaderData.title} — AETHER-TRADE`;
+    const article = loaderData.article;
+    const title = article.seoTitle || `${article.title} — AETHER-TRADE`;
     const description =
-      loaderData.seoDescription ||
-      loaderData.geoSummary ||
-      loaderData.body.replace(/\s+/g, " ").trim().slice(0, 160);
-    const canonical = `${SITE_URL}/insights/${encodeURIComponent(loaderData.slug)}`;
+      article.seoDescription ||
+      article.geoSummary ||
+      article.body.replace(/\s+/g, " ").trim().slice(0, 160);
+    const canonical = `${SITE_URL}/insights/${encodeURIComponent(article.slug)}`;
     const graph: Record<string, unknown>[] = [
       {
         "@context": "https://schema.org",
@@ -67,6 +68,7 @@ export const Route = createFileRoute("/insights/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
+        { property: "og:site_name", content: "AETHER-TRADE" },
         { property: "og:url", content: canonical },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
@@ -107,7 +109,7 @@ function renderArticleBlock(block: string, index: number) {
 }
 
 function InsightArticlePage() {
-  const article = Route.useLoaderData();
+  const { article } = Route.useLoaderData();
   const blocks = article.body
     .split(/\n{2,}/)
     .map((block) => block.trim())
