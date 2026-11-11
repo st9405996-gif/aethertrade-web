@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     const canonicalPath =
       currentPath === "/" ? "/" : currentPath.replace(/\/+$/, "");
     const canonicalUrl = SITE_URL + canonicalPath;
-    return ({
+    return {
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -183,7 +183,7 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
       { rel: "icon", href: "/favicon.svg?v=20261104", type: "image/svg+xml" },
       { rel: "canonical", href: canonicalUrl },
     ],
-    });
+    };
   },
   shellComponent: RootShell,
   component: RootComponent,
@@ -252,7 +252,7 @@ function RootComponent() {
   }, [pathname]);
 
   useEffect(() => {
-    const canonicalPath = pathname === "/" ? "/" : pathname.replace(/\\/+$/, "");
+    const canonicalPath = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
     const canonical = SITE_URL + canonicalPath;
     let canonicalLink = document.head.querySelector(
       'link[rel="canonical"]',
