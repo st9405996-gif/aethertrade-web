@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MarketPage, type MarketPageContent } from "@/components/site/market-page";
 
 const content: MarketPageContent = {
-  market: "the United States",
+  market: "the United States",\n  marketKey: "United States",
   eyebrow: "US freight forwarding and trade operations",
   title: "Workflow Automation for US Freight Forwarders and Import-Export Teams",
   description:
