@@ -8,7 +8,7 @@ export type MarketWorkflow = {
 };
 
 export type MarketPageContent = {
-  market: string;
+  market: string;\n  marketKey: string;
   eyebrow: string;
   title: string;
   description: string;
@@ -117,7 +117,7 @@ export function MarketPage({ content }: { content: MarketPageContent }) {
           description="AETHER-TRADE uses the same scoped, human-reviewed delivery approach while adapting discovery to each market's operational context."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {MARKET_LINKS.filter((item) => item.label !== content.market).map((item) => (
+          {MARKET_LINKS.filter((item) => item.label !== content.marketKey).map((item) => (
             <Link
               key={item.path}
               to={item.path as never}
