@@ -10,6 +10,16 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# Allow ChatGPT search discovery while keeping private routes out of the crawl.
+# OAI-SearchBot is separate from GPTBot (model-training crawler).
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /thank-you
+Disallow: /api/
+
 User-agent: *
 Disallow: /admin
 Disallow: /auth
