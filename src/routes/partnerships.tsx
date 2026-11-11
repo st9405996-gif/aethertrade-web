@@ -19,6 +19,7 @@ export const Route = createFileRoute("/partnerships")({
         "Partner with AETHER-TRADE as a technology provider, implementation partner or industry association.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/partnerships" },
     ),
   component: PartnershipsPage,
 });
