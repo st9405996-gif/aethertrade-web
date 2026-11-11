@@ -26,7 +26,17 @@ const llmsPaths = [...llms.matchAll(/\]\((https:\/\/aethertrade\.cloud[^)]*)\)/g
 function routePathOf(file: string): string {
   const base = file.replace(/\.tsx?$/, "");
   if (base === "index") return "/";
-  return "/" + base;
+  return "/" + base.replace(/\./g, "/");
+}
+
+/** Matches concrete URLs against static routes and file-based dynamic segments. */
+function hasRoute(path: string, routePaths: Set<string>): boolean {
+  return [...routePaths].some((route) => {
+    const pattern = route.split("/").map((segment) =>
+      segment.startsWith("$") ? "[^/]+" : segment
+    ).join("/");
+    return new RegExp("^" + pattern + "/?$").test(path);
+  });
 }
 
 describe("SEO files", () => {
@@ -51,7 +61,7 @@ describe("SEO files", () => {
   it("every sitemap path is an existing route file", () => {
     const files = new Set(readdirSync(routesDir).map(routePathOf));
     for (const path of sitemapPaths) {
-      expect(files.has(path), `missing route for ${path}`).toBe(true);
+      expect(hasRoute(path, files), `missing route for ${path}`).toBe(true);
     }
   });
 
