@@ -18,6 +18,7 @@ export const Route = createFileRoute("/industries")({
         "Trade operations support across textiles, agriculture, machinery, consumer goods, chemicals and electronics.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/industries" },
     ),
   component: IndustriesPage,
 });
