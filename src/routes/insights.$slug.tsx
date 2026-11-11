@@ -26,7 +26,7 @@ export const Route = createFileRoute("/insights/$slug")({
         description,
         mainEntityOfPage: canonical,
         author: loaderData.author
-          ? { "@type": "Person", name: loaderData.author }
+          ? { "@type": "Organization", name: loaderData.author }
           : { "@type": "Organization", name: "AETHER-TRADE" },
         publisher: {
           "@type": "Organization",
@@ -49,6 +49,7 @@ export const Route = createFileRoute("/insights/$slug")({
     }
 
     return {
+      links: [{ rel: "canonical", href: canonical }],
       meta: [
         { title },
         { name: "description", content: description },
@@ -56,6 +57,7 @@ export const Route = createFileRoute("/insights/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
+        { property: "og:url", content: canonical },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
@@ -71,11 +73,31 @@ export const Route = createFileRoute("/insights/$slug")({
   component: InsightArticlePage,
 });
 
+function renderInlineMarkdown(text: string) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, index) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (!match) return part;
+    const [, label, href] = match;
+    if (!href.startsWith("/") && !href.startsWith("https://")) return label;
+    return (
+      <a
+        key={index}
+        href={href}
+        className="font-medium text-primary underline-offset-4 hover:underline"
+        {...(href.startsWith("https://") ? { target: "_blank", rel: "noreferrer" } : {})}
+      >
+        {label}
+      </a>
+    );
+  });
+}
+
 function InsightArticlePage() {
   const article = Route.useLoaderData();
-  const paragraphs = article.body
+  const blocks = article.body
     .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
+    .map((block) => block.trim())
     .filter(Boolean);
 
   return (
@@ -100,9 +122,23 @@ function InsightArticlePage() {
         </aside>
       ) : null}
       <div className="space-y-5 text-base leading-8 text-muted-foreground">
-        {paragraphs.map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        ))}
+        {blocks.map((block, index) => {
+          if (block.startsWith("### ")) {
+            return (
+              <h3 key={index} className="pt-4 text-lg font-semibold leading-7 text-foreground">
+                {renderInlineMarkdown(block.slice(4))}
+              </h3>
+            );
+          }
+          if (block.startsWith("## ")) {
+            return (
+              <h2 key={index} className="pt-6 text-2xl font-semibold leading-tight text-foreground">
+                {renderInlineMarkdown(block.slice(3))}
+              </h2>
+            );
+          }
+          return <p key={index}>{renderInlineMarkdown(block)}</p>;
+        })}
       </div>
       {article.aeoQuestions.length > 0 ? (
         <section className="mt-12 border-t border-border pt-8">
@@ -117,6 +153,21 @@ function InsightArticlePage() {
           </dl>
         </section>
       ) : null}
+      <section className="mt-12 rounded-xl border border-border bg-card p-6 md:p-8">
+        <h2 className="text-2xl font-semibold text-foreground">
+          Want to improve a document or shipment workflow?
+        </h2>
+        <p className="mt-3 leading-7 text-muted-foreground">
+          Start with one process. We can map the hand-offs, identify repetitive checks and scope a
+          practical pilot with human review.
+        </p>
+        <a
+          href="/contact"
+          className="mt-5 inline-flex font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Discuss your workflow →
+        </a>
+      </section>
     </article>
   );
 }
