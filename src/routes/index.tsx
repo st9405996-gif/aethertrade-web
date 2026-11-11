@@ -40,12 +40,12 @@ export const Route = createFileRoute("/")({
       (() => ({
         meta: [
           {
-            title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
+            title: "AI Workflow Automation for Trade & Logistics | AETHER-TRADE",
           },
           {
             name: "description",
             content:
-              "AETHER-TRADE builds AI agents, connected workflows, and operational automation for mid-market importers, exporters, and logistics enterprises.",
+              "AETHER-TRADE designs scoped AI workflow automation, document intelligence and business process automation for importers, exporters, freight forwarders and logistics teams. Improve shipment-document coordination, reduce repetitive manual work and keep operational decisions under human control.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
@@ -221,7 +221,7 @@ function HomePage() {
 function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
   const hero = cmsHero(cmsPage, {
     eyebrow: "Global trade technology & automation company",
-    title: "Global Trade Operations. Connected by Intelligence.",
+    title: "AI Workflow Automation for Importers, Exporters & Freight Forwarders",
     description:
       "We build AI agents, connected workflows, and operational automations for global trade and logistics teams. Reduce repetitive work, improve visibility, and keep people in control.",
   });
@@ -277,7 +277,7 @@ function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       <div className="container-page">
         <SectionHeader
           eyebrow="The everyday reality"
-          title="Trade operations run on documents — and documents don't run themselves."
+          title="Automate Repetitive Trade Documents & Shipment Operations"
           description="Before any automation, teams face the same five frictions on every shipment."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
@@ -331,7 +331,7 @@ function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       <div className="container-page">
         <SectionHeader
           eyebrow="The AETHER-TRADE approach"
-          title="Four capabilities, one connected workflow."
+          title="Trade Operations, Document Intelligence & Workflow Automation"
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((a, i) => (
@@ -399,7 +399,7 @@ function Audiences({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       <div className="container-page">
         <SectionHeader
           eyebrow="Solutions by business type"
-          title="Built for the businesses that move global trade."
+          title="AI Automation Solutions for Importers, Exporters & Freight Forwarders"
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((s, i) => (
@@ -435,7 +435,7 @@ function CataloguePreview() {
           <SectionHeader
             align="left"
             eyebrow="Automation catalogue"
-            title="Custom automations engineered around your operation."
+            title="Custom AI Agents & Workflow Automation for Logistics Operations"
             description="Example workflows we can scope and engineer around your systems, controls and operational requirements."
           />
           <Button variant="outline-hero" asChild>
@@ -545,7 +545,7 @@ function TrustGovernance({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       aria-labelledby="trust-title"
     >
       <div className="container-page">
-        <SectionHeader eyebrow="How we work" title="Intelligence with people in control." />
+        <SectionHeader eyebrow="How we work" title="Human-Controlled AI Automation for Trade & Logistics" />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((t, i) => (
             <Link
