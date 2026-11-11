@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MarketPage, type MarketPageContent } from "@/components/site/market-page";
 
 const content: MarketPageContent = {
-  market: "the UAE",\n  marketKey: "UAE",
+  market: "the UAE",
+  marketKey: "UAE",
   eyebrow: "UAE trade and logistics workflows",
   title: "Workflow Automation for UAE Freight Forwarders and Trade Teams",
   description:
