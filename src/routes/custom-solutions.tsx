@@ -186,6 +186,28 @@ function CustomSolutionsPage() {
         </div>
       </section>
 
+      <section className="container-page section-pad">
+        <SectionHeader
+          eyebrow="Market focus"
+          title="Trade workflows across three connected markets."
+          description="Explore operational use cases for teams connected to the UAE, China-related supply chains and the United States. These pages describe workflow context, not local offices or government integrations."
+        />
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <Link to={"/uae-logistics-automation" as never} className="rounded-xl border border-border p-5 transition-colors hover:border-primary">
+            <h3 className="font-semibold">UAE</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Freight forwarding and trade operations</p>
+          </Link>
+          <Link to={"/china-trade-automation" as never} className="rounded-xl border border-border p-5 transition-colors hover:border-primary">
+            <h3 className="font-semibold">China</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Supplier and export-document workflows</p>
+          </Link>
+          <Link to={"/usa-freight-forwarding-automation" as never} className="rounded-xl border border-border p-5 transition-colors hover:border-primary">
+            <h3 className="font-semibold">United States</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Import, export and forwarding operations</p>
+          </Link>
+        </div>
+      </section>
+
       <CmsPageSections page={cmsPage} />
       <CtaBand
         {...cmsCta(cmsPage, {
