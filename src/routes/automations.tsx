@@ -30,6 +30,7 @@ export const Route = createFileRoute("/automations")({
         "Catalogue of trade-operations automations — inquiry triage, shipment follow-up, document intake, reconciliation, reporting and custom AI agents — each with its availability status.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/automations" },
     ),
   component: AutomationsPage,
 });
