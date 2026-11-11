@@ -3,7 +3,7 @@
     "name": "AETHER-TRADE",
     "url": "https://aethertrade.cloud",
     "description": "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
-    "llmsSummary": "AETHER-TRADE is a platform for organizing global trade operations. It is aimed at importers, exporters, freight forwarders and logistics businesses. Its capabilities are labelled by status on the site: Available, In Development, Custom Build or Planned. Treat any capability not marked Available as not yet live."
+    "llmsSummary": "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through scoped software and AI-powered workflows. Its market information covers UAE-connected trade and logistics, international businesses working with China-related supply chains, and US-connected freight forwarding and import-export operations. Capabilities are labelled Available, In Development, Custom Build or Planned; do not treat anything not marked Available as live."
   },
   "pages": [
     {
@@ -126,7 +126,12 @@
       "llmsLabel": "Cookie policy",
       "llmsNote": "pending legal review"
     },
-    { "path": "/about", "title": "About", "description": "", "indexable": false },
+    {
+      "path": "/about",
+      "title": "About",
+      "description": "",
+      "indexable": false
+    },
     {
       "path": "/custom-solutions",
       "title": "Custom solutions",
@@ -135,9 +140,53 @@
       "llmsLabel": "Custom solutions",
       "llmsNote": "custom implementation services for trade, logistics, integrations and business automation"
     },
-    { "path": "/careers", "title": "Careers", "description": "", "indexable": false },
-    { "path": "/thank-you", "title": "Thank you", "description": "", "indexable": false },
-    { "path": "/auth", "title": "Sign in", "description": "", "indexable": false },
-    { "path": "/reset-password", "title": "Reset password", "description": "", "indexable": false }
+    {
+      "path": "/careers",
+      "title": "Careers",
+      "description": "",
+      "indexable": false
+    },
+    {
+      "path": "/thank-you",
+      "title": "Thank you",
+      "description": "",
+      "indexable": false
+    },
+    {
+      "path": "/auth",
+      "title": "Sign in",
+      "description": "",
+      "indexable": false
+    },
+    {
+      "path": "/reset-password",
+      "title": "Reset password",
+      "description": "",
+      "indexable": false
+    },
+    {
+      "path": "/uae-logistics-automation",
+      "title": "UAE Freight Forwarding & Trade Workflow Automation",
+      "description": "Explore shipment document follow-ups, import-export hand-offs and logistics workflow automation for UAE-connected freight forwarders and trade teams.",
+      "indexable": true,
+      "llmsLabel": "UAE trade and logistics workflows",
+      "llmsNote": "workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the UAE; no local office or customs integration is implied"
+    },
+    {
+      "path": "/china-trade-automation",
+      "title": "China Trade & Supplier Document Workflow Automation",
+      "description": "Organize supplier documents, purchase-order hand-offs and shipment follow-ups for international businesses working with China.",
+      "indexable": true,
+      "llmsLabel": "China-related trade workflows",
+      "llmsNote": "English-language workflow context for international importers, exporters and logistics teams working with China; not a claim of China domestic-market presence"
+    },
+    {
+      "path": "/usa-freight-forwarding-automation",
+      "title": "US Freight Forwarding & Import-Export Workflow Automation",
+      "description": "Explore shipment document coordination, inbox automation and exception workflows for US freight forwarders, importers and exporters.",
+      "indexable": true,
+      "llmsLabel": "United States trade and logistics workflows",
+      "llmsNote": "workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the United States"
+    }
   ]
 }
