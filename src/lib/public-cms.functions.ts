@@ -244,7 +244,7 @@ export function mergeCmsHead<T extends CmsHeadBase>(
   const description = page.seoDescription;
   const fallbackPath = options.fallbackPath ?? (page.slug === "home" ? "/" : "/" + page.slug);
   const normalizedFallbackPath =
-    fallbackPath === "/" ? "/" : "/" + fallbackPath.replace(/^\\/+|\\/+$/g, "");
+    fallbackPath === "/" ? "/" : "/" + fallbackPath.replace(/^\/+|\/+$/g, "");
   const defaultCanonical = "https://aethertrade.cloud" + normalizedFallbackPath;
   let canonical = defaultCanonical;
   if (page.canonical) {
