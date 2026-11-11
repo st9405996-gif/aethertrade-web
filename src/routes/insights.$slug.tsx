@@ -60,7 +60,6 @@ export const Route = createFileRoute("/insights/$slug")({
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
       ],
-      links: [{ rel: "canonical", href: canonical }],
       scripts: [
         {
           type: "application/ld+json",

@@ -243,8 +243,25 @@ export function mergeCmsHead<T extends CmsHeadBase>(
   const title = page.seoTitle || (hasContent ? page.title + " — AETHER-TRADE" : "");
   const description = page.seoDescription;
   const fallbackPath = options.fallbackPath ?? (page.slug === "home" ? "/" : "/" + page.slug);
-  const canonical =
-    page.canonical || (hasContent ? "https://aethertrade.cloud" + fallbackPath : "");
+  const normalizedFallbackPath =
+    fallbackPath === "/" ? "/" : "/" + fallbackPath.replace(/^\/+|\/+$/g, "");
+  const defaultCanonical = "https://aethertrade.cloud" + normalizedFallbackPath;
+  let canonical = defaultCanonical;
+  if (page.canonical) {
+    try {
+      const candidate = new URL(page.canonical, "https://aethertrade.cloud");
+      if (
+        candidate.origin === "https://aethertrade.cloud" &&
+        candidate.pathname === normalizedFallbackPath &&
+        !candidate.search &&
+        !candidate.hash
+      ) {
+        canonical = candidate.toString();
+      }
+    } catch {
+      // Keep the route-derived canonical URL when the CMS value is invalid.
+    }
+  }
 
   const meta = (base.meta || []).filter((item) => {
     if (title && (item.title || item.property === "og:title" || item.name === "twitter:title"))
@@ -275,7 +292,5 @@ export function mergeCmsHead<T extends CmsHeadBase>(
   if (page.noindex) meta.push({ name: "robots", content: "noindex, nofollow" });
   if (canonical) meta.push({ property: "og:url", content: canonical });
 
-  const links = (base.links || []).filter((item) => item.rel !== "canonical");
-  if (canonical) links.push({ rel: "canonical", href: canonical });
-  return { ...base, meta, links } as T;
+  return { ...base, meta } as T;
 }
