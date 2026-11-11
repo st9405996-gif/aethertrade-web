@@ -1,46 +1,57 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { getPublishedInsight } from "@/lib/public-insights.functions";
+import { getGlobalSeoSettings } from "@/lib/global-seo.functions";
 
 const SITE_URL = "https://aethertrade.cloud";
 
 export const Route = createFileRoute("/insights/$slug")({
   loader: async ({ params }) => {
-    const article = await getPublishedInsight({ data: { slug: params.slug } });
+    const [article, seo] = await Promise.all([
+      getPublishedInsight({ data: { slug: params.slug } }),
+      getGlobalSeoSettings(),
+    ]);
     if (!article) throw notFound();
-    return article;
+    return { article, sameAs: seo.sameAs };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return {};
 
-    const title = loaderData.seoTitle || `${loaderData.title} — AETHER-TRADE`;
+    const article = loaderData.article;
+    const title = article.seoTitle || `${article.title} — AETHER-TRADE`;
     const description =
-      loaderData.seoDescription ||
-      loaderData.geoSummary ||
-      loaderData.body.replace(/\s+/g, " ").trim().slice(0, 160);
-    const canonical = `${SITE_URL}/insights/${encodeURIComponent(loaderData.slug)}`;
+      article.seoDescription ||
+      article.geoSummary ||
+      article.body.replace(/\s+/g, " ").trim().slice(0, 160);
+    const canonical = `${SITE_URL}/insights/${encodeURIComponent(article.slug)}`;
     const graph: Record<string, unknown>[] = [
       {
         "@context": "https://schema.org",
         "@type": "Article",
-        headline: loaderData.title,
+        headline: article.title,
         description,
         mainEntityOfPage: canonical,
-        author: loaderData.author
-          ? { "@type": "Organization", name: loaderData.author }
-          : { "@type": "Organization", name: "AETHER-TRADE" },
+        datePublished: article.datePublished || undefined,
+        dateModified: article.dateModified || undefined,
+        author: {
+          "@type": "Organization",
+          name: article.author || "AETHER-TRADE",
+          url: SITE_URL,
+          ...(loaderData.sameAs.length ? { sameAs: loaderData.sameAs } : {}),
+        },
         publisher: {
           "@type": "Organization",
           name: "AETHER-TRADE",
           url: SITE_URL,
+          ...(loaderData.sameAs.length ? { sameAs: loaderData.sameAs } : {}),
         },
       },
     ];
 
-    if (loaderData.aeoQuestions.length > 0) {
+    if (article.aeoQuestions.length > 0) {
       graph.push({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        mainEntity: loaderData.aeoQuestions.map(({ question, answer }) => ({
+        mainEntity: article.aeoQuestions.map(({ question, answer }) => ({
           "@type": "Question",
           name: question,
           acceptedAnswer: { "@type": "Answer", text: answer },
@@ -57,6 +68,7 @@ export const Route = createFileRoute("/insights/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "article" },
+        { property: "og:site_name", content: "AETHER-TRADE" },
         { property: "og:url", content: canonical },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
@@ -97,7 +109,7 @@ function renderArticleBlock(block: string, index: number) {
 }
 
 function InsightArticlePage() {
-  const article = Route.useLoaderData();
+  const { article } = Route.useLoaderData();
   const blocks = article.body
     .split(/\n{2,}/)
     .map((block) => block.trim())
@@ -114,9 +126,11 @@ function InsightArticlePage() {
       <header className="mb-10 mt-8 space-y-4">
         {article.category ? <p className="eyebrow">{article.category}</p> : null}
         <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{article.title}</h1>
-        {article.author ? (
-          <p className="text-sm text-muted-foreground">By {article.author}</p>
-        ) : null}
+        <p className="text-sm text-muted-foreground">
+          By {article.author || "AETHER-TRADE"}
+          {article.datePublished ? ` · Published ${new Date(article.datePublished).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
+          {article.dateModified && article.dateModified !== article.datePublished ? ` · Updated ${new Date(article.dateModified).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}` : ""}
+        </p>
       </header>
       {article.geoSummary ? (
         <aside className="mb-8 rounded-lg border border-border bg-card p-5">
