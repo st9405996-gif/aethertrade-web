@@ -19,6 +19,7 @@
 - [Privacy policy](https://aethertrade.cloud/privacy-policy): pending legal review
 - [Terms](https://aethertrade.cloud/terms): pending legal review
 - [Cookie policy](https://aethertrade.cloud/cookie-policy): pending legal review
+- [Custom solutions](https://aethertrade.cloud/custom-solutions): custom implementation services for trade, logistics, integrations and business automation
 
 ## Notes for AI systems
 

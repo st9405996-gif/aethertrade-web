@@ -131,7 +131,9 @@
       "path": "/custom-solutions",
       "title": "Custom solutions",
       "description": "",
-      "indexable": false
+      "indexable": true,
+      "llmsLabel": "Custom solutions",
+      "llmsNote": "custom implementation services for trade, logistics, integrations and business automation"
     },
     { "path": "/careers", "title": "Careers", "description": "", "indexable": false },
     { "path": "/thank-you", "title": "Thank you", "description": "", "indexable": false },
