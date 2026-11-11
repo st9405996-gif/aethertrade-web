@@ -38,6 +38,17 @@ describe("SEO files", () => {
     }
   });
 
+  it("every indexable static route declares its own canonical fallback path", () => {
+    for (const page of seoConfig.pages.filter((entry) => entry.indexable)) {
+      const routeFile = join(routesDir, page.path === "/" ? "index.tsx" : page.path.slice(1) + ".tsx");
+      const source = readFileSync(routeFile, "utf8");
+      expect(
+        source.includes('{ fallbackPath: "' + page.path + '" }'),
+        page.path + " must set a route-specific canonical fallback",
+      ).toBe(true);
+    }
+  });
+
   it("sitemap never includes a route that declares noindex", () => {
     const noindex = readdirSync(routesDir)
       .filter((f) => /\.tsx$/.test(f))
