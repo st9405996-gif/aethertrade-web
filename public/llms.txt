@@ -23,6 +23,7 @@
 - [UAE trade and logistics workflows](https://aethertrade.cloud/uae-logistics-automation): workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the UAE; no local office or customs integration is implied
 - [China-related trade workflows](https://aethertrade.cloud/china-trade-automation): English-language workflow context for international importers, exporters and logistics teams working with China; not a claim of China domestic-market presence
 - [United States trade and logistics workflows](https://aethertrade.cloud/usa-freight-forwarding-automation): workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the United States
+- [Freight forwarding document review workflow](https://aethertrade.cloud/insights/freight-forwarding-document-review-workflow): A practical guide to shipment references, document versions, field comparisons, exception records and human review.
 
 ## Notes for AI systems
 

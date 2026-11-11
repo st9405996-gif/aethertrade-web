@@ -187,6 +187,14 @@
       "indexable": true,
       "llmsLabel": "United States trade and logistics workflows",
       "llmsNote": "workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the United States"
+    },
+    {
+      "path": "/insights/freight-forwarding-document-review-workflow",
+      "title": "Freight Forwarding Document Review: A Practical Workflow",
+      "description": "A practical guide to organizing shipment documents, comparing key fields, tracking revisions and handling exceptions in freight forwarding.",
+      "indexable": true,
+      "llmsLabel": "Freight forwarding document review workflow",
+      "llmsNote": "A practical guide to shipment references, document versions, field comparisons, exception records and human review."
     }
   ]
 }
