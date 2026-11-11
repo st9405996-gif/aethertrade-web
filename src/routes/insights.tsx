@@ -67,9 +67,10 @@ function InsightsPage() {
                   </Link>
                 </h2>
                 <p className="mt-2 flex-1 text-sm text-muted-foreground">
-                  {article.body.length > 220
-                    ? `${article.body.slice(0, 217).trimEnd()}…`
-                    : article.body}
+                  {(() => {
+                    const excerpt = article.body.replace(/^#{1,6}\\s+/gm, "").replace(/\\[([^\\]]+)\\]\\([^)]+\\)/g, "$1").replace(/\\*\\*([^*]+)\\*\\*/g, "$1").replace(/\\*([^*]+)\\*/g, "$1").replace(/^[-*]\\s+|^\\d+\\.\\s+/gm, "").replace(/\\s+/g, " ").trim();
+                    return excerpt.length > 220 ? `${excerpt.slice(0, 217).trimEnd()}…` : excerpt;
+                  })()}
                 </p>
                 <Link
                   to="/insights/$slug"
