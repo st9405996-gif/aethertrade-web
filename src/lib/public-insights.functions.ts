@@ -20,6 +20,8 @@ export interface PublishedInsight {
   geoSummary: string;
   aeoQuestions: AeoQuestion[];
   noindex: boolean;
+  datePublished: string;
+  dateModified: string;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -74,6 +76,8 @@ export function parsePublishedInsight(value: unknown, now = Date.now()): Publish
     geoSummary: asText(fields?.["geoSummary"]).trim().slice(0, 1200),
     aeoQuestions: parseAeoQuestions(fields?.["aeoQuestions"]),
     noindex: row["noindex"],
+    datePublished: asText(fields?.["publishedAt"]),
+    dateModified: asText(row["updated_at"]),
   };
 }
 
@@ -97,7 +101,7 @@ export async function fetchPublishedInsights(
   const url = new URL(`${normalizedBaseUrl}/rest/v1/content_records`);
   url.searchParams.set(
     "select",
-    "slug,title,body,category,publication,scheduled_at,noindex,seo_title,seo_description,fields",
+    "slug,title,body,category,publication,scheduled_at,noindex,seo_title,seo_description,fields,updated_at",
   );
   url.searchParams.set("module", "eq.insights");
   url.searchParams.set(
