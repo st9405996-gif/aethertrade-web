@@ -36,6 +36,7 @@ export const Route = createFileRoute("/faqs")({
         ],
       },
       loaderData?.cmsPage,
+      { fallbackPath: "/faqs" },
     );
   },
   component: FaqsPage,
