@@ -223,7 +223,7 @@ describe("public CMS page reader", () => {
     ).resolves.toMatchObject({ slug: "custom-page", noindex: true });
   });
 
-  it("uses the /pages/:slug canonical for dynamic pages without changing fixed-route defaults", () => {
+  it("leaves canonical ownership to the root route while setting route-specific Open Graph URLs", () => {
     const base = {
       meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
       links: [] as { rel?: string; href?: string }[],
@@ -244,12 +244,19 @@ describe("public CMS page reader", () => {
       ctaDescription: "",
     };
 
-    expect(mergeCmsHead(base, page).links).toEqual([
-      { rel: "canonical", href: "https://aethertrade.cloud/custom-page" },
-    ]);
-    expect(mergeCmsHead(base, page, { fallbackPath: "/pages/custom-page" }).links).toEqual([
-      { rel: "canonical", href: "https://aethertrade.cloud/pages/custom-page" },
-    ]);
+    const fixedRoute = mergeCmsHead(base, page);
+    expect(fixedRoute.links).toEqual([]);
+    expect(fixedRoute.meta).toContainEqual({
+      property: "og:url",
+      content: "https://aethertrade.cloud/custom-page",
+    });
+
+    const dynamicRoute = mergeCmsHead(base, page, { fallbackPath: "/pages/custom-page" });
+    expect(dynamicRoute.links).toEqual([]);
+    expect(dynamicRoute.meta).toContainEqual({
+      property: "og:url",
+      content: "https://aethertrade.cloud/pages/custom-page",
+    });
   });
 
   it("returns not-found data for records hidden by public RLS and rejects service errors", async () => {
