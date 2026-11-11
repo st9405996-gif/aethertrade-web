@@ -22,9 +22,15 @@ for (const page of config.pages.filter((entry) => !entry.indexable)) {
 if (!robots.includes("Sitemap: " + base + "/sitemap.xml")) {
   errors.push("robots.txt must reference the canonical sitemap URL.");
 }
-const oaiSection =
-  robots.match(/^User-agent: OAI-SearchBot\s*$([\\s\\S]*?)(?=^User-agent:|^Sitemap:|$)/m)?.[1] ?? "";
-if (!/^Allow: \/$/m.test(oaiSection)) {
+const robotLines = robots.split(/\r?\n/);
+const oaiStart = robotLines.findIndex((line) => line.trim() === "User-agent: OAI-SearchBot");
+const oaiLines =
+  oaiStart < 0
+    ? []
+    : robotLines
+        .slice(oaiStart + 1)
+        .filter((line, index, lines) => lines.slice(0, index).every((prior) => !/^User-agent:|^Sitemap:/.test(prior)));
+if (!oaiLines.some((line) => line.trim() === "Allow: /")) {
   errors.push("robots.txt must explicitly allow OAI-SearchBot for ChatGPT search discovery.");
 }
 if (!llms.startsWith("# " + config.site.name + "\n")) {
