@@ -15,7 +15,7 @@ export function Logo({ className }: { className?: string }) {
       <svg
         viewBox="0 0 44 44"
         className="size-9 shrink-0"
-        role="img"
+        role="presentation"
         aria-hidden="true"
         fill="none"
       >
