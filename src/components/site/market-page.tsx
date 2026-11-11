@@ -8,7 +8,8 @@ export type MarketWorkflow = {
 };
 
 export type MarketPageContent = {
-  market: string;\n  marketKey: string;
+  market: string;
+  marketKey: string;
   eyebrow: string;
   title: string;
   description: string;
