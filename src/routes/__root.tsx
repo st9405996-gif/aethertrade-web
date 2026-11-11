@@ -245,6 +245,26 @@ function RootComponent() {
   }, [pathname]);
 
   useEffect(() => {
+    const canonical = SITE_URL + (pathname === "/" ? "/" : pathname);
+    let canonicalLink = document.head.querySelector(
+      'link[rel="canonical"]',
+    ) as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.rel = "canonical";
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.href = canonical;
+    let canonicalMeta = document.head.querySelector(
+      'meta[property="og:url"]',
+    ) as HTMLMetaElement | null;
+    if (!canonicalMeta) {
+      canonicalMeta = document.createElement("meta");
+      canonicalMeta.setAttribute("property", "og:url");
+      document.head.appendChild(canonicalMeta);
+    }
+    canonicalMeta.content = canonical;
+
     if (!cmsPage || !cmsSlug || !hasCmsContent) return;
     const title = cmsPage.seoTitle || cmsPage.title + " — AETHER-TRADE";
     document.title = title;
@@ -263,20 +283,7 @@ function RootComponent() {
       }
       element.content = content;
     };
-    const canonical = /^https:\/\/[A-Za-z0-9.-]+(?:\/.*)?$/.test(cmsPage.canonical)
-      ? cmsPage.canonical
-      : "https://aethertrade.cloud" + (pathname === "/" ? "/" : pathname);
-    let canonicalLink = document.head.querySelector(
-      'link[rel="canonical"]',
-    ) as HTMLLinkElement | null;
-    if (!canonicalLink) {
-      canonicalLink = document.createElement("link");
-      canonicalLink.rel = "canonical";
-      document.head.appendChild(canonicalLink);
-    }
-    canonicalLink.href = canonical;
     updateMeta("property", "og:title", title);
-    updateMeta("property", "og:url", canonical);
     if (cmsPage.seoDescription) {
       updateMeta("name", "description", cmsPage.seoDescription);
       updateMeta("property", "og:description", cmsPage.seoDescription);
