@@ -259,7 +259,7 @@ export function mergeCmsHead<T extends CmsHeadBase>(
         canonical = candidate.toString();
       }
     } catch {
-      // Keep the page's own canonical URL when the CMS value is invalid.
+      // Keep the route-derived canonical URL when the CMS value is invalid.
     }
   }
 
