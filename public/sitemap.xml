@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated from content/seo.json. Do not edit by hand. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://aethertrade.cloud/</loc></url>
   <url><loc>https://aethertrade.cloud/platform</loc></url>
@@ -7,6 +8,8 @@
   <url><loc>https://aethertrade.cloud/industries</loc></url>
   <url><loc>https://aethertrade.cloud/services</loc></url>
   <url><loc>https://aethertrade.cloud/automations</loc></url>
+  <url><loc>https://aethertrade.cloud/document-intake</loc></url>
+  <url><loc>https://aethertrade.cloud/shipment-follow-up</loc></url>
   <url><loc>https://aethertrade.cloud/insights</loc></url>
   <url><loc>https://aethertrade.cloud/partnerships</loc></url>
   <url><loc>https://aethertrade.cloud/faqs</loc></url>
