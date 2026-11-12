@@ -30,7 +30,7 @@ export const Route = createFileRoute("/automations")({
         "Catalogue of trade-operations automations — inquiry triage, shipment follow-up, document intake, reconciliation, reporting and custom AI agents — each with its availability status.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/automations" },
+      { fallbackPath: "/automations", title: "Freight & Trade Workflow Automation Catalogue | AETHER-TRADE", description: "Explore available inquiry triage, shipment follow-up, document intake and invoice reconciliation workflows, plus clearly labelled custom and planned capabilities." },
     ),
   component: AutomationsPage,
 });
