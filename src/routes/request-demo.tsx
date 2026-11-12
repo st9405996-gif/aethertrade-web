@@ -32,7 +32,7 @@ export const Route = createFileRoute("/request-demo")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/request-demo" },
+      { fallbackPath: "/request-demo", title: "Request a Workflow Demo | AETHER-TRADE", description: "Request a workflow demo for freight document intelligence and shipment operations automation. Tell us about your current process and the outcome you want to improve." },
     ),
   component: RequestDemoPage,
 });
