@@ -13,7 +13,7 @@ export const Route = createFileRoute("/terms")({
         "Terms governing access to and use of the AETHER-TRADE website and inquiry forms.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/terms" },
+      { fallbackPath: "/terms", title: "Terms of Use | AETHER-TRADE", description: "Read the terms governing use of the AETHER-TRADE website and submission of business inquiries." },
     ),
   component: TermsPage,
 });
