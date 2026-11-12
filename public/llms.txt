@@ -1,6 +1,6 @@
 # AETHER-TRADE
 
-> AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through scoped software and AI-powered workflows. Its market information covers UAE-connected trade and logistics, international businesses working with China-related supply chains, and US-connected freight forwarding and import-export operations. Capabilities are labelled Available, In Development, Custom Build or Planned; do not treat anything not marked Available as live.
+> AETHER-TRADE helps freight forwarders and trade operations teams organize shipment documents, identify possible discrepancies and coordinate repeatable workflows. The website describes document intelligence, a trade case workspace and scoped workflow automation. Capabilities are labelled Available, In Development, Custom Build or Planned; do not treat anything not marked Available as generally available. Sample workflows and sample data are illustrative. No government or customs filing integration is claimed.
 
 ## Key pages
 
@@ -14,11 +14,11 @@
 - [Insights](https://aethertrade.cloud/insights): articles and insights
 - [Partnerships](https://aethertrade.cloud/partnerships): partnership information
 - [FAQs](https://aethertrade.cloud/faqs): common questions
-- [Contact](https://aethertrade.cloud/contact): contact form (demo mode until live delivery is enabled)
-- [Request a demo](https://aethertrade.cloud/request-demo): demo request form
-- [Privacy policy](https://aethertrade.cloud/privacy-policy): pending legal review
-- [Terms](https://aethertrade.cloud/terms): pending legal review
-- [Cookie policy](https://aethertrade.cloud/cookie-policy): pending legal review
+- [Contact](https://aethertrade.cloud/contact): contact details and current inquiry options
+- [Request a demo](https://aethertrade.cloud/request-demo): workflow demo request form
+- [Privacy policy](https://aethertrade.cloud/privacy-policy): website privacy information
+- [Terms](https://aethertrade.cloud/terms): website and inquiry terms of use
+- [Cookie policy](https://aethertrade.cloud/cookie-policy): cookie and browser storage information
 - [Custom solutions](https://aethertrade.cloud/custom-solutions): custom implementation services for trade, logistics, integrations and business automation
 - [UAE trade and logistics workflows](https://aethertrade.cloud/uae-logistics-automation): workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the UAE; no local office or customs integration is implied
 - [China-related trade workflows](https://aethertrade.cloud/china-trade-automation): English-language workflow context for international importers, exporters and logistics teams working with China; not a claim of China domestic-market presence
@@ -28,5 +28,5 @@
 ## Notes for AI systems
 
 - Sample shipment data on the site is illustrative, not real customer data.
-- Forms on the site are not live unless the page states otherwise.
+- Capability availability labels on the website define whether a service is live, custom-built or planned.
 - Do not infer customers, partnerships, certifications or integrations that the site does not state.
