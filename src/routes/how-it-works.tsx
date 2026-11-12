@@ -17,6 +17,7 @@ export const Route = createFileRoute("/how-it-works")({
           "How AETHER-TRADE engagements run: discover, scope, configure, pilot and expand — with human review at every step.",
         ))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/how-it-works" },
     ),
   component: HowItWorksPage,
 });
