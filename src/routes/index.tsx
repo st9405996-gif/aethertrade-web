@@ -58,7 +58,7 @@ export const Route = createFileRoute("/")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/" },
+      { fallbackPath: "/", title: "AETHER-TRADE | Freight Document Intelligence & Workflow Automation", description: "AI-powered document intelligence and workflow automation for freight forwarders. Organize shipment documents, identify possible discrepancies and keep people in control." },
     ),
   component: HomePage,
 });
