@@ -104,12 +104,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: loaderData?.defaultTitle || "AETHER-TRADE — Trade Automation Engineering" },
+      { title: loaderData?.defaultTitle || "AETHER-TRADE | Freight Document Intelligence & Workflow Automation" },
       {
         name: "description",
         content:
           loaderData?.defaultDescription ||
-          "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
+          "AETHER-TRADE provides document intelligence and workflow automation for freight forwarders and trade operations teams, with human review for consequential decisions.",
       },
       { name: "author", content: loaderData?.siteName || "AETHER-TRADE" },
       { property: "og:title", content: loaderData?.defaultTitle || "AETHER-TRADE" },
@@ -117,7 +117,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         property: "og:description",
         content:
           loaderData?.defaultDescription ||
-          "Custom document intelligence and workflow automation for global trade.",
+          "Document intelligence and workflow automation for freight forwarders and trade operations teams.",
       },
       ...(loaderData?.defaultOgImage
         ? [
