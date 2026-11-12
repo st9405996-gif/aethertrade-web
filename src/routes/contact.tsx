@@ -26,7 +26,7 @@ export const Route = createFileRoute("/contact")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/contact" },
+      { fallbackPath: "/contact", title: "Contact AETHER-TRADE | Freight Workflow Automation", description: "Contact AETHER-TRADE about freight document intelligence, trade operations automation and a focused workflow assessment." },
     ),
   component: ContactPage,
 });
