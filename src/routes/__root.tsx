@@ -96,10 +96,6 @@ const GOOGLE_ANALYTICS_ID = "G-JY6M0YJY1S";
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: () => getGlobalSeoSettings(),
   head: ({ loaderData, matches }) => {
-    const currentPath = matches[matches.length - 1]?.pathname || "/";
-    const canonicalPath =
-      currentPath === "/" ? "/" : currentPath.replace(/\/+$/, "");
-    const canonicalUrl = SITE_URL + canonicalPath;
     return {
     meta: [
       { charSet: "utf-8" },
@@ -181,7 +177,6 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
         href: appCss,
       },
       { rel: "icon", href: "/favicon.svg?v=20261104", type: "image/svg+xml" },
-      { rel: "canonical", href: canonicalUrl },
     ],
     };
   },
