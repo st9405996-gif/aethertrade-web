@@ -44,9 +44,9 @@ function ServicesPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Services",
-          title: "Hands-On Help to Modernize Trade Operations.",
+          title: "Custom Projects and Consulting for Freight Automation.",
           description:
-            "Alongside the platform, we work directly with your team to assess, build and pilot the workflows that matter most.",
+            "Start with a scoped operations assessment, then pilot one document or shipment workflow around your existing systems. Bespoke integrations and AI agents are scoped as custom builds.",
         })}
       >
         <Button variant="outline" asChild>
@@ -66,7 +66,7 @@ function ServicesPage() {
       <CmsPageSections page={cmsPage} />
       <CtaBand
         {...cmsCta(cmsPage, {
-          title: "Start with an operations assessment.",
+          title: "Start with a focused operations assessment.",
           description: "A clear picture of where automation will — and won't — help.",
         })}
       />
