@@ -59,6 +59,7 @@ const content: MarketPageContent = {
 
 export const Route = createFileRoute("/usa-freight-forwarding-automation")({
   head: () => ({
+    links: [{ rel: "canonical", href: "https://aethertrade.cloud/usa-freight-forwarding-automation" }],
     meta: [
       { title: "US Freight Forwarding & Import-Export Workflow Automation | AETHER-TRADE" },
       {
