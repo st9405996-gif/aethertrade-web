@@ -58,6 +58,7 @@ export const Route = createFileRoute("/")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/" },
     ),
   component: HomePage,
 });
