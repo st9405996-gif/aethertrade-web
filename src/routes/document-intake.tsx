@@ -40,10 +40,13 @@ const samples = {
 };
 
 export const Route = createFileRoute("/document-intake")({
-  head: () => meta(
-    "Trade Document Intake & Structuring Demo",
-    "Explore an illustrative AETHER-TRADE document intake workflow: extract trade document fields, review exceptions and organize shipment data."
-  ),
+  head: () => ({
+    ...meta(
+      "Trade Document Intake & Structuring Demo",
+      "Explore an illustrative AETHER-TRADE document intake workflow: extract trade document fields, review exceptions and organize shipment data."
+    ),
+    links: [{ rel: "canonical", href: "https://aethertrade.cloud/document-intake" }],
+  }),
   component: DocumentIntakePage,
 });
 
