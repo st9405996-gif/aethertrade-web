@@ -57,7 +57,8 @@ export function parsePublishedInsight(value: unknown, now = Date.now()): Publish
   if (
     !isValidCmsPageSlug(slug) ||
     !title.trim() ||
-    !body.trim() ||
+    // Do not publish title-only teasers or placeholder introductions as complete articles.
+    body.trim().length < 500 ||
     !isPublicAt(row["publication"], row["scheduled_at"], now) ||
     typeof row["noindex"] !== "boolean"
   ) {
