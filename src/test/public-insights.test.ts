@@ -5,7 +5,7 @@ const now = Date.parse("2026-11-06T12:00:00.000Z");
 const insightRow = {
   slug: "trade-operations",
   title: "Trade operations",
-  body: "A focused overview.",
+  body: "A focused overview of trade operations, document handling and shipment workflow review. ".repeat(8),
   category: "Operations",
   publication: "Published",
   scheduled_at: null,
@@ -48,6 +48,7 @@ describe("published insights public reader", () => {
     ["missing noindex evidence", { noindex: undefined }],
     ["invalid slug", { slug: "Trade Operations" }],
     ["missing body", { body: "   " }],
+    ["placeholder body", { body: "A short introduction with no substantive article content." }],
   ])("excludes %s records", (_label, overrides) => {
     expect(parsePublishedInsight({ ...insightRow, ...overrides }, now)).toBeNull();
   });

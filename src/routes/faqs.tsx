@@ -36,6 +36,7 @@ export const Route = createFileRoute("/faqs")({
         ],
       },
       loaderData?.cmsPage,
+      { fallbackPath: "/faqs", title: "AETHER-TRADE FAQs | Freight Document Automation", description: "Answers about AETHER-TRADE's trade document intelligence, workflow automation, implementation approach and capability availability." },
     );
   },
   component: FaqsPage,

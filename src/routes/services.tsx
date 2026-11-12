@@ -8,6 +8,34 @@ import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
 import { parseAvailabilityStatus } from "@/lib/availability-status";
 
+const SERVICE_DELIVERABLES: Record<string, string[]> = {
+  "operations-assessment": [
+    "Current-state workflow map and key hand-offs",
+    "Prioritized automation opportunities and process risks",
+    "One scoped pilot recommendation with measurable acceptance criteria",
+  ],
+  "workflow-automation-build": [
+    "Agreed workflow specification and exception rules",
+    "Configured automation with representative test cases",
+    "Human review points and handover notes",
+  ],
+  "custom-ai-agents": [
+    "Defined task boundaries, allowed actions and escalation rules",
+    "Test scenarios for normal, uncertain and failed inputs",
+    "Human approval points for consequential actions",
+  ],
+  "systems-integration": [
+    "Integration feasibility and access requirements",
+    "Field mapping and error-handling specification",
+    "Tested connection within the agreed project scope",
+  ],
+  "pilot-ongoing-support": [
+    "Pilot success measures and agreed review cadence",
+    "Issue triage and prioritized improvement list",
+    "Handover notes and agreed post-pilot support scope",
+  ],
+};
+
 export const Route = createFileRoute("/services")({
   loader: async () => ({
     cmsPage: await getPublishedCmsPage({ data: { slug: "services" } }),
@@ -20,6 +48,7 @@ export const Route = createFileRoute("/services")({
         "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/services", title: "Custom Freight Automation Services | AETHER-TRADE", description: "Operations assessments, document workflow automation, custom AI agents, systems integration and pilot support for trade operations." },
     ),
   component: ServicesPage,
 });
@@ -29,14 +58,17 @@ function ServicesPage() {
     const status =
       parseAvailabilityStatus(item.availability) ??
       (item.availability.trim() ? undefined : "Custom Build");
+    const configuredDeliverables = (item.fields["deliverables"] || "")
+      .split("\n")
+      .map((value) => value.trim())
+      .filter(Boolean);
     return {
       title: item.title,
       body: item.body,
       ...(status ? { status } : {}),
-      points: (item.fields["deliverables"] || "")
-        .split("\n")
-        .map((x) => x.trim())
-        .filter(Boolean),
+      points: configuredDeliverables.length
+        ? configuredDeliverables
+        : SERVICE_DELIVERABLES[item.slug] || [],
     };
   });
   return (
@@ -44,9 +76,9 @@ function ServicesPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Services",
-          title: "Hands-On Help to Modernize Trade Operations.",
+          title: "Custom Projects and Consulting for Freight Automation.",
           description:
-            "Alongside the platform, we work directly with your team to assess, build and pilot the workflows that matter most.",
+            "Start with a scoped operations assessment, then pilot one document or shipment workflow around your existing systems. Bespoke integrations and AI agents are scoped as custom builds.",
         })}
       >
         <Button variant="outline" asChild>
@@ -54,7 +86,7 @@ function ServicesPage() {
         </Button>
       </PageHero>
       <section className="container-page section-pad">
-        <SectionHeader eyebrow="What we offer" title="Services" />
+        <SectionHeader eyebrow="What we offer" title="Services and typical deliverables" description="Each engagement is scoped around one workflow, the systems involved and the review controls your team needs." />
         <div className="mt-12">
           {cards.length ? (
             <CardGrid items={cards} />
@@ -62,11 +94,15 @@ function ServicesPage() {
             <EmptyContentState>No published services are available.</EmptyContentState>
           )}
         </div>
+        <p className="mt-8 max-w-3xl text-sm leading-6 text-muted-foreground">
+          Delivery timelines and project fees are confirmed after reviewing workflow complexity,
+          data access, integration requirements and the agreed pilot scope.
+        </p>
       </section>
       <CmsPageSections page={cmsPage} />
       <CtaBand
         {...cmsCta(cmsPage, {
-          title: "Start with an operations assessment.",
+          title: "Start with a focused operations assessment.",
           description: "A clear picture of where automation will — and won't — help.",
         })}
       />

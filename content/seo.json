@@ -2,14 +2,14 @@
   "site": {
     "name": "AETHER-TRADE",
     "url": "https://aethertrade.cloud",
-    "description": "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
-    "llmsSummary": "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through scoped software and AI-powered workflows. Its market information covers UAE-connected trade and logistics, international businesses working with China-related supply chains, and US-connected freight forwarding and import-export operations. Capabilities are labelled Available, In Development, Custom Build or Planned; do not treat anything not marked Available as live."
+    "description": "AETHER-TRADE provides document intelligence and workflow automation for freight forwarders and trade operations teams, with human review for consequential decisions.",
+    "llmsSummary": "AETHER-TRADE helps freight forwarders and trade operations teams organize shipment documents, identify possible discrepancies and coordinate repeatable workflows. The website describes document intelligence, a trade case workspace and scoped workflow automation. Capabilities are labelled Available, In Development, Custom Build or Planned; do not treat anything not marked Available as generally available. Sample workflows and sample data are illustrative. No government or customs filing integration is claimed."
   },
   "pages": [
     {
       "path": "/",
       "title": "AETHER-TRADE",
-      "description": "",
+      "description": "AI-powered document intelligence and workflow automation for freight forwarders. Organize shipment documents, identify possible discrepancies and keep people in control.",
       "indexable": true,
       "llmsLabel": "Home",
       "llmsNote": "overview of the platform and its approach"
@@ -17,7 +17,7 @@
     {
       "path": "/platform",
       "title": "Platform",
-      "description": "",
+      "description": "Explore AETHER-TRADE's trade case workspace and document intelligence capabilities, plus custom workflow modules scoped around existing systems.",
       "indexable": true,
       "llmsLabel": "Platform",
       "llmsNote": "platform capabilities and their status"
@@ -25,7 +25,7 @@
     {
       "path": "/how-it-works",
       "title": "How it works",
-      "description": "",
+      "description": "See how AETHER-TRADE assesses a trade workflow, agrees scope, builds and tests a pilot, and keeps human review in control.",
       "indexable": true,
       "llmsLabel": "How it works",
       "llmsNote": "the operating workflow"
@@ -33,7 +33,7 @@
     {
       "path": "/solutions",
       "title": "Solutions",
-      "description": "",
+      "description": "Workflow automation and document intelligence for freight forwarders, importers, exporters, logistics operators and trading companies.",
       "indexable": true,
       "llmsLabel": "Solutions",
       "llmsNote": "solutions by business need"
@@ -41,7 +41,7 @@
     {
       "path": "/industries",
       "title": "Industries",
-      "description": "",
+      "description": "Explore document and workflow challenges across textiles, agriculture, machinery, consumer goods and other trade-related sectors.",
       "indexable": true,
       "llmsLabel": "Industries",
       "llmsNote": "sectors served"
@@ -49,7 +49,7 @@
     {
       "path": "/services",
       "title": "Services",
-      "description": "",
+      "description": "Operations assessments, document workflow automation, custom AI agents, systems integration and pilot support for trade operations.",
       "indexable": true,
       "llmsLabel": "Services",
       "llmsNote": "service offerings"
@@ -57,7 +57,7 @@
     {
       "path": "/automations",
       "title": "Automations",
-      "description": "",
+      "description": "Explore example workflows for inquiry triage, shipment follow-up, document intake and invoice-to-packing-list reconciliation, with clear availability labels.",
       "indexable": true,
       "llmsLabel": "Automations",
       "llmsNote": "automation catalogue with status labels"
@@ -65,7 +65,7 @@
     {
       "path": "/insights",
       "title": "Insights",
-      "description": "",
+      "description": "Practical guidance on freight forwarding document review, shipment case management, trade documents and human-reviewed automation.",
       "indexable": true,
       "llmsLabel": "Insights",
       "llmsNote": "articles and insights"
@@ -73,7 +73,7 @@
     {
       "path": "/partnerships",
       "title": "Partnerships",
-      "description": "",
+      "description": "Explore implementation, technology and industry partnership opportunities with AETHER-TRADE.",
       "indexable": true,
       "llmsLabel": "Partnerships",
       "llmsNote": "partnership information"
@@ -81,7 +81,7 @@
     {
       "path": "/faqs",
       "title": "FAQs",
-      "description": "",
+      "description": "Answers about AETHER-TRADE's trade document intelligence, workflow automation, implementation approach and capability availability.",
       "indexable": true,
       "llmsLabel": "FAQs",
       "llmsNote": "common questions"
@@ -89,42 +89,42 @@
     {
       "path": "/contact",
       "title": "Contact",
-      "description": "",
+      "description": "Contact AETHER-TRADE about freight document intelligence, trade operations automation and a focused workflow assessment.",
       "indexable": true,
       "llmsLabel": "Contact",
-      "llmsNote": "contact form (demo mode until live delivery is enabled)"
+      "llmsNote": "contact details and current inquiry options"
     },
     {
       "path": "/request-demo",
       "title": "Request a demo",
-      "description": "",
+      "description": "Request a workflow demo for freight document intelligence and shipment operations automation from AETHER-TRADE.",
       "indexable": true,
       "llmsLabel": "Request a demo",
-      "llmsNote": "demo request form"
+      "llmsNote": "workflow demo request form"
     },
     {
       "path": "/privacy-policy",
       "title": "Privacy policy",
-      "description": "",
+      "description": "Learn what information AETHER-TRADE collects through its website, how inquiries are handled and how privacy choices are respected.",
       "indexable": true,
       "llmsLabel": "Privacy policy",
-      "llmsNote": "pending legal review"
+      "llmsNote": "website privacy information"
     },
     {
       "path": "/terms",
       "title": "Terms",
-      "description": "",
+      "description": "Read the terms governing use of the AETHER-TRADE website and submission of business inquiries.",
       "indexable": true,
       "llmsLabel": "Terms",
-      "llmsNote": "pending legal review"
+      "llmsNote": "website and inquiry terms of use"
     },
     {
       "path": "/cookie-policy",
       "title": "Cookie policy",
-      "description": "",
+      "description": "Learn how AETHER-TRADE uses essential browser storage, consent preferences and website analytics.",
       "indexable": true,
       "llmsLabel": "Cookie policy",
-      "llmsNote": "pending legal review"
+      "llmsNote": "cookie and browser storage information"
     },
     {
       "path": "/about",
@@ -135,7 +135,7 @@
     {
       "path": "/custom-solutions",
       "title": "Custom solutions",
-      "description": "",
+      "description": "Custom workflow automation, document intelligence and system integration projects scoped around freight and trade operations.",
       "indexable": true,
       "llmsLabel": "Custom solutions",
       "llmsNote": "custom implementation services for trade, logistics, integrations and business automation"
@@ -167,7 +167,7 @@
     {
       "path": "/uae-logistics-automation",
       "title": "UAE Freight Forwarding & Trade Workflow Automation",
-      "description": "Explore shipment document follow-ups, import-export hand-offs and logistics workflow automation for UAE-connected freight forwarders and trade teams.",
+      "description": "Explore shipment document coordination and logistics workflow automation for freight forwarders and trade teams connected to the UAE.",
       "indexable": true,
       "llmsLabel": "UAE trade and logistics workflows",
       "llmsNote": "workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the UAE; no local office or customs integration is implied"
@@ -183,7 +183,7 @@
     {
       "path": "/usa-freight-forwarding-automation",
       "title": "US Freight Forwarding & Import-Export Workflow Automation",
-      "description": "Explore shipment document coordination, inbox automation and exception workflows for US freight forwarders, importers and exporters.",
+      "description": "Explore shipment document coordination, inbox automation and exception workflows for US-connected freight forwarders and trade teams.",
       "indexable": true,
       "llmsLabel": "United States trade and logistics workflows",
       "llmsNote": "workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the United States"

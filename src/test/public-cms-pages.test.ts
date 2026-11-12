@@ -223,7 +223,23 @@ describe("public CMS page reader", () => {
     ).resolves.toMatchObject({ slug: "custom-page", noindex: true });
   });
 
-  it("leaves canonical ownership to the root route while setting route-specific Open Graph URLs", () => {
+  it("emits a self-referencing canonical when CMS data is absent", () => {
+    const base = {
+      meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
+      links: [] as { rel?: string; href?: string }[],
+    };
+
+    const result = mergeCmsHead(base, null, { fallbackPath: "/platform" });
+    expect(result.links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/platform" },
+    ]);
+    expect(result.meta).toContainEqual({
+      property: "og:url",
+      content: "https://aethertrade.cloud/platform",
+    });
+  });
+
+  it("normalizes approved CMS canonical hosts and rejects cross-route overrides", () => {
     const base = {
       meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
       links: [] as { rel?: string; href?: string }[],
@@ -234,7 +250,7 @@ describe("public CMS page reader", () => {
       body: "Public page content",
       seoTitle: "",
       seoDescription: "",
-      canonical: "",
+      canonical: "https://www.aethertrade.cloud/custom-page",
       noindex: false,
       sections: [],
       heroEyebrow: "",
@@ -244,19 +260,25 @@ describe("public CMS page reader", () => {
       ctaDescription: "",
     };
 
-    const fixedRoute = mergeCmsHead(base, page);
-    expect(fixedRoute.links).toEqual([]);
-    expect(fixedRoute.meta).toContainEqual({
-      property: "og:url",
-      content: "https://aethertrade.cloud/custom-page",
-    });
+    expect(mergeCmsHead(base, page).links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/custom-page" },
+    ]);
 
-    const dynamicRoute = mergeCmsHead(base, page, { fallbackPath: "/pages/custom-page" });
-    expect(dynamicRoute.links).toEqual([]);
-    expect(dynamicRoute.meta).toContainEqual({
-      property: "og:url",
-      content: "https://aethertrade.cloud/pages/custom-page",
-    });
+    const invalid = mergeCmsHead(base, { ...page, canonical: "https://aethertrade.cloud/" });
+    expect(invalid.links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/custom-page" },
+    ]);
+  });
+
+  it("uses the supplied route path for nested CMS pages", () => {
+    const base = {
+      meta: [] as { title?: string; name?: string; property?: string; content?: string }[],
+      links: [] as { rel?: string; href?: string }[],
+    };
+    const page = { ...pageRecord(), slug: "custom-page" } as PublishedCmsPage;
+    expect(mergeCmsHead(base, page, { fallbackPath: "/pages/custom-page" }).links).toEqual([
+      { rel: "canonical", href: "https://aethertrade.cloud/pages/custom-page" },
+    ]);
   });
 
   it("returns not-found data for records hidden by public RLS and rejects service errors", async () => {

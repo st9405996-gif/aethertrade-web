@@ -26,6 +26,7 @@ export const Route = createFileRoute("/contact")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/contact", title: "Contact AETHER-TRADE | Freight Workflow Automation", description: "Contact AETHER-TRADE about freight document intelligence, trade operations automation and a focused workflow assessment." },
     ),
   component: ContactPage,
 });
@@ -37,9 +38,9 @@ function ContactPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Contact",
-          title: "Talk to AETHER-TRADE.",
+          title: "Start a Focused Workflow Conversation.",
           description:
-            "Trade operations, automation and custom solutions — start a focused conversation.",
+            "Tell us about your trade operations, document review process or workflow challenge. We'll use that context to understand whether a focused assessment or pilot is appropriate.",
         })}
       />
       <CmsPageSections page={cmsPage} />

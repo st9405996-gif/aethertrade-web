@@ -18,6 +18,7 @@ export const Route = createFileRoute("/industries")({
         "Trade operations support across textiles, agriculture, machinery, consumer goods, chemicals and electronics.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/industries", title: "Trade Workflow Automation by Industry | AETHER-TRADE", description: "Explore document and workflow challenges across textiles, agriculture, machinery, consumer goods and other trade-related sectors." },
     ),
   component: IndustriesPage,
 });

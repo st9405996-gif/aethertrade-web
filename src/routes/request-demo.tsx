@@ -16,11 +16,11 @@ export const Route = createFileRoute("/request-demo")({
     mergeCmsHead(
       (() => ({
         meta: [
-          { title: "Book an Operations Audit — AETHER-TRADE" },
+          { title: "Request a Workflow Demo — AETHER-TRADE" },
           {
             name: "description",
             content:
-              "Book an operations audit of AETHER-TRADE. No account required — tell us about your trade operations and what you want to improve.",
+              "Request a workflow demo for freight document intelligence and shipment operations automation. Tell us about your current process and the outcome you want to improve.",
           },
           { property: "og:title", content: "Book an Operations Audit — AETHER-TRADE" },
           {
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/request-demo")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/request-demo", title: "Request a Workflow Demo | AETHER-TRADE", description: "Request a workflow demo for freight document intelligence and shipment operations automation. Tell us about your current process and the outcome you want to improve." },
     ),
   component: RequestDemoPage,
 });
@@ -43,9 +44,9 @@ function RequestDemoPage() {
     <>
       <PageHero
         {...cmsHero(cmsPage, {
-          eyebrow: "Book an operations audit",
-          title: "AETHER-TRADE for your operations.",
-          description: "Tell us about your business and the workflow you want to improve. No account required.",
+          eyebrow: "Request a workflow demo",
+          title: "See a workflow built around your trade operations.",
+          description: "Tell us about your business, the documents your team reviews and the workflow you want to improve.",
         })}
       />
       <CmsPageSections page={cmsPage} />

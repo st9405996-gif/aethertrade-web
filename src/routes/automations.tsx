@@ -30,6 +30,7 @@ export const Route = createFileRoute("/automations")({
         "Catalogue of trade-operations automations — inquiry triage, shipment follow-up, document intake, reconciliation, reporting and custom AI agents — each with its availability status.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/automations", title: "Freight & Trade Workflow Automation Catalogue | AETHER-TRADE", description: "Explore available inquiry triage, shipment follow-up, document intake and invoice reconciliation workflows, plus clearly labelled custom and planned capabilities." },
     ),
   component: AutomationsPage,
 });
@@ -57,9 +58,9 @@ function AutomationsPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Automation catalogue",
-          title: "Custom Automation for Real Trade Workflows.",
+          title: "Example Workflows We Can Automate for You.",
           description:
-            "Explore example workflows. We adapt architecture, integrations and approval controls to your business during an operations audit.",
+            "Explore the workflows currently available, plus custom and planned capabilities. Integrations and approval controls are confirmed during scoping.",
         })}
       />
       <section className="container-page section-pad">
@@ -117,7 +118,7 @@ function AutomationsPage() {
                   )}
                   {item.integrations.length > 0 && (
                     <div>
-                      <dt className="font-medium">Integrations</dt>
+                      <dt className="font-medium">Potential integrations</dt>
                       <dd className="text-muted-foreground">{item.integrations.join(", ")}</dd>
                     </div>
                   )}
@@ -125,7 +126,7 @@ function AutomationsPage() {
                 <div className="mt-auto pt-5">
                   <Button size="sm" variant="outline" asChild>
                     <Link to="/request-demo" search={{ automation: item.slug }}>
-                      Book an Operations Audit
+                      Request a Workflow Demo
                     </Link>
                   </Button>
                 </div>
@@ -156,7 +157,7 @@ function AutomationsPage() {
                     ) : null}
                     {item.integrations.length ? (
                       <div>
-                        <dt className="font-medium">Integrations</dt>
+                        <dt className="font-medium">Potential integrations</dt>
                         <dd className="text-muted-foreground">{item.integrations.join(", ")}</dd>
                       </div>
                     ) : null}
@@ -164,7 +165,7 @@ function AutomationsPage() {
                   <DialogFooter>
                     <Button asChild>
                       <Link to="/request-demo" search={{ automation: item.slug }}>
-                        Book an Operations Audit
+                        Request a Workflow Demo
                       </Link>
                     </Button>
                   </DialogFooter>

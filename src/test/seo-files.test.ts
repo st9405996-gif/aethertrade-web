@@ -77,6 +77,24 @@ describe("SEO files", () => {
     }
   });
 
+  it("every indexable page has server-rendered canonical metadata", () => {
+    for (const page of seoConfig.pages.filter((entry) => entry.indexable)) {
+      if (page.path.startsWith("/insights/")) {
+        const articleRoute = readFileSync(join(routesDir, "insights.$slug.tsx"), "utf8");
+        expect(articleRoute).toContain("const canonical = `${SITE_URL}/insights/${encodeURIComponent(article.slug)}`");
+        continue;
+      }
+
+      const routeFile = page.path === "/" ? "index.tsx" : page.path.slice(1) + ".tsx";
+      const source = readFileSync(join(routesDir, routeFile), "utf8");
+      const hasFallback = source.includes(`fallbackPath: "${page.path}"`);
+      const hasExplicitCanonical = source.includes(
+        `href: "https://aethertrade.cloud${page.path}"`,
+      );
+      expect(hasFallback || hasExplicitCanonical, `missing canonical for ${page.path}`).toBe(true);
+    }
+  });
+
   it("robots.txt points to the sitemap and blocks non-public paths", () => {
     expect(robots).toContain("Sitemap: https://aethertrade.cloud/sitemap.xml");
     for (const path of ["/admin", "/auth", "/reset-password", "/thank-you", "/api/"]) {

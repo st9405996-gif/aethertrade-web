@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "node scripts/build-seo.mjs && vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "seo": "node scripts/build-seo.mjs",
     "seo:check": "node scripts/check-seo.mjs",
-    "build:site": "node scripts/build-seo.mjs && vite build"
+    "build:site": "npm run build"
   },
   "overrides": {
     "rolldown": "1.2.1",

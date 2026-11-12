@@ -59,6 +59,7 @@ const content: MarketPageContent = {
 
 export const Route = createFileRoute("/uae-logistics-automation")({
   head: () => ({
+    links: [{ rel: "canonical", href: "https://aethertrade.cloud/uae-logistics-automation" }],
     meta: [
       { title: "UAE Freight Forwarding & Trade Workflow Automation | AETHER-TRADE" },
       {

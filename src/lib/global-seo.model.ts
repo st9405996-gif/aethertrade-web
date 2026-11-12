@@ -16,16 +16,16 @@ export interface GlobalSeoSettings {
 export const DEFAULT_GLOBAL_SEO: GlobalSeoSettings = {
   siteName: "AETHER-TRADE",
   siteUrl: "https://aethertrade.cloud",
-  defaultTitle: "AETHER-TRADE — Trade Automation Engineering",
+  defaultTitle: "AETHER-TRADE | Freight Document Intelligence & Workflow Automation",
   defaultDescription:
-    "AETHER-TRADE engineers custom document intelligence and end-to-end workflow automation for importers, exporters and logistics enterprises.",
+    "AETHER-TRADE provides document intelligence and workflow automation for freight forwarders and trade operations teams, with human review for consequential decisions.",
   defaultOgImage: "",
   googleVerification: "",
   bingVerification: "",
   organizationName: "AETHER-TRADE",
   organizationUrl: "https://aethertrade.cloud",
   organizationDescription:
-    "AETHER-TRADE helps importers, exporters, freight forwarders and logistics businesses organize trade operations through intelligent software and AI-powered workflows.",
+    "AETHER-TRADE helps freight forwarders and trade operations teams organize shipment documents, identify possible discrepancies and coordinate repeatable workflows with human oversight.",
   organizationLogo: "",
   sameAs: [],
 };
