@@ -15,6 +15,7 @@ export const Route = createFileRoute("/privacy-policy")({
         "What information AETHER-TRADE collects through its website forms and analytics, how it is used and how to contact us.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/privacy-policy" },
     ),
   component: PrivacyPage,
 });
