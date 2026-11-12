@@ -239,7 +239,7 @@ const CANONICAL_SITE_ORIGIN = "https://aethertrade.cloud";
 export function mergeCmsHead<T extends CmsHeadBase>(
   base: T,
   page?: PublishedCmsPage | null,
-  options: { fallbackPath?: string } = {},
+  options: { fallbackPath?: string; title?: string; description?: string } = {},
 ): T {
   const fallbackPath =
     options.fallbackPath ?? (page ? (page.slug === "home" ? "/" : "/" + page.slug) : undefined);
@@ -276,11 +276,11 @@ export function mergeCmsHead<T extends CmsHeadBase>(
 
   const canonical = CANONICAL_SITE_ORIGIN + canonicalPath;
   const hasContent = Boolean(page && (page.body.trim().length > 0 || page.sections.length > 0));
-  const hasSeo = Boolean(page && (page.seoTitle || page.seoDescription || page.canonical));
-  const title = page
+  const hasSeo = Boolean(options.title || options.description || (page && (page.seoTitle || page.seoDescription || page.canonical)));
+  const title = options.title ?? (page
     ? page.seoTitle || (hasContent ? page.title + " — AETHER-TRADE" : "")
-    : "";
-  const description = page?.seoDescription ?? "";
+    : "");
+  const description = options.description ?? page?.seoDescription ?? "";
 
   const meta = (base.meta || []).filter((item) => {
     if (title && (item.title || item.property === "og:title" || item.name === "twitter:title"))
