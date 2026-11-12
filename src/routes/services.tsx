@@ -20,6 +20,7 @@ export const Route = createFileRoute("/services")({
         "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/services" },
     ),
   component: ServicesPage,
 });
