@@ -17,7 +17,7 @@ export const Route = createFileRoute("/how-it-works")({
           "How AETHER-TRADE engagements run: discover, scope, configure, pilot and expand — with human review at every step.",
         ))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/how-it-works" },
+      { fallbackPath: "/how-it-works", title: "How Freight Workflow Automation Works | AETHER-TRADE", description: "See how AETHER-TRADE assesses a trade workflow, agrees scope, builds and tests a pilot, and keeps human review in control." },
     ),
   component: HowItWorksPage,
 });
