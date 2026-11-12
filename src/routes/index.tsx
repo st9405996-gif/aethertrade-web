@@ -40,12 +40,12 @@ export const Route = createFileRoute("/")({
       (() => ({
         meta: [
           {
-            title: "AETHER-TRADE — Automate Your International Trade Infrastructure.",
+            title: "AETHER-TRADE | Freight Document Intelligence & Workflow Automation",
           },
           {
             name: "description",
             content:
-              "AETHER-TRADE builds AI agents, connected workflows, and operational automation for mid-market importers, exporters, and logistics enterprises.",
+              "AETHER-TRADE helps freight forwarders and trade operations teams organize shipment documents, compare key fields and coordinate review workflows with human oversight.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
@@ -221,9 +221,9 @@ function HomePage() {
 function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
   const hero = cmsHero(cmsPage, {
     eyebrow: "Global trade technology & automation company",
-    title: "Global Trade Operations. Connected by Intelligence.",
+    title: "AI-Powered Document & Workflow Automation for Freight Forwarders.",
     description:
-      "We build AI agents, connected workflows, and operational automations for global trade and logistics teams. Reduce repetitive work, improve visibility, and keep people in control.",
+      "We help freight forwarders and trade operations teams organize shipment documents, identify discrepancies and coordinate routine work through structured, human-reviewed workflows.",
   });
   return (
     <section className="relative isolate overflow-hidden">
@@ -246,7 +246,7 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
             {hero.title}
           </h1>
           <p className="mt-5 text-lg font-medium text-primary">
-            AI agents, connected workflows, and automation for global trade and logistics.
+            Document intelligence and workflow automation for freight forwarders and trade operations teams.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
             {hero.description}
@@ -254,11 +254,11 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
               <Link to="/request-demo" search={{ automation: undefined }}>
-                Book an Operations Audit <ArrowRight />
+                Request a Workflow Demo <ArrowRight />
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>
-              <Link to="/services">Explore Our Services</Link>
+              <Link to="/services">Explore Available Automations</Link>
             </Button>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">Connect. Automate. Grow.</p>
