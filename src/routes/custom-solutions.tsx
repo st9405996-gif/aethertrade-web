@@ -84,7 +84,7 @@ export const Route = createFileRoute("/custom-solutions")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/custom-solutions" },
+      { fallbackPath: "/custom-solutions", title: "Custom Trade Workflow Automation | AETHER-TRADE", description: "Custom workflow automation, document intelligence and system integration projects scoped around freight and trade operations." },
     ),
   component: CustomSolutionsPage,
 });
