@@ -58,9 +58,9 @@ function AutomationsPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Automation catalogue",
-          title: "Custom Automation for Real Trade Workflows.",
+          title: "Example Workflows We Can Automate for You.",
           description:
-            "Explore example workflows. We adapt architecture, integrations and approval controls to your business during an operations audit.",
+            "Explore the workflows currently available, plus custom and planned capabilities. Integrations and approval controls are confirmed during scoping.",
         })}
       />
       <section className="container-page section-pad">
@@ -126,7 +126,7 @@ function AutomationsPage() {
                 <div className="mt-auto pt-5">
                   <Button size="sm" variant="outline" asChild>
                     <Link to="/request-demo" search={{ automation: item.slug }}>
-                      Book an Operations Audit
+                      Request a Workflow Demo
                     </Link>
                   </Button>
                 </div>
@@ -165,7 +165,7 @@ function AutomationsPage() {
                   <DialogFooter>
                     <Button asChild>
                       <Link to="/request-demo" search={{ automation: item.slug }}>
-                        Book an Operations Audit
+                        Request a Workflow Demo
                       </Link>
                     </Button>
                   </DialogFooter>
