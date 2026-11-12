@@ -95,7 +95,7 @@ const GOOGLE_ANALYTICS_ID = "G-JY6M0YJY1S";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: () => getGlobalSeoSettings(),
-  head: ({ loaderData, matches }) => {
+  head: ({ loaderData }) => {
     return {
     meta: [
       { charSet: "utf-8" },
