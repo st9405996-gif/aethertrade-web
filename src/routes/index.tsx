@@ -258,7 +258,7 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>
-              <Link to="/services">Explore Available Automations</Link>
+              <Link to="/automations">Explore Available Automations</Link>
             </Button>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">Connect. Automate. Grow.</p>
