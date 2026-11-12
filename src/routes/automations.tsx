@@ -118,7 +118,7 @@ function AutomationsPage() {
                   )}
                   {item.integrations.length > 0 && (
                     <div>
-                      <dt className="font-medium">Integrations</dt>
+                      <dt className="font-medium">Potential integrations</dt>
                       <dd className="text-muted-foreground">{item.integrations.join(", ")}</dd>
                     </div>
                   )}
@@ -157,7 +157,7 @@ function AutomationsPage() {
                     ) : null}
                     {item.integrations.length ? (
                       <div>
-                        <dt className="font-medium">Integrations</dt>
+                        <dt className="font-medium">Potential integrations</dt>
                         <dd className="text-muted-foreground">{item.integrations.join(", ")}</dd>
                       </div>
                     ) : null}
