@@ -26,6 +26,7 @@ export const Route = createFileRoute("/contact")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/contact" },
     ),
   component: ContactPage,
 });
