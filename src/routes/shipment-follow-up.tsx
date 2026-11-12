@@ -1,130 +1,56 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, ClipboardList, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, Mail, ShieldCheck, CircleAlert, FileText, Search, Eye, Send } from "lucide-react";
 import { PageHero, SectionHeader } from "@/components/site/section";
 import { Button } from "@/components/ui/button";
 import { CtaBand } from "@/components/site/cta-band";
 import { meta } from "@/components/site/blocks";
 
-const shipment = {
-  reference: "AE-2026-1048",
-  customer: "Harborline Trading FZE",
-  route: "Jebel Ali, UAE → Rotterdam, NL",
-  eta: "18 Nov 2026 · Illustrative",
-  checklist: [
-    { name: "Commercial invoice", status: "Received", received: "12 Nov · Sample" },
-    { name: "Packing list", status: "Received", received: "12 Nov · Sample" },
-    { name: "Bill of lading", status: "Missing", received: "Awaiting customer" },
-    { name: "Certificate of origin", status: "Missing", received: "Awaiting customer" },
-  ],
-};
+const stages = [
+ {title:"Select shipment",description:"Open the illustrative shipment workspace.",icon:ClipboardList},
+ {title:"Check documents",description:"Review the document checklist and received items.",icon:Search},
+ {title:"Identify gaps",description:"Show outstanding documents and next required actions.",icon:CircleAlert},
+ {title:"Draft reminder",description:"Prepare a sample customer email from the missing-item list.",icon:Mail},
+ {title:"Human approval",description:"Preview and approve the draft in this demo only.",icon:Eye},
+ {title:"Run summary",description:"Review the outcome and simulated event trail.",icon:CheckCircle2},
+];
+const docs=[["Commercial invoice","Received"],["Packing list","Received"],["Bill of lading","Missing"],["Certificate of origin","Missing"]];
 
 export const Route = createFileRoute("/shipment-follow-up")({
-  head: () => ({
-    ...meta(
-      "Shipment Follow-Up Assistant Demo",
-      "Explore an illustrative shipment document checklist, missing-document identification and human-approved follow-up email drafting."
-    ),
-    links: [{ rel: "canonical", href: "https://aethertrade.cloud/shipment-follow-up" }],
-  }),
-  component: ShipmentFollowUpPage,
+ head:()=>({...meta("Shipment Follow-Up Assistant Demo","Guided illustrative shipment document tracking and human-reviewed follow-up."),links:[{rel:"canonical",href:"https://aethertrade.cloud/shipment-follow-up"}]}),
+ component:Page,
 });
-
-function ShipmentFollowUpPage() {
-  const [draftReady, setDraftReady] = useState(false);
-  const [approved, setApproved] = useState(false);
-  const missing = shipment.checklist.filter((item) => item.status === "Missing");
-
-  return (
-    <>
-      <PageHero
-        eyebrow="Product demo · Illustrative sample"
-        title="Keep shipment document follow-ups organized."
-        description="Explore a sample shipment checklist, identify pending documents and review a follow-up email draft before a coordinator approves it."
-      >
-        <Button variant="hero" asChild>
-          <Link to="/request-demo" search={{ automation: "shipment-follow-up-assistant" }}>
-            Discuss a pilot <ArrowRight />
-          </Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to="/document-intake">Explore Document Intake</Link>
-        </Button>
-      </PageHero>
-
-      <section className="container-page section-pad">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-primary/10 p-3 text-primary"><ClipboardList /></div>
-              <div><p className="eyebrow">Shipment workspace</p><h2 className="text-xl font-semibold">{shipment.reference}</h2></div>
-            </div>
-            <dl className="mt-5 space-y-3 text-sm">
-              <div><dt className="text-muted-foreground">Customer</dt><dd className="font-medium">{shipment.customer}</dd></div>
-              <div><dt className="text-muted-foreground">Route</dt><dd className="font-medium">{shipment.route}</dd></div>
-              <div><dt className="text-muted-foreground">ETA</dt><dd className="font-medium">{shipment.eta}</dd></div>
-            </dl>
-            <div className="mt-6 flex items-center justify-between rounded-lg bg-muted/40 p-3">
-              <span className="text-sm text-muted-foreground">Document checklist</span>
-              <span className="text-sm font-semibold">{shipment.checklist.length - missing.length}/{shipment.checklist.length} received</span>
-            </div>
-            <div className="mt-4 space-y-2">
-              {shipment.checklist.map((item) => (
-                <div key={item.name} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
-                  <div><p className="text-sm font-medium">{item.name}</p><p className="mt-1 text-xs text-muted-foreground">{item.received}</p></div>
-                  <span className={`rounded-full px-2 py-1 text-xs ${item.status === "Missing" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}`}>{item.status}</span>
-                </div>
-              ))}
-            </div>
-            <Button className="mt-6 w-full" onClick={() => { setDraftReady(true); setApproved(false); }}>
-              <Mail /> {draftReady ? "Refresh sample follow-up draft" : "Draft follow-up email"}
-            </Button>
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              <p>Demo simulation only. No email is sent, no real shipment is accessed and no external systems are connected.</p>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div><p className="eyebrow">Human-reviewed communication</p><h2 className="text-xl font-semibold">Follow-up email preview</h2><p className="mt-1 text-sm text-muted-foreground">Draft status: {draftReady ? "Ready for review" : "Not generated yet"}</p></div>
-              <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Illustrative draft</span>
-            </div>
-            <div className="mt-6 rounded-xl border border-border bg-background p-5">
-              <p className="text-xs text-muted-foreground">To: customer contact (sample)</p>
-              <p className="mt-2 text-sm font-semibold">Subject: Documents pending for shipment {shipment.reference}</p>
-              <div className="mt-4 space-y-3 text-sm leading-6">
-                <p>Hello Harborline team,</p>
-                <p>We are preparing the document set for shipment {shipment.reference}. Could you please share the following outstanding items when convenient?</p>
-                <ul className="list-disc pl-5">{missing.map((item) => <li key={item.name}>{item.name}</li>)}</ul>
-                <p>Thank you,<br />Logistics coordination team</p>
-              </div>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button variant="hero" disabled={!draftReady || approved} onClick={() => setApproved(true)}>
-                <CheckCircle2 /> {approved ? "Sample approved" : "Approve sample draft"}
-              </Button>
-              <Button variant="outline" disabled={!draftReady} onClick={() => { setDraftReady(false); setApproved(false); }}>
-                Reset demo
-              </Button>
-              {approved && <span role="status" className="text-sm text-emerald-700 dark:text-emerald-300">Simulated approval recorded in this page only.</span>}
-            </div>
-            <div className="mt-4 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">Approval is a visual simulation. It does not create an audit record or send the message.</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-page section-pad border-t border-border">
-        <SectionHeader eyebrow="Workflow concept" title="From missing documents to a reviewed follow-up" description="A proposed workflow can organize checklist status, draft customer messages and keep consequential communication behind a human approval step." />
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            ["01", "Track the checklist", "Show required, received and outstanding documents by shipment."],
-            ["02", "Prepare a draft", "Compose a context-specific reminder based on the missing items."],
-            ["03", "Review before sending", "A coordinator checks the draft and explicitly approves the next action."],
-          ].map(([number, title, body]) => <article key={number} className="rounded-xl border border-border bg-card p-5"><p className="eyebrow">{number}</p><h3 className="mt-2 font-semibold">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{body}</p></article>)}
-        </div>
-      </section>
-      <CtaBand title="Discuss shipment follow-ups in your operation." description="Tell us about your document requirements, email workflows and approval process." />
-    </>
-  );
+function Page(){
+ const [stage,setStage]=useState(0);
+ const [approved,setApproved]=useState(false);
+ const done=stage===stages.length-1;
+ const Icon=stages[stage].icon;
+ return <>
+  <PageHero eyebrow="Product demo · guided sample simulation" title="See a shipment follow-up run from checklist to review." description="Step through a shipment workspace, document status check, missing-item detection, email drafting, approval and a final run summary. The sample makes each stage and its output visible.">
+   <Button variant="hero" onClick={()=>setStage(1)}>Start walkthrough <ArrowRight/></Button>
+   <Button variant="outline" asChild><Link to="/document-intake">Explore Document Intake</Link></Button>
+  </PageHero>
+  <section className="container-page section-pad">
+   <div className="mb-5 flex flex-wrap justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><span className="font-semibold"><ShieldCheck className="mr-2 inline size-4"/>DEMO ENVIRONMENT — SAMPLE DATA ONLY</span><span className="text-muted-foreground">No real shipment access, email send or external system connection.</span></div>
+   <div className="grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
+    <aside className="rounded-2xl border border-border bg-card p-5">
+     <p className="eyebrow">Workflow run · RUN-SHP-1048</p><h2 className="mt-2 text-xl font-semibold">Shipment AE-2026-1048</h2><p className="text-sm text-muted-foreground">Jebel Ali, UAE → Rotterdam, NL</p>
+     <div className="mt-5 space-y-2">{stages.map((s,i)=>{const I=s.icon;return <button key={s.title} onClick={()=>setStage(i)} className={i===stage?"flex w-full gap-3 rounded-xl border border-primary bg-primary/5 p-3 text-left":"flex w-full gap-3 rounded-xl border border-border p-3 text-left hover:bg-muted/40"}><span className="mt-1">{i<stage?<CheckCircle2 className="size-4 text-emerald-600"/>:<I className="size-4"/>}</span><span><span className="flex flex-wrap justify-between gap-2 font-medium">{i+1}. {s.title}<span className="text-[10px] uppercase text-muted-foreground">{i<stage?"Complete":i===stage?"Active":"Waiting"}</span></span><span className="mt-1 block text-xs text-muted-foreground">{s.description}</span></span></button>})}</div>
+     <div className="mt-5 flex gap-2"><Button variant="outline" className="flex-1" disabled={stage===0} onClick={()=>setStage(s=>Math.max(0,s-1))}>Previous</Button><Button className="flex-1" onClick={()=>setStage(done?0:stage+1)}>{done?"Restart":"Next stage"} <ArrowRight/></Button></div><p className="mt-3 text-center text-xs text-muted-foreground">Stage {stage+1} of {stages.length} · Click any stage</p>
+    </aside>
+    <main className="min-h-[520px] rounded-2xl border border-border bg-card p-6 sm:p-8">
+     <p className="eyebrow">Stage {String(stage+1).padStart(2,"0")} / 06</p><h2 className="mt-2 text-2xl font-semibold">{stages[stage].title}</h2><p className="mt-2 text-sm text-muted-foreground">{stages[stage].description}</p>
+     {stage===0&&<div className="mt-6 grid gap-4 md:grid-cols-2"><div className="rounded-xl border p-5"><p className="text-xs text-muted-foreground">Shipment reference</p><p className="mt-2 text-xl font-semibold">AE-2026-1048</p><dl className="mt-4 space-y-3 text-sm"><div><dt className="text-muted-foreground">Customer</dt><dd className="font-medium">Harborline Trading FZE (sample)</dd></div><div><dt className="text-muted-foreground">Route</dt><dd className="font-medium">Jebel Ali → Rotterdam</dd></div><div><dt className="text-muted-foreground">ETA</dt><dd className="font-medium">18 Nov 2026 · illustrative</dd></div></dl></div><div className="rounded-xl bg-muted/40 p-5"><p className="font-semibold">Workspace context</p><p className="mt-2 text-sm text-muted-foreground">One shipment record provides a visible home for its checklist, pending items, message draft and workflow trail.</p><Button className="mt-5" onClick={()=>setStage(1)}>Check document set <ArrowRight/></Button></div></div>}
+     {stage===1&&<div className="mt-6"><div className="mb-4 flex justify-between"><span className="font-semibold">Document checklist</span><span className="text-xs text-muted-foreground">2 / 4 received</span></div><div className="space-y-3">{docs.map(([name,status])=><div key={name} className="flex items-center justify-between gap-3 rounded-xl border p-4"><div className="flex items-center gap-3"><FileText className="size-5 text-primary"/><span className="font-medium">{name}</span></div><span className={status==="Missing"?"rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-700":"rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-700"}>{status}</span></div>)}</div><Button className="mt-5" onClick={()=>setStage(2)}>Detect missing items <ArrowRight/></Button></div>}
+     {stage===2&&<div className="mt-6"><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-emerald-500/10 p-4"><CheckCircle2 className="text-emerald-600"/><p className="mt-2 text-2xl font-semibold">2</p><p className="text-xs text-muted-foreground">Documents received</p></div><div className="rounded-xl bg-amber-500/10 p-4"><CircleAlert className="text-amber-600"/><p className="mt-2 text-2xl font-semibold">2</p><p className="text-xs text-muted-foreground">Documents outstanding</p></div><div className="rounded-xl bg-muted/50 p-4"><ClipboardList/><p className="mt-2 text-2xl font-semibold">1</p><p className="text-xs text-muted-foreground">Sample shipment case</p></div></div><div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4"><p className="font-semibold">Detected follow-up items</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm"><li>Bill of lading — not present in sample checklist</li><li>Certificate of origin — not present in sample checklist</li></ul><p className="mt-3 text-xs text-muted-foreground">This detection is preconfigured sample data, not a live search of shipment systems.</p></div><Button className="mt-5" onClick={()=>setStage(3)}>Draft reminder <ArrowRight/></Button></div>}
+     {stage===3&&<div className="mt-6 rounded-xl border border-border p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-muted-foreground">To</p><p className="font-medium">Customer contact (sample)</p></div><span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">Draft · not sent</span></div><div className="mt-4 border-t pt-4"><p className="text-xs text-muted-foreground">Subject</p><p className="font-semibold">Documents pending for shipment AE-2026-1048</p><div className="mt-4 space-y-3 text-sm leading-6"><p>Hello Harborline team,</p><p>We are preparing the document set for shipment AE-2026-1048. Could you please share the following outstanding items?</p><ul className="list-disc pl-5"><li>Bill of lading</li><li>Certificate of origin</li></ul><p>Thank you,<br/>Logistics coordination team</p></div></div><div className="mt-5 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">Draft is generated from fixed sample content. No email address or mail service is connected.</div><Button className="mt-5" onClick={()=>setStage(4)}>Open approval screen <ArrowRight/></Button></div>}
+     {stage===4&&<div className="mt-6"><div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5"><p className="font-semibold"><Eye className="mr-2 inline size-5 text-amber-600"/>Human approval checkpoint</p><p className="mt-2 text-sm text-muted-foreground">A coordinator can inspect the proposed reminder. In this mock demo, approval changes only the local screen state; it does not send the email.</p></div><div className="mt-5 flex flex-wrap gap-3"><Button variant="hero" disabled={approved} onClick={()=>setApproved(true)}><CheckCircle2/>{approved?"Sample approved":"Approve sample draft"}</Button><Button variant="outline" onClick={()=>{setApproved(false);setStage(3)}}>Back to draft</Button></div>{approved&&<p role="status" className="mt-4 rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700">Demo approval state set locally. Email not sent.</p>}</div>}
+     {stage===5&&<div className="mt-6"><div className="rounded-xl border p-5"><p className="font-semibold"><CheckCircle2 className="mr-2 inline size-5 text-emerald-600"/>Sample run summary</p><div className="mt-4 space-y-3 text-sm"><div className="flex justify-between gap-3"><span className="text-muted-foreground">Checklist review</span><span className="font-medium">2 received · 2 missing</span></div><div className="flex justify-between gap-3"><span className="text-muted-foreground">Reminder draft</span><span className="font-medium">Prepared</span></div><div className="flex justify-between gap-3"><span className="text-muted-foreground">Approval</span><span className="font-medium">{approved?"Sample approved":"Pending / not approved"}</span></div><div className="flex justify-between gap-3"><span className="text-muted-foreground">Email delivery</span><span className="font-medium">Not sent</span></div></div></div><div className="mt-4 rounded-xl bg-muted/40 p-4"><p className="font-semibold">Illustrative event trail</p><ol className="mt-3 space-y-2 text-sm text-muted-foreground"><li>01 · Shipment workspace opened</li><li>02 · Checklist statuses reviewed</li><li>03 · Missing items identified from sample</li><li>04 · Follow-up draft prepared</li><li>05 · Human approval state: {approved?"approved in demo":"pending"}</li></ol></div><Button variant="outline" className="mt-5" onClick={()=>{setStage(0);setApproved(false)}}>Restart walkthrough</Button></div>}
+     <div className="mt-6 flex items-center gap-2 border-t pt-4 text-xs text-muted-foreground"><Icon className="size-4"/> Visible run state · checklist, draft and event trail</div>
+    </main>
+   </div>
+  </section>
+  <section className="container-page section-pad border-t border-border"><SectionHeader eyebrow="Client walkthrough" title="From missing documents to a reviewed next step." description="The sample makes checklist status, outstanding items, generated communication and approval controls visible. A real deployment would require approved data connections, mail permissions, audit logging and operational validation."/><div className="mt-8 grid gap-4 md:grid-cols-3">{[["01","Status at a glance","Received and missing documents are distinguished."],["02","Draft tied to context","The reminder lists the exact sample gaps for this shipment."],["03","Approval before action","The demo stops at a local approval checkpoint; nothing is sent."]].map(([n,t,d])=><article key={n} className="rounded-xl border border-border bg-card p-5"><p className="eyebrow">{n}</p><h3 className="mt-2 font-semibold">{t}</h3><p className="mt-2 text-sm text-muted-foreground">{d}</p></article>)}</div></section>
+  <CtaBand title="Scope a real shipment follow-up pilot." description="Discuss document sources, reminder rules, email approvals and audit requirements."/>
+ </>;
 }
