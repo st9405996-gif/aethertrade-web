@@ -63,6 +63,22 @@
       "llmsNote": "automation catalogue with status labels"
     },
     {
+      "path": "/document-intake",
+      "title": "Trade Document Intake & Structuring Demo",
+      "description": "Illustrative demo of trade document intake, field structuring and human review.",
+      "indexable": true,
+      "llmsLabel": "Trade Document Intake Demo",
+      "llmsNote": "illustrative document intake and structured field review demo"
+    },
+    {
+      "path": "/shipment-follow-up",
+      "title": "Shipment Follow-Up Assistant Demo",
+      "description": "Illustrative demo of shipment document tracking, missing-item follow-up drafting and human approval.",
+      "indexable": true,
+      "llmsLabel": "Shipment Follow-Up Demo",
+      "llmsNote": "illustrative shipment checklist and human-reviewed follow-up email demo"
+    },
+    {
       "path": "/insights",
       "title": "Insights",
       "description": "Practical guidance on freight forwarding document review, shipment case management, trade documents and human-reviewed automation.",

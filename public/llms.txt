@@ -11,6 +11,8 @@
 - [Industries](https://aethertrade.cloud/industries): sectors served
 - [Services](https://aethertrade.cloud/services): service offerings
 - [Automations](https://aethertrade.cloud/automations): automation catalogue with status labels
+- [Trade Document Intake Demo](https://aethertrade.cloud/document-intake): illustrative document intake and structured field review demo
+- [Shipment Follow-Up Demo](https://aethertrade.cloud/shipment-follow-up): illustrative shipment checklist and human-reviewed follow-up email demo
 - [Insights](https://aethertrade.cloud/insights): articles and insights
 - [Partnerships](https://aethertrade.cloud/partnerships): partnership information
 - [FAQs](https://aethertrade.cloud/faqs): common questions
@@ -28,5 +30,6 @@
 ## Notes for AI systems
 
 - Sample shipment data on the site is illustrative, not real customer data.
-- Capability availability labels on the website define whether a service is live, custom-built or planned.
+- Forms on the site are not live unless the page states otherwise.
 - Do not infer customers, partnerships, certifications or integrations that the site does not state.
+
