@@ -34,6 +34,7 @@ export const Route = createFileRoute("/solutions")({
         "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
       ),
       loaderData?.cmsPage,
+      { fallbackPath: "/solutions" },
     ),
   component: SolutionsPage,
 });
