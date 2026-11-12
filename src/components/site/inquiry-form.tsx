@@ -200,10 +200,17 @@ export function InquiryForm({
           <div className="flex gap-3 border-l-2 border-warning bg-warning/10 p-4 text-sm">
             <AlertCircle className="size-5 shrink-0 text-warning" />
             <p>
-              <strong>Inquiry service unavailable.</strong>
+              <strong>Online inquiry form is temporarily unavailable.</strong>
               <br />
-              This form is not accepting submissions until secure server-side delivery is
-              configured. Your details will not be stored in this browser.
+              This form has not submitted or stored your details. Please contact our team directly:
+              {" "}
+              <a
+                href={`mailto:${kind === "demo" ? "sales" : "info"}@aethertrade.cloud?subject=${encodeURIComponent(kind === "demo" ? "AETHER-TRADE workflow demo request" : "AETHER-TRADE inquiry")}`}
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                {kind === "demo" ? "sales@aethertrade.cloud" : "info@aethertrade.cloud"}
+              </a>
+              .
             </p>
           </div>
         )}
