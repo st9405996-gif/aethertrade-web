@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AutomationsRouteImport } from './routes/automations'
+import { Route as DocumentIntakeRouteImport } from './routes/document-intake'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -28,6 +29,7 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as RequestDemoRouteImport } from './routes/request-demo'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ShipmentFollowUpRouteImport } from './routes/shipment-follow-up'
 import { Route as SolutionsRouteImport } from './routes/solutions'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ThankYouRouteImport } from './routes/thank-you'
@@ -62,6 +64,12 @@ const AutomationsRoute = AutomationsRouteImport.update({
   path: '/automations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocumentIntakeRoute = DocumentIntakeRouteImport.update({
+  id: '/document-intake',
+  path: '/document-intake',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
 const CareersRoute = CareersRouteImport.update({
   id: '/careers',
   path: '/careers',
@@ -132,6 +140,12 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShipmentFollowUpRoute = ShipmentFollowUpRouteImport.update({
+  id: '/shipment-follow-up',
+  path: '/shipment-follow-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
 const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
   path: '/solutions',
@@ -183,6 +197,8 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/custom-solutions': typeof CustomSolutionsRoute
+  '/document-intake': typeof DocumentIntakeRoute
+  '/shipment-follow-up': typeof ShipmentFollowUpRoute
   '/faqs': typeof FaqsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/industries': typeof IndustriesRoute
@@ -272,6 +288,8 @@ export interface FileRouteTypes {
     | '/contact'
     | '/cookie-policy'
     | '/custom-solutions'
+  | '/document-intake'
+  | '/shipment-follow-up'
     | '/faqs'
     | '/how-it-works'
     | '/industries'
@@ -359,6 +377,8 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   CustomSolutionsRoute: typeof CustomSolutionsRoute
+  DocumentIntakeRoute: typeof DocumentIntakeRoute
+  ShipmentFollowUpRoute: typeof ShipmentFollowUpRoute
   FaqsRoute: typeof FaqsRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IndustriesRoute: typeof IndustriesRoute
@@ -439,6 +459,20 @@ declare module '@tanstack/react-router' {
       path: '/custom-solutions'
       fullPath: '/custom-solutions'
       preLoaderRoute: typeof CustomSolutionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/document-intake': {
+      id: '/document-intake'
+      path: '/document-intake'
+      fullPath: '/document-intake'
+      preLoaderRoute: typeof DocumentIntakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipment-follow-up': {
+      id: '/shipment-follow-up'
+      path: '/shipment-follow-up'
+      fullPath: '/shipment-follow-up'
+      preLoaderRoute: typeof ShipmentFollowUpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faqs': {
@@ -604,6 +638,8 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   CustomSolutionsRoute: CustomSolutionsRoute,
+  DocumentIntakeRoute: DocumentIntakeRoute,
+  ShipmentFollowUpRoute: ShipmentFollowUpRoute,
   FaqsRoute: FaqsRoute,
   HowItWorksRoute: HowItWorksRoute,
   IndustriesRoute: IndustriesRoute,
