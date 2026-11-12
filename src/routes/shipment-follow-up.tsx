@@ -20,10 +20,13 @@ const shipment = {
 };
 
 export const Route = createFileRoute("/shipment-follow-up")({
-  head: () => meta(
-    "Shipment Follow-Up Assistant Demo",
-    "Explore an illustrative shipment document checklist, missing-document identification and human-approved follow-up email drafting."
-  ),
+  head: () => ({
+    ...meta(
+      "Shipment Follow-Up Assistant Demo",
+      "Explore an illustrative shipment document checklist, missing-document identification and human-approved follow-up email drafting."
+    ),
+    links: [{ rel: "canonical", href: "https://aethertrade.cloud/shipment-follow-up" }],
+  }),
   component: ShipmentFollowUpPage,
 });
 
