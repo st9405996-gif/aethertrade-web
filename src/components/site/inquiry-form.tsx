@@ -231,6 +231,8 @@ export function InquiryForm({
                 onChange={(e) => setValues({ ...values, automation: e.target.value })}
               >
                 <option value="">General platform demo</option>
+                <option value="product-intelligence">Product Intelligence</option>
+                <option value="shipment-readiness">Shipment Readiness</option>
                 {CATALOGUE_PREVIEW.map((r) => (
                   <option key={r.slug} value={r.slug}>
                     {r.name}
