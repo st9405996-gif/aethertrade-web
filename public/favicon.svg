@@ -1,7 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#14233B"/>
-  <path d="M32 8 8 56h12l12-25 12 25h12L32 8Z" fill="#F8FAFC"/>
-  <path d="M23 42h18l5 9H18l5-9Z" fill="#4D9C9B"/>
-  <ellipse cx="32" cy="32" rx="28" ry="11" transform="rotate(-34 32 32)" fill="none" stroke="#69B9B1" stroke-width="3"/>
-  <circle cx="50.5" cy="15.5" r="3.5" fill="#69B9B1"/>
+<svg xmlns="http://w3.org" viewBox="0 0 64 64">
+  <defs>
+    <!-- Dark Navy Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#0E2240"/>
+      <stop offset="100%" stop-color="#071224"/>
+    </radialGradient>
+    
+    <!-- Blue 'A' Gradient -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#0F294A"/>
+    </linearGradient>
+
+    <!-- Silver Swoosh Gradient -->
+    <linearGradient id="silverGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748B"/>
+      <stop offset="50%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Round Circle Background -->
+  <circle cx="32" cy="32" r="31" fill="url(#bgGrad)" stroke="#1E3A5F" stroke-width="1"/>
+
+  <!-- Left & Top Peak of 'A' -->
+  <path d="M32 13 L15 47 H23.5 L32 29.5 L40.5 47 H49 L32 13 Z" fill="url(#blueGrad)" stroke="#38BDF8" stroke-width="0.6" stroke-linejoin="round"/>
+  
+  <!-- Inner Cutout Triangle for 3D Depth -->
+  <path d="M32 29.5 L26.5 41 H37.5 Z" fill="#08162B"/>
+
+  <!-- Orbiting Silver Swoosh -->
+  <path d="M12 39 C6 45, 22 44, 43 32 C55 25, 58 18, 46 19 C52 20, 49 25, 39 31 C22 40, 11 42, 12 39 Z" fill="url(#silverGrad)"/>
+
+  <!-- Bright Star Sparkle on Swoosh -->
+  <g transform="translate(43, 31.5)">
+    <path d="M0 -6 L1.2 -1.2 L6 0 L1.2 1.2 L0 6 L-1.2 1.2 L-6 0 L-1.2 -1.2 Z" fill="#FFFFFF"/>
+    <circle cx="0" cy="0" r="1.5" fill="#E0F2FE"/>
+  </g>
 </svg>
