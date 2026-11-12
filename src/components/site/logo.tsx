@@ -2,8 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
 /**
- * AETHER-TRADE identity: an engineered A monogram crossed by a global orbit.
- * Uses semantic theme tokens so the mark stays legible in light and dark UI.
+ * AETHER-TRADE identity: metallic blue A monogram with a silver global swoosh.
  */
 export function Logo({ className }: { className?: string }) {
   return (
@@ -13,25 +12,34 @@ export function Logo({ className }: { className?: string }) {
       className={cn("group inline-flex min-w-0 items-center gap-2.5", className)}
     >
       <svg
-        viewBox="0 0 44 44"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 64 64"
         className="size-9 shrink-0"
         role="presentation"
         aria-hidden="true"
-        fill="none"
       >
-        <path d="M22 4.5 5.5 38h8.1L22 21.1 30.4 38h8.1L22 4.5Z" className="fill-foreground" />
-        <path d="M16.4 28.7h11.2l3.1 6.2H13.3l3.1-6.2Z" className="fill-primary" />
-        <ellipse
-          cx="22"
-          cy="22"
-          rx="20"
-          ry="8.1"
-          transform="rotate(-34 22 22)"
-          className="stroke-primary"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        <circle cx="35.1" cy="10.7" r="2.6" className="fill-primary" />
+        <circle cx="32" cy="32" r="31" fill="#0B192E" />
+
+        {/* Back arc of the silver ring behind the A */}
+        <path d="M27 23.5 C15 29.5, 9 36.5, 11.5 40.5 C13.5 42.5, 18.5 41.5, 24 39.5 C16.5 40.5, 13.5 38.5, 15.5 35 C17.5 31.5, 21.5 27.5, 27 23.5 Z" fill="#94A3B8" />
+        <path d="M36 20.5 C46 18.5, 53 19.5, 53.5 22.5 C54 25, 49.5 28.5, 43.5 32 L42 30.5 C47.5 27.5, 50.5 24.5, 50 22.8 C49.5 21, 43.5 20.5, 36 21.5 Z" fill="#CBD5E1" />
+
+        {/* Left leg of A */}
+        <path d="M31.5 13.5 C32.3 13.5, 33 14, 33.5 15 L36.5 21 L24.5 46 H16.5 L30.2 15 C30.6 14, 31 13.5, 31.5 13.5 Z" fill="#0284C7" stroke="#38BDF8" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M31.5 14 L35.2 21.2 L23.5 45.5 H17.5 L30.8 14.8 Z" fill="#38BDF8" opacity="0.55" />
+
+        {/* Right leg of A */}
+        <path d="M33.5 15 L48.5 46 H40.5 L31.8 28 L35.5 20.5 Z" fill="#0369A1" stroke="#38BDF8" strokeWidth="0.6" strokeLinejoin="round" />
+        <path d="M35.5 20.5 L47.5 45.5 H41.2 L32.2 27.5 Z" fill="#0C4A6E" opacity="0.7" />
+
+        {/* Front sweeping metallic silver swoosh */}
+        <path d="M11 40 C13.5 44.5, 29.5 41.5, 44.5 31.5 C52 26.5, 54.5 22.5, 53 20.5 C53.8 23.5, 49.5 27.5, 41 32 C27 39.5, 13.5 41.5, 11 40 Z" fill="#F8FAFC" />
+        <path d="M11 40 C13.5 45.5, 30.5 42.5, 45.5 32 C51.5 27.8, 54 24, 53.3 21.5 C52.5 24.5, 48 28, 41.5 31.8 C27.5 39.8, 13.5 42.5, 11 40 Z" fill="#94A3B8" />
+
+        {/* Four-point star sparkle */}
+        <path d="M42.5 23.5 L43.4 30.1 L50 31 L43.4 31.9 L42.5 38.5 L41.6 31.9 L35 31 L41.6 30.1 Z" fill="#FFFFFF" />
+        <path d="M38.5 27 L42.5 30.4 L46.5 27 L43.1 31 L46.5 35 L42.5 31.6 L38.5 35 L41.9 31 Z" fill="#E0F2FE" opacity="0.85" />
+        <circle cx="42.5" cy="31" r="1.8" fill="#FFFFFF" />
       </svg>
       <span className="flex min-w-0 flex-col leading-none">
         <span className="whitespace-nowrap text-[0.93rem] font-semibold tracking-[0.12em] text-foreground">
