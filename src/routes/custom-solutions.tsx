@@ -84,6 +84,7 @@ export const Route = createFileRoute("/custom-solutions")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/custom-solutions" },
     ),
   component: CustomSolutionsPage,
 });
