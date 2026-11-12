@@ -47,7 +47,8 @@ describe("published insights public reader", () => {
     ["future scheduled", { publication: "Scheduled", scheduled_at: "2026-11-07T00:00:00Z" }],
     ["missing noindex evidence", { noindex: undefined }],
     ["invalid slug", { slug: "Trade Operations" }],
-    ["missing body", { body: "   " }],\n    ["placeholder body", { body: "A short introduction with no substantive article content." }],
+    ["missing body", { body: "   " }],
+    ["placeholder body", { body: "A short introduction with no substantive article content." }],
   ])("excludes %s records", (_label, overrides) => {
     expect(parsePublishedInsight({ ...insightRow, ...overrides }, now)).toBeNull();
   });
