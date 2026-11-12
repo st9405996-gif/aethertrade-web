@@ -34,7 +34,7 @@ export const Route = createFileRoute("/solutions")({
         "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/solutions" },
+      { fallbackPath: "/solutions", title: "Solutions for Freight Forwarders & Trade Teams | AETHER-TRADE", description: "Workflow automation and document intelligence for freight forwarders, customs brokers, importers, exporters, logistics operators and trading companies." },
     ),
   component: SolutionsPage,
 });
@@ -47,6 +47,27 @@ function SolutionsPage() {
     challenges: lines(item.fields["challenges"] || ""),
     helps: lines(item.fields["benefits"] || ""),
   }));
+
+  // Keep the homepage and Solutions audience lists aligned without implying
+  // customs filing, government access or a pre-built customs integration.
+  if (!records.some((item) => item.slug === "customs-brokers")) {
+    records.push({
+      slug: "customs-brokers",
+      title: "Customs Brokers",
+      audience:
+        "Potential workflow use cases include organizing supporting shipment documents, tracking review status and routing exceptions for authorized broker staff. Customs filing and government-system access are not offered.",
+      challenges: [
+        "Supporting documents arrive across inboxes and client channels",
+        "Review status and outstanding information are difficult to track",
+        "Exceptions need clear ownership and evidence for follow-up",
+      ],
+      helps: [
+        "Structure each client or shipment document set around an agreed reference",
+        "Flag missing or inconsistent information for human review",
+        "Keep review outcomes and hand-offs organized for the responsible team",
+      ],
+    });
+  }
   return (
     <>
       <PageHero
