@@ -26,7 +26,7 @@ export const Route = createFileRoute("/platform")({
         "One intelligent platform for connected trade operations: case workspaces, document intelligence, cross-document checks and human-reviewed workflows.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/platform" },
+      { fallbackPath: "/platform", title: "Trade Document Intelligence & Workflow Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade case workspace and document intelligence capabilities, plus custom workflow modules scoped around existing systems." },
     ),
   component: PlatformPage,
 });
