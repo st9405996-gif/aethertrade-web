@@ -63,22 +63,6 @@
       "llmsNote": "automation catalogue with status labels"
     },
     {
-      "path": "/document-intake",
-      "title": "Trade Document Intake & Structuring Demo",
-      "description": "Illustrative demo of trade document intake, field structuring and human review.",
-      "indexable": true,
-      "llmsLabel": "Trade Document Intake Demo",
-      "llmsNote": "illustrative document intake and structured field review demo"
-    },
-    {
-      "path": "/shipment-follow-up",
-      "title": "Shipment Follow-Up Assistant Demo",
-      "description": "Illustrative demo of shipment document tracking, missing-item follow-up drafting and human approval.",
-      "indexable": true,
-      "llmsLabel": "Shipment Follow-Up Demo",
-      "llmsNote": "illustrative shipment checklist and human-reviewed follow-up email demo"
-    },
-    {
       "path": "/insights",
       "title": "Insights",
       "description": "",
@@ -142,41 +126,16 @@
       "llmsLabel": "Cookie policy",
       "llmsNote": "pending legal review"
     },
-    {
-      "path": "/about",
-      "title": "About",
-      "description": "",
-      "indexable": false
-    },
+    { "path": "/about", "title": "About", "description": "", "indexable": false },
     {
       "path": "/custom-solutions",
       "title": "Custom solutions",
       "description": "",
       "indexable": false
     },
-    {
-      "path": "/careers",
-      "title": "Careers",
-      "description": "",
-      "indexable": false
-    },
-    {
-      "path": "/thank-you",
-      "title": "Thank you",
-      "description": "",
-      "indexable": false
-    },
-    {
-      "path": "/auth",
-      "title": "Sign in",
-      "description": "",
-      "indexable": false
-    },
-    {
-      "path": "/reset-password",
-      "title": "Reset password",
-      "description": "",
-      "indexable": false
-    }
+    { "path": "/careers", "title": "Careers", "description": "", "indexable": false },
+    { "path": "/thank-you", "title": "Thank you", "description": "", "indexable": false },
+    { "path": "/auth", "title": "Sign in", "description": "", "indexable": false },
+    { "path": "/reset-password", "title": "Reset password", "description": "", "indexable": false }
   ]
 }
