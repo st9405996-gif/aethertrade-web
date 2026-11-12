@@ -24,7 +24,7 @@ export const Route = createFileRoute("/insights")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/insights" },
+      { fallbackPath: "/insights", title: "Trade Operations Insights | AETHER-TRADE", description: "Practical guidance on freight forwarding document review, shipment case management, trade documents and human-reviewed automation." },
     ),
   component: InsightsPage,
 });
