@@ -43,10 +43,13 @@ function TermsPage() {
         </p>
         <h2>Contact and operations-audit inquiries</h2>
         <p>
-          The Contact and Request an Operations Audit forms are live inquiry forms. Submitting a
-          form sends the information you provide to AETHER-TRADE for review and may generate an
-          email acknowledgment and a sales-team notification. A submission is a request for contact
-          only; it does not create a service agreement, guarantee acceptance or establish a customer
+          The Contact and Request an Operations Audit forms accept submissions only when secure
+          server-side delivery is enabled. The form indicates whether it is currently accepting
+          submissions. If it is unavailable, information entered into it is not submitted or stored;
+          use the published email links on the Contact page instead. When live delivery is enabled,
+          a submission sends the information you provide to AETHER-TRADE for review and may generate
+          an email acknowledgment and a team notification. A submission is a request for contact only;
+          it does not create a service agreement, guarantee acceptance or establish a customer
           relationship.
         </p>
         <p>
