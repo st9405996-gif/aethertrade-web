@@ -24,6 +24,7 @@ export const Route = createFileRoute("/insights")({
         ],
       }))(),
       loaderData?.cmsPage,
+      { fallbackPath: "/insights" },
     ),
   component: InsightsPage,
 });
