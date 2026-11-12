@@ -92,7 +92,7 @@
       "description": "Contact AETHER-TRADE about freight document intelligence, trade operations automation and a focused workflow assessment.",
       "indexable": true,
       "llmsLabel": "Contact",
-      "llmsNote": "contact form (demo mode until live delivery is enabled)"
+      "llmsNote": "contact details and current inquiry options"
     },
     {
       "path": "/request-demo",
@@ -100,7 +100,7 @@
       "description": "Request a workflow demo for freight document intelligence and shipment operations automation from AETHER-TRADE.",
       "indexable": true,
       "llmsLabel": "Request a demo",
-      "llmsNote": "demo request form"
+      "llmsNote": "workflow demo request form"
     },
     {
       "path": "/privacy-policy",
@@ -108,7 +108,7 @@
       "description": "Learn what information AETHER-TRADE collects through its website, how inquiries are handled and how privacy choices are respected.",
       "indexable": true,
       "llmsLabel": "Privacy policy",
-      "llmsNote": "pending legal review"
+      "llmsNote": "website privacy information"
     },
     {
       "path": "/terms",
@@ -116,7 +116,7 @@
       "description": "Read the terms governing use of the AETHER-TRADE website and submission of business inquiries.",
       "indexable": true,
       "llmsLabel": "Terms",
-      "llmsNote": "pending legal review"
+      "llmsNote": "website and inquiry terms of use"
     },
     {
       "path": "/cookie-policy",
@@ -124,7 +124,7 @@
       "description": "Learn how AETHER-TRADE uses essential browser storage, consent preferences and website analytics.",
       "indexable": true,
       "llmsLabel": "Cookie policy",
-      "llmsNote": "pending legal review"
+      "llmsNote": "cookie and browser storage information"
     },
     {
       "path": "/about",
