@@ -7,6 +7,7 @@ import { CardGrid, EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
 import { parseAvailabilityStatus } from "@/lib/availability-status";
+import { CompanyPositioning } from "@/components/site/company-positioning";
 
 const SERVICE_DELIVERABLES: Record<string, string[]> = {
   "operations-assessment": [
@@ -78,13 +79,14 @@ function ServicesPage() {
           eyebrow: "Services",
           title: "Custom Projects and Consulting for Freight Automation.",
           description:
-            "Start with a scoped operations assessment, then pilot one document or shipment workflow around your existing systems. Bespoke integrations and AI agents are scoped as custom builds.",
+            "We assess your operation, then design and build a custom software or automation solution for an agreed workflow. It can be delivered as a standalone application; integrations with existing systems are optional and separately scoped.",
         })}
       >
         <Button variant="outline" asChild>
           <Link to="/custom-solutions">About custom solutions</Link>
         </Button>
       </PageHero>
+      <CompanyPositioning />
       <section className="container-page section-pad">
         <SectionHeader eyebrow="What we offer" title="Services and typical deliverables" description="Each engagement is scoped around one workflow, the systems involved and the review controls your team needs." />
         <div className="mt-12">
