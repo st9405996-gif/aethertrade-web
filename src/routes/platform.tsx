@@ -13,6 +13,7 @@ import { CardGrid, EmptyContentState, meta } from "@/components/site/blocks";
 import { CtaBand } from "@/components/site/cta-band";
 import { Button } from "@/components/ui/button";
 import { parseAvailabilityStatus } from "@/lib/availability-status";
+import { CompanyPositioning } from "@/components/site/company-positioning";
 
 export const Route = createFileRoute("/platform")({
   loader: async () => ({
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/platform")({
     mergeCmsHead(
       meta(
         "Platform",
-        "One intelligent platform for connected trade operations: case workspaces, document intelligence, cross-document checks and human-reviewed workflows.",
+        "Custom software and workflow automation for trade operations, including document intelligence, case workspaces and optional integrations.",
       ),
       loaderData?.cmsPage,
       { fallbackPath: "/platform", title: "Trade Document Intelligence & Workflow Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade case workspace and document intelligence capabilities, plus custom workflow modules scoped around existing systems." },
@@ -53,13 +54,14 @@ function PlatformPage() {
           eyebrow: "The platform",
           title: "Automation Engineering for Connected Trade Operations.",
           description:
-            "We design and implement document intelligence, controlled rule engines and connected workflows around your existing systems and approval processes.",
+            "We design and build software applications, document intelligence tools and controlled workflows for trade operations. Solutions can run as standalone applications, with integrations to existing systems scoped when needed.",
         })}
       >
         <Button variant="outline" asChild>
           <Link to="/how-it-works">See how engagements work</Link>
         </Button>
       </PageHero>
+      <CompanyPositioning />
       <section className="container-page section-pad">
         <SectionHeader
           eyebrow="Modules"
@@ -91,8 +93,8 @@ function PlatformPage() {
                 },
                 {
                   id: "fallback-3",
-                  title: "Fits around your tools",
-                  body: "Built to work alongside email, spreadsheets and existing systems.",
+                  title: "Standalone or connected",
+                  body: "Purpose-built software can run independently or connect to existing tools when the project requires it.",
                 },
               ]
           ).map((item) => (

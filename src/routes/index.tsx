@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/accordion";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 import { DetailCard } from "@/components/site/detail-card";
+import { CompanyPositioning } from "@/components/site/company-positioning";
 
 export const Route = createFileRoute("/")({
   loader: async () => ({
@@ -40,18 +41,18 @@ export const Route = createFileRoute("/")({
       (() => ({
         meta: [
           {
-            title: "AETHER-TRADE | Freight Document Intelligence & Workflow Automation",
+            title: "AETHER-TRADE | Custom Software & AI Automation for Global Trade",
           },
           {
             name: "description",
             content:
-              "AETHER-TRADE helps freight forwarders and trade operations teams organize shipment documents, compare key fields and coordinate review workflows with human oversight.",
+              "AETHER-TRADE is a software development company building custom software, AI-powered applications and workflow automation for global trade operations.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
             property: "og:description",
             content:
-              "AI agents. Connected workflows. Human-controlled automation.",
+              "Custom software. AI-powered applications. Workflow automation for global trade.",
           },
           { property: "og:type", content: "website" },
           { name: "twitter:card", content: "summary_large_image" },
@@ -198,6 +199,7 @@ function HomePage() {
   return (
     <>
       <Hero cmsPage={cmsPage ?? null} />
+      <CompanyPositioning />
       <Challenges cmsPage={cmsPage ?? null} />
       <Approach cmsPage={cmsPage ?? null} />
       <WorkflowSection workflowRecords={workflowRecords} />
