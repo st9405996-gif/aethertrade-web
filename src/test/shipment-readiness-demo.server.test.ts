@@ -4,7 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { handleShipmentReadinessDemo } from "@/lib/shipment-readiness-demo.server";
 const env = {
-  GEMINI_API_KEY: "test-gemini-key",
+  GROQ_API_KEY: "test-groq-key",
   SUPABASE_URL: "https://example-project.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "service_role_test_value_0123456789",
   ABUSE_HASH_SECRET: "abuse_hash_test_secret_0123456789abcdef",
@@ -17,9 +17,9 @@ function request(body: unknown, origin = "https://aethertrade.cloud") {
   });
 }
 describe("shipment readiness demo endpoint", () => {
-  it("returns deterministic findings when the optional Gemini key is absent", async () => {
+  it("returns deterministic findings when the optional Groq key is absent", async () => {
     const fetchMock = vi.fn() as unknown as typeof fetch;
-    const response = await handleShipmentReadinessDemo(request({ scenarioId: "quantity-mismatch" }), { ...env, GEMINI_API_KEY: undefined }, fetchMock);
+    const response = await handleShipmentReadinessDemo(request({ scenarioId: "quantity-mismatch" }), { ...env, GROQ_API_KEY: undefined }, fetchMock);
     const payload = await response.json();
     expect(response.status).toBe(200);
     expect(payload.aiStatus).toBe("fallback");
@@ -27,14 +27,14 @@ describe("shipment readiness demo endpoint", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
   it("rejects unknown scenario identifiers", async () => {
-    const response = await handleShipmentReadinessDemo(request({ scenarioId: "arbitrary-user-input" }), { ...env, GEMINI_API_KEY: undefined });
+    const response = await handleShipmentReadinessDemo(request({ scenarioId: "arbitrary-user-input" }), { ...env, GROQ_API_KEY: undefined });
     expect(response.status).toBe(400);
   });
   it("rejects cross-origin requests", async () => {
-    const response = await handleShipmentReadinessDemo(request({ scenarioId: "quantity-mismatch" }, "https://attacker.example"), { ...env, GEMINI_API_KEY: undefined });
+    const response = await handleShipmentReadinessDemo(request({ scenarioId: "quantity-mismatch" }, "https://attacker.example"), { ...env, GROQ_API_KEY: undefined });
     expect(response.status).toBe(403);
   });
-  it("uses atomic per-IP and global quotas before calling Gemini", async () => {
+  it("uses atomic per-IP and global quotas before calling Groq", async () => {
     const generated = {
       explanation: "The sample invoice and packing list show different quantities and need review.",
       questions: ["Which quantity is supported by the final packing record?", "Which document should be corrected after the quantity is confirmed?"],
@@ -42,8 +42,8 @@ describe("shipment readiness demo endpoint", () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/rpc/consume_submission_quota")) return new Response("true");
-      if (url.includes("generativelanguage.googleapis.com")) return new Response(JSON.stringify({
-        candidates: [{ content: { parts: [{ text: JSON.stringify(generated) }] } }],
+      if (url.includes("api.groq.com/openai/v1/chat/completions")) return new Response(JSON.stringify({
+        choices: [{ message: { content: JSON.stringify(generated) } }],
       }), { status: 200, headers: { "content-type": "application/json" } });
       throw new Error("Unexpected request: " + url);
     }) as unknown as typeof fetch;
@@ -57,7 +57,7 @@ describe("shipment readiness demo endpoint", () => {
   it("falls back to deterministic output when the quota is exhausted", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (String(input).includes("/rpc/consume_submission_quota")) return new Response("false");
-      throw new Error("Gemini must not be called after quota exhaustion.");
+      throw new Error("Groq must not be called after quota exhaustion.");
     }) as unknown as typeof fetch;
     const response = await handleShipmentReadinessDemo(request({ scenarioId: "missing-document" }), env, fetchMock);
     const payload = await response.json();
@@ -66,12 +66,12 @@ describe("shipment readiness demo endpoint", () => {
     expect(payload.findings[0].status).toBe("missing");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
-  it("falls back if Gemini returns malformed JSON", async () => {
+  it("falls back if Groq returns malformed JSON", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/rpc/consume_submission_quota")) return new Response("true");
-      if (url.includes("generativelanguage.googleapis.com")) return new Response(JSON.stringify({
-        candidates: [{ content: { parts: [{ text: "not json" }] } }],
+      if (url.includes("api.groq.com/openai/v1/chat/completions")) return new Response(JSON.stringify({
+        choices: [{ message: { content: "not json" } }],
       }), { status: 200 });
       throw new Error("Unexpected request: " + url);
     }) as unknown as typeof fetch;
