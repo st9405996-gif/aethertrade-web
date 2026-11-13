@@ -258,7 +258,7 @@ export function InquiryForm({
                 Monthly shipment volume *
                 <select className="h-10 rounded-md border border-input bg-background px-3" value={shipmentVolume}
                   onChange={(event) => { setShipmentVolume(event.target.value); setErrors((current) => ({ ...current, shipmentVolume: "" })); }}>
-                  <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="50+">50+</option>
+                  <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101–200">101–200</option><option value="201–500">201–500</option><option value="501–1,000">501–1,000</option><option value="1,000+">1,000+</option>
                 </select>
                 {errors["shipmentVolume"] && <span className="text-destructive">{errors["shipmentVolume"]}</span>}
               </label>
