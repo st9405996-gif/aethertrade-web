@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CtaBand } from "@/components/site/cta-band";
 import { meta } from "@/components/site/blocks";
 import { buildMissingDocumentDraft, compareTradeDocuments } from "@/lib/trade-intelligence";
+import { ShipmentReadinessDemo } from "@/components/site/shipment-readiness-demo";
 
 const sampleInvoice = `COMMERCIAL INVOICE
 Invoice No: INV-2048
@@ -83,6 +84,8 @@ function ShipmentReadinessPage() {
           <Link to="/document-intake">Explore Product Intelligence</Link>
         </Button>
       </PageHero>
+
+      <ShipmentReadinessDemo />
 
       <section className="container-page section-pad">
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
