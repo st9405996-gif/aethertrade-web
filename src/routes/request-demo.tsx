@@ -7,7 +7,7 @@ import { CmsPageSections } from "@/components/site/cms-page-renderer";
 /** Preserves catalogue context ("Request This Solution" links carry the slug). */
 const validateSearch = (search: Record<string, unknown>) => ({
   automation: typeof search["automation"] === "string" ? search["automation"] : undefined,
-  shipmentVolume: typeof search["shipmentVolume"] === "string" && ["1–10", "11–50", "50+"].includes(search["shipmentVolume"]) ? search["shipmentVolume"] : undefined,
+  shipmentVolume: typeof search["shipmentVolume"] === "string" && ["1–10", "11–50", "51–100", "101–200", "201–500", "501–1,000", "1,000+"].includes(search["shipmentVolume"]) ? search["shipmentVolume"] : undefined,
 });
 
 export const Route = createFileRoute("/request-demo")({
