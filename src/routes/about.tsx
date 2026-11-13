@@ -3,6 +3,7 @@ import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { PageHero } from "@/components/site/section";
 import { CtaBand } from "@/components/site/cta-band";
+import { CompanyPositioning } from "@/components/site/company-positioning";
 
 export const Route = createFileRoute("/about")({
   loader: async () => ({ cmsPage: await getPublishedCmsPage({ data: { slug: "about" } }) }),
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/about")({
           {
             name: "description",
             content:
-              "AETHER-TRADE builds more connected operations for global trade — human-controlled AI, evidence and operational clarity.",
+              "AETHER-TRADE is a software development company building custom applications, AI-powered tools and workflow automation for global trade businesses.",
           },
           { property: "og:title", content: "About — AETHER-TRADE" },
           {
@@ -43,6 +44,7 @@ function AboutPage() {
             "Our mission, product philosophy and long-term vision — human-controlled AI, evidence-first findings and operational clarity for trade businesses.",
         })}
       />
+      <CompanyPositioning />
       <CmsPageSections page={cmsPage ?? null} />
       <CtaBand
         {...cmsCta(cmsPage, {
