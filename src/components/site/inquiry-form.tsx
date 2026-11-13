@@ -16,9 +16,11 @@ import { hasAnalyticsConsent } from "@/lib/consentmanager-analytics";
 export function InquiryForm({
   kind,
   automation = "",
+  initialShipmentVolume,
 }: {
   kind: "contact" | "demo";
   automation?: string | undefined;
+  initialShipmentVolume?: string | undefined;
 }) {
   const navigate = useNavigate();
   const submit = useServerFn(submitInquiry);
@@ -61,6 +63,7 @@ export function InquiryForm({
       cancelled = true;
     };
   }, [challengeRequired]);
+  const [shipmentVolume, setShipmentVolume] = useState(initialShipmentVolume ?? "");
   const [values, setValues] = useState({
     kind,
     name: "",
@@ -69,8 +72,8 @@ export function InquiryForm({
     country: "",
     category: "General inquiry",
     automation,
-    message: "",
-    requirements: "",
+    message: automation === "shipment-readiness" ? "I would like this for my business." : "",
+    requirements: automation === "shipment-readiness" ? "I would like to explore Shipment Readiness for my shipments." : "",
     consent: false,
     website: "",
   });
@@ -86,7 +89,17 @@ export function InquiryForm({
       setError("The inquiry service is temporarily unavailable. Please try again later.");
       return;
     }
-    const parsed = inquirySchema.safeParse(values);
+    if (kind === "demo" && values.automation === "shipment-readiness" && !shipmentVolume) {
+      setErrors({ shipmentVolume: "Select your approximate monthly shipment volume." });
+      return;
+    }
+    const submissionValues = {
+      ...values,
+      requirements: values.automation === "shipment-readiness" && shipmentVolume
+        ? values.requirements + "\nMonthly shipment volume: " + shipmentVolume
+        : values.requirements,
+    };
+    const parsed = inquirySchema.safeParse(submissionValues);
     if (!parsed.success) {
       const issues = parsed.error.issues;
       setErrors(Object.fromEntries(issues.map((i) => [String(i.path[0]), i.message])));
@@ -240,6 +253,16 @@ export function InquiryForm({
                 ))}
               </select>
             </label>
+            {values.automation === "shipment-readiness" && (
+              <label className="grid gap-2 text-sm">
+                Monthly shipment volume *
+                <select className="h-10 rounded-md border border-input bg-background px-3" value={shipmentVolume}
+                  onChange={(event) => { setShipmentVolume(event.target.value); setErrors((current) => ({ ...current, shipmentVolume: "" })); }}>
+                  <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="50+">50+</option>
+                </select>
+                {errors["shipmentVolume"] && <span className="text-destructive">{errors["shipmentVolume"]}</span>}
+              </label>
+            )}
             <label className="grid gap-2 text-sm">
               Business requirements *
               <Textarea

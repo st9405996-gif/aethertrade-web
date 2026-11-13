@@ -256,6 +256,10 @@ async function dynamicSeoDocument(
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const requestUrl = new URL(request.url);
+    if (requestUrl.pathname === "/api/demo/shipment-readiness") {
+      const { handleShipmentReadinessDemo } = await import("./lib/shipment-readiness-demo.server");
+      return withSecurityHeaders(await handleShipmentReadinessDemo(request, readServerEnv()));
+    }
     if (requestUrl.pathname.startsWith("/api/admin-supabase/"))
       return withSecurityHeaders(await proxyAdminSupabase(request));
     const seoDocument = await dynamicSeoDocument(requestUrl.pathname, readServerEnv());
