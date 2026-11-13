@@ -18,7 +18,7 @@ export function ShipmentReadinessDemo() {
   }, [analyzing]);
   async function analyze() {
     const deterministicResult = buildShipmentReadinessScenario(scenarioId);
-    setResult(deterministicResult);
+    setResult(null);
     setAnalyzing(true);
     try {
       const response = await fetch("/api/demo/shipment-readiness", {
@@ -47,7 +47,7 @@ export function ShipmentReadinessDemo() {
           {SHIPMENT_READINESS_SCENARIOS.map((scenario, index) => {
             const active = scenario.id === scenarioId;
             return (
-              <button key={scenario.id} type="button" aria-pressed={active}
+              <button key={scenario.id} type="button" aria-pressed={active} disabled={analyzing}
                 onClick={() => { setScenarioId(scenario.id); setResult(null); }}
                 className={"rounded-xl border p-4 text-left transition-colors " +
                   (active ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:border-primary/50")}>
