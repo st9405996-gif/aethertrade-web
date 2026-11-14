@@ -17,10 +17,12 @@ export function InquiryForm({
   kind,
   automation = "",
   initialShipmentVolume,
+  initialCompanySize,
 }: {
   kind: "contact" | "demo";
   automation?: string | undefined;
   initialShipmentVolume?: string | undefined;
+  initialCompanySize?: string | undefined;
 }) {
   const navigate = useNavigate();
   const submit = useServerFn(submitInquiry);
@@ -93,12 +95,12 @@ export function InquiryForm({
       setErrors({ shipmentVolume: "Select your approximate monthly shipment volume." });
       return;
     }
-    const submissionValues = {
-      ...values,
-      requirements: values.automation === "shipment-readiness" && shipmentVolume
-        ? values.requirements + "\nMonthly shipment volume: " + shipmentVolume
-        : values.requirements,
-    };
+    const requirementDetails = [
+      values.requirements,
+      initialCompanySize ? "Company size: " + initialCompanySize + " employees" : "",
+      values.automation === "shipment-readiness" && shipmentVolume ? "Monthly shipment volume: " + shipmentVolume : "",
+    ].filter(Boolean);
+    const submissionValues = { ...values, requirements: requirementDetails.join("\n") };
     const parsed = inquirySchema.safeParse(submissionValues);
     if (!parsed.success) {
       const issues = parsed.error.issues;
@@ -253,6 +255,7 @@ export function InquiryForm({
                 ))}
               </select>
             </label>
+            {initialCompanySize && <p className="text-sm text-muted-foreground">Company size selected: <strong className="text-foreground">{initialCompanySize} employees</strong></p>}
             {values.automation === "shipment-readiness" && (
               <label className="grid gap-2 text-sm">
                 Monthly shipment volume *
