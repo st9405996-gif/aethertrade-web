@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 
 const companySizes = ["1–10", "11–50", "51–200", "201–500", "501–1,000", "1,000+"];
 
-export function ProductDemoNextStep({ automation, shipmentVolume, showShipmentVolume = false }: { automation: "product-intelligence" | "shipment-readiness"; shipmentVolume?: string; showShipmentVolume?: boolean }) {
+export function ProductDemoNextStep({ automation, shipmentVolume, showShipmentVolume = false, requireShipmentVolume = false }: { automation: "product-intelligence" | "shipment-readiness"; shipmentVolume?: string; showShipmentVolume?: boolean; requireShipmentVolume?: boolean }) {
   const [companySize, setCompanySize] = useState("");
   const [selectedShipmentVolume, setSelectedShipmentVolume] = useState("");
   const effectiveShipmentVolume = shipmentVolume ?? selectedShipmentVolume;
-  const canContinue = Boolean(companySize) && (!showShipmentVolume || Boolean(effectiveShipmentVolume));
+  const canContinue = Boolean(companySize) && (!(showShipmentVolume || requireShipmentVolume) || Boolean(effectiveShipmentVolume));
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <p className="text-sm font-semibold">How many people are in your company?</p>
