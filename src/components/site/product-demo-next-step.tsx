@@ -19,11 +19,17 @@ export function ProductDemoNextStep({ automation, shipmentVolume }: { automation
             {companySizes.map((size) => <option key={size} value={size}>{size} employees</option>)}
           </select>
         </label>
-        <Button asChild variant="hero" disabled={!companySize}>
-          <Link to="/request-demo" search={{ automation, companySize, shipmentVolume }}>
+        {companySize ? (
+          <Button asChild variant="hero">
+            <Link to="/request-demo" search={{ automation, companySize, shipmentVolume }}>
+              Continue to demo request <ArrowRight />
+            </Link>
+          </Button>
+        ) : (
+          <Button variant="hero" disabled>
             Continue to demo request <ArrowRight />
-          </Link>
-        </Button>
+          </Button>
+        )}
       </div>
     </div>
   );
