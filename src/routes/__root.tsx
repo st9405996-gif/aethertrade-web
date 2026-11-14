@@ -133,15 +133,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     scripts: [
       {
         type: "text/plain",
-        className: "cmplazyload",
-        "data-cmp-purpose": "8",
-        "data-cmp-src": `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
+        "data-type": "application/javascript",
+        "data-name": "analytics",
+        "data-src": `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
         async: true,
       },
       {
-        children: `window.dataLayer = window.dataLayer || [];
-function gtag(){window.dataLayer.push(arguments);}
-gtag('js', new Date());
+        type: "text/plain",
+        "data-type": "application/javascript",
+        "data-name": "analytics",
+        children: `gtag('js', new Date());
 gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
       },
       {
@@ -186,13 +187,22 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="stylesheet" href="/klaro.css" />
         <script
-          src="https://cdn.consentmanager.net/delivery/autoblocking/30b2b75d02cfa.js"
-          data-cmp-ab="1"
-          data-cmp-host="d.delivery.consentmanager.net"
-          data-cmp-cdn="cdn.consentmanager.net"
-          data-cmp-codesrc="16"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+window.gtag = window.gtag || function(){window.dataLayer.push(arguments);};
+window.gtag('consent', 'default', {
+  ad_storage: 'denied',
+  analytics_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});`,
+          }}
         />
+        <script src="/klaro-config.js" defer />
+        <script src="/klaro.js" data-config="klaroConfig" defer />
         <HeadContent />
         <ScriptOnce>{themeBootstrapScript}</ScriptOnce>
       </head>
