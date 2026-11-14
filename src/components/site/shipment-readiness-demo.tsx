@@ -19,9 +19,34 @@ type OwnResult = {
 };
 
 function renderEvidenceLine(line: string, values: string[]) {
-  if (!values.length) return line;
-  const escaped = values.filter(Boolean).sort((a, b) => b.length - a.length)
-    .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\function makeFindingDraft(reference: string, findings: string[]) {"));
+  const candidates = values.filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!candidates.length) return line;
+  const parts: { text: string; highlighted: boolean }[] = [];
+  let remaining = line;
+  while (remaining.length) {
+    let matchIndex = -1;
+    let matchValue = "";
+    for (const value of candidates) {
+      const index = remaining.indexOf(value);
+      if (index !== -1 && (matchIndex === -1 || index < matchIndex)) {
+        matchIndex = index;
+        matchValue = value;
+      }
+    }
+    if (matchIndex === -1) {
+      parts.push({ text: remaining, highlighted: false });
+      break;
+    }
+    if (matchIndex > 0) parts.push({ text: remaining.slice(0, matchIndex), highlighted: false });
+    parts.push({ text: matchValue, highlighted: true });
+    remaining = remaining.slice(matchIndex + matchValue.length);
+  }
+  return parts.map((part, index) => part.highlighted
+    ? <mark key={index} className="rounded bg-amber-300/40 px-0.5 font-semibold text-foreground ring-1 ring-amber-500/40 dark:bg-amber-400/20">{part.text}</mark>
+    : <span key={index}>{part.text}</span>);
+}
+
+function makeFindingDraft(reference: string, findings: string[]) {"));
   if (!escaped.length) return line;
   const matches = new Set(values);
   return line.split(new RegExp(`(${escaped.join("|")})`, "g")).map((part, index) =>
@@ -187,7 +212,17 @@ export function ShipmentReadinessDemo() {
                 {selectedScenario.documents.map((document) => (
                   <div key={document.name} className="min-w-0">
                     <p className="text-xs font-semibold">{document.name}</p>
-                    <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">{document.content}</pre>
+                    <div className="mt-2 overflow-hidden rounded-lg bg-muted/50 p-3 font-mono text-xs leading-6">
+                      {document.content.split("\n").map((line, lineIndex) => {
+                        const evidenceValues = result?.findings.flatMap((finding) =>
+                          finding.evidence.filter((item) => item.document === document.name).map((item) => item.value)
+                        ) ?? [];
+                        return <div key={lineIndex} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2 break-words">
+                          <span className="select-none text-right text-muted-foreground/60">{lineIndex + 1}</span>
+                          <span>{renderEvidenceLine(line, evidenceValues)}</span>
+                        </div>;
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
