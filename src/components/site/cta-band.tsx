@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import globe from "@/assets/globe-network.jpg";
 
 /** Closing call-to-action band with the connected-global-trade visual. */
-export function CtaBand({ title, description }: { title: string; description: string }) {
+export function CtaBand({ title, description, primaryLabel = "Book an Operations Audit", automation }: { title: string; description: string; primaryLabel?: string; automation?: string }) {
   return (
     <section className="relative overflow-hidden">
       <img
@@ -29,8 +29,8 @@ export function CtaBand({ title, description }: { title: string; description: st
           <p className="mt-4 text-pretty text-lg text-muted-foreground">{description}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
-              <Link to="/request-demo" search={{ automation: undefined }}>
-                Book an Operations Audit <ArrowRight />
+              <Link to="/request-demo" search={{ automation }}>
+                {primaryLabel} <ArrowRight />
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>
