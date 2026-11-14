@@ -35,7 +35,7 @@ export type DocumentAnalysis = {
 };
 
 const FIELD_DEFINITIONS = [
-  { key: "invoiceNumber", label: "Invoice number", aliases: ["invoice no", "invoice number", "commercial invoice no", "commercial invoice number", "invoice #"] },
+  { key: "invoiceNumber", label: "Invoice number", aliases: ["invoice no", "invoice number", "commercial invoice no", "commercial invoice number", "reference commercial invoice no", "reference invoice no", "reference invoice number", "invoice #"] },
   { key: "invoiceDate", label: "Invoice date", aliases: ["invoice date", "date of issue", "issue date"] },
   { key: "exporter", label: "Exporter / seller", aliases: ["exporter", "seller", "shipper", "supplier"] },
   { key: "importer", label: "Importer / buyer", aliases: ["importer", "buyer", "consignee", "customer"] },
