@@ -127,7 +127,7 @@ function splitTableCells(line: string) {
 }
 
 function parseQuantity(value: string) {
-  const match = value.replace(/,/g, "").match(/^([\d.]+)\s*([a-z]+)?/i);
+  const match = value.match(/^([\d,]+(?:\.\d+)?)\s*([a-z]+)?/i);
   return { quantity: match?.[1] ?? "", unit: (match?.[2] ?? "").toUpperCase() };
 }
 
