@@ -121,7 +121,7 @@ Subtotal: 25.00`;
   });
 
   it("parses unnumbered invoice rows and pipe-delimited package breakdowns", () => {
-    const invoiceText = \`COMMERCIAL INVOICE
+    const invoiceText = `COMMERCIAL INVOICE
 Invoice Number: INV-2026-089
 Invoice Date: November 15, 2026
 Seller / Exporter
@@ -135,8 +135,8 @@ Line Items (Goods Description)
 | 100% Cotton Men's Polo Shirts | 6105.10 | 1,000 | Pcs | $5.50 | $5,500.00 | Pakistan |
 | Leather Casual Belts | 4203.30 | 500 | Pcs | $3.20 | $1,600.00 | Pakistan |
 | **Total** | | **1,500** | | | **$7,100.00** | |
-• Total Invoice Amount: $7,100.00 USD\`;
-    const packingText = \`PACKING LIST
+• Total Invoice Amount: $7,100.00 USD`;
+    const packingText = `PACKING LIST
 Reference Commercial Invoice No.: INV-2026-089
 Date: November 15, 2026
 | Marks & Numbers | Package Type | No. of Packages | Description of Goods | Qty / Pcs | Net Weight (kg) | Gross Weight (kg) | Dimensions (cm) |
@@ -146,7 +146,7 @@ Date: November 15, 2026
 | **Total** | | **30 Cartons** | | **1,500 Pcs** | **305.00 kg** | **340.00 kg** | |
 Total Number of Packages: 30 Cartons
 Total Net Weight: 305.00 kg
-Total Gross Weight: 340.00 kg\`;
+Total Gross Weight: 340.00 kg`;
     const invoice = analyzeTradeDocument(invoiceText);
     const packing = analyzeTradeDocument(packingText);
     const field = (result: ReturnType<typeof analyzeTradeDocument>, key: string) => result.fields.find((item) => item.key === key)?.value;
