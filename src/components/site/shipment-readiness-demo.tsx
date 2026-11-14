@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { buildShipmentReadinessScenario, SHIPMENT_READINESS_SCENARIOS, type ShipmentReadinessDemoResult, type ShipmentReadinessScenarioId } from "@/lib/shipment-readiness-demo";
 import { compareTradeDocuments, type ComparisonRow } from "@/lib/trade-intelligence";
 
@@ -240,7 +241,10 @@ export function ShipmentReadinessDemo() {
                       <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101+">100+ (101 or more)</option>
                     </select>
                   </label>
-                  <Button className="mt-3" asChild variant="hero" disabled={!monthlyVolume}><Link to="/request-demo" search={{ automation: "shipment-readiness", shipmentVolume: monthlyVolume }}>Discuss a pilot <ArrowRight /></Link></Button>
+                  <p className="mt-2 text-xs text-muted-foreground">You can include this estimate when you continue to the demo request.</p>
+                </div>
+                <div className="mt-4">
+                  <ProductDemoNextStep automation="shipment-readiness" />
                 </div>
               </div>
             )}
