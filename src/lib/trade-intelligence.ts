@@ -102,7 +102,7 @@ function findFirstMatch(lines: string[], patterns: RegExp[]) {
 
 function parseLineItems(lines: string[]): TradeLineItem[] {
   const items: TradeLineItem[] = [];
-  const rowPattern = /^\s*(\d{1,4})\s+(?:(\d{4}(?:\.\d{2}){1,3}|\d{6,10})\s+)?(.+?)\s+(\d[\d,]*(?:\.\d+)?)\s+(PCS?|PIECES?|SETS?|UNITS?|PAIRS?|KG|KGS|BOXES?|CARTONS?)\s+([\d,]+\.\d{2})\s+([\d,]+\.\d{2})\s*$/i;
+  const rowPattern = /^\s*(\d{1,4})\s+(?:(\d{4}(?:\.\d{2}){1,3}|\d{6,10})\s+)?(.+?)\s+(\d[\d,]*(?:\.\d+)?)\s+(PCS?|PIECES?|SETS?|UNITS?|PAIRS?|KG|KGS|BOXES?|CARTONS?)\s+([\d,]+(?:\.\d{1,2})?)\s+([\d,]+(?:\.\d{1,2})?)\s*$/i;
   for (const line of lines) {
     const match = line.match(rowPattern);
     if (!match) continue;
@@ -144,10 +144,10 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   values.set("importer", importer.value ? importer : findLabelValue(lines, ["importer", "buyer", "consignee", "customer"]));
 
   const total = findFirstMatch(lines, [
-    /^(?:total\s+invoice\s+value|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:\-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?([\d,]+\.\d{2})\b/i,
+    /^(?:total\s+invoice\s+value|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:\-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?([\d,]+(?:\.\d{1,2})?)\b/i,
   ]);
   if (total.value) values.set("total", total);
-  const subtotal = findFirstMatch(lines, [/^sub\s*total\s*[:\-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?([\d,]+\.\d{2})\b/i]);
+  const subtotal = findFirstMatch(lines, [/^sub\s*total\s*[:\-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?([\d,]+(?:\.\d{1,2})?)\b/i]);
   if (subtotal.value) values.set("subtotal", subtotal);
 
   const gross = findFirstMatch(lines, [/^(?:total\s+)?gross\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i]);
