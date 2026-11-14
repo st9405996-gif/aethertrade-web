@@ -90,6 +90,22 @@ describe("trade intelligence", () => {
     expect(invoiceOnly.find((row) => row.key === "invoiceNumber")?.status).toBe("invoice-only");
   });
 
+  it("supports slash labels with an empty value and validates summed carton rows", () => {
+    const text = `COMMERCIAL INVOICE
+Exporter / Seller:
+Example Export Ltd.
+1. Item: Cotton towels — 3 cartons
+2. Item: Bed linen — 5 cartons
+Total Packages: 8 cartons`;
+    const result = analyzeTradeDocument(text);
+    expect(result.fields.find((field) => field.key === "exporter")?.value).toBe("Example Export Ltd.");
+    expect(result.validations.find((check) => check.key === "carton-count")).toMatchObject({
+      status: "consistent",
+      expected: "8",
+      actual: "8 cartons",
+    });
+  });
+
   it("creates a draft only from the missing-document list supplied by the operator", () => {
     const result = buildMissingDocumentDraft("SHIP-1", ["Bill of lading"]);
     expect(result.subject).toContain("SHIP-1");
