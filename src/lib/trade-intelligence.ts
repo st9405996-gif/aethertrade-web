@@ -91,6 +91,25 @@ function findLabelValue(lines: string[], aliases: readonly string[]) {
   return { value: "", evidence: "" };
 }
 
+function findPartyValue(lines: string[], aliases: readonly string[]) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].replace(/^\s*(?:\d+[.)]|[-*•])\s*/, "").trim();
+    const colonIndex = line.indexOf(":");
+    const label = colonIndex >= 0 ? line.slice(0, colonIndex) : line;
+    if (!labelMatches(label, aliases)) continue;
+    const inline = colonIndex >= 0 ? clean(line.slice(colonIndex + 1)) : "";
+    if (inline && !/^company name$/i.test(inline)) return { value: inline, evidence: line };
+    for (let nextIndex = index + 1; nextIndex < Math.min(index + 6, lines.length); nextIndex += 1) {
+      const candidate = lines[nextIndex].replace(/^\s*(?:\d+[.)]|[-*•])\s*/, "").trim();
+      if (/^(?:buyer|seller|shipper|exporter|importer|consignee|notify party|shipment|line items|packing|bank details)\b/i.test(candidate)) break;
+      const company = candidate.match(/^(?:company\s+name|legal\s+name)\s*:\s*(.+)$/i);
+      if (company?.[1]) return { value: clean(company[1]), evidence: line + " → " + candidate };
+      if (candidate && !candidate.includes(":")) return { value: clean(candidate), evidence: line + " → " + candidate };
+    }
+  }
+  return { value: "", evidence: "" };
+}
+
 function findFirstMatch(lines: string[], patterns: RegExp[]) {
   for (const pattern of patterns) {
     for (const line of lines) {
@@ -174,8 +193,8 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     values.set(definition.key, findLabelValue(lines, definition.aliases));
   }
 
-  const exporter = findLabelValue(lines, ["shipper / exporter", "exporter / shipper", "seller / exporter", "exporter", "seller", "shipper", "supplier"]);
-  const importer = findLabelValue(lines, ["consignee / buyer", "buyer / consignee", "importer / buyer", "importer", "buyer", "consignee", "customer"]);
+  const exporter = findPartyValue(lines, ["shipper / exporter", "exporter / shipper", "seller / exporter", "exporter", "seller", "shipper", "supplier"]);
+  const importer = findPartyValue(lines, ["consignee / buyer", "buyer / consignee", "importer / buyer", "importer", "buyer", "consignee", "customer"]);
   values.set("exporter", exporter.value ? exporter : findLabelValue(lines, ["exporter", "seller", "shipper", "supplier"]));
   values.set("importer", importer.value ? importer : findLabelValue(lines, ["importer", "buyer", "consignee", "customer"]));
 
@@ -236,14 +255,14 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   });
 
   const validations: InternalValidation[] = [];
-  const subtotalValue = values.get("subtotal")?.value ?? "";
+  const subtotalValue = values.get("subtotal")?.value || values.get("total")?.value || "";
   if (lineItems.length && subtotalValue) {
     const calculated = lineItems.reduce((sum, item) => sum + amountToNumber(item.amount), 0);
     const stated = amountToNumber(subtotalValue);
     const matches = Number.isFinite(calculated) && Number.isFinite(stated) && Math.abs(calculated - stated) < 0.011;
     validations.push({
       key: "line-item-subtotal",
-      label: "Line items vs subtotal",
+      label: values.get("subtotal")?.value ? "Line items vs subtotal" : "Line items vs invoice total",
       status: matches ? "consistent" : "mismatch",
       expected: calculated.toFixed(2),
       actual: stated.toFixed(2),
