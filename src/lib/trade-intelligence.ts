@@ -199,26 +199,26 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   values.set("importer", importer.value ? importer : findLabelValue(lines, ["importer", "buyer", "consignee", "customer"]));
 
   const total = findFirstMatch(lines, [
-    /^(?:total\s+invoice\s+value|total\s+invoice\s+amount|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i,
+    /^\s*[-*•]?\s*(?:total\s+invoice\s+value|total\s+invoice\s+amount|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i,
   ]);
   if (total.value) values.set("total", total);
-  const subtotal = findFirstMatch(lines, [/^sub\s*total\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i]);
+  const subtotal = findFirstMatch(lines, [/^\s*[-*•]?\s*sub\s*total\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i]);
   if (subtotal.value) values.set("subtotal", subtotal);
 
   const gross = findFirstMatch(lines, [
-    /^total\s+gross\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
-    /^gross\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^\s*[-*•]?\s*total\s+gross\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^\s*[-*•]?\s*gross\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
   ]);
   const net = findFirstMatch(lines, [
-    /^total\s+net\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
-    /^net\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^\s*[-*•]?\s*total\s+net\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^\s*[-*•]?\s*net\s+(?:weight|wt)\s*[:-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
   ]);
   if (gross.value) values.set("grossWeight", gross);
   if (net.value) values.set("netWeight", net);
 
   const packages = findFirstMatch(lines, [
-    /^total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
-    /^(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
+    /^\s*[-*•]?\s*total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
+    /^\s*[-*•]?\s*(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
   ]);
   if (packages.value) values.set("packages", packages);
 
@@ -279,10 +279,11 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   for (let index = 0; index < lines.length; index += 1) {
     const header = splitTableCells(lines[index]).map((cell) => cell.toLowerCase());
     const packageIndex = header.findIndex((cell) => /no\.? of packages|number of packages|packages/.test(cell));
-    if (packageIndex < 0 || !header.some((cell) => /description of goods|goods description/.test(cell))) continue;
+    const descriptionIndex = header.findIndex((cell) => /description of goods|goods description/.test(cell));
+    if (packageIndex < 0 || descriptionIndex < 0) continue;
     for (let row = index + 1; row < lines.length; row += 1) {
       const cells = splitTableCells(lines[row]);
-      if (!cells.length || cells.length <= packageIndex || /^total$/i.test((cells[0] ?? "").replace(/\\*/g, "").trim())) break;
+      if (!cells.length || cells.length <= packageIndex || /^total$/i.test((cells[descriptionIndex] ?? "").trim())) break;
       const count = amountToNumber(cells[packageIndex]);
       if (Number.isFinite(count)) cartonRows.push(count);
     }
