@@ -101,26 +101,61 @@ function findFirstMatch(lines: string[], patterns: RegExp[]) {
   return { value: "", evidence: "" };
 }
 
+function splitTableCells(line: string) {
+  if (line.includes("|")) return line.split("|").map((cell) => clean(cell));
+  if (line.includes("\t")) return line.split("\t").map((cell) => clean(cell));
+  return [];
+}
+
+function parseQuantity(value: string) {
+  const match = value.replace(/,/g, "").match(/^([\d.]+)\s*([a-z]+)?/i);
+  return { quantity: match?.[1] ?? "", unit: (match?.[2] ?? "").toUpperCase() };
+}
+
 function parseLineItems(lines: string[]): TradeLineItem[] {
   const items: TradeLineItem[] = [];
-  const rowPattern = /^\s*(\d{1,4})\s+(?:(\d{4}(?:\.\d{2}){1,3}|\d{6,10})\s+)?(.+?)\s+(\d[\d,]*(?:\.\d+)?)\s+(PCS?|PIECES?|SETS?|UNITS?|PAIRS?|KG|KGS|BOXES?|CARTONS?)\s+([\d,]+(?:\.\d{1,2})?)\s+([\d,]+(?:\.\d{1,2})?)\s*$/i;
+  const rowPattern = /^\s*(\d{1,4})\s+(?:(\d{4}(?:\.\d{2}){1,3}|\d{6,10})\s+)?(.+?)\s+(\d[\d,]*(?:\.\d+)?)\s+(PCS?|PIECES?|SETS?|UNITS?|PAIRS?|KG|KGS|BOXES?|CARTONS?)\s+[$€£]?([\d,]+(?:\.\d{1,2})?)\s+[$€£]?([\d,]+(?:\.\d{1,2})?)\s*$/i;
   for (const line of lines) {
     const match = line.match(rowPattern);
-    if (!match) continue;
-    items.push({
-      lineNumber: match[1],
-      hsCode: match[2] ?? "",
-      description: clean(match[3]),
-      quantity: clean(match[4]),
-      unit: match[5].toUpperCase(),
-      unitPrice: clean(match[6]),
-      amount: clean(match[7]),
-      evidence: line,
-    });
+    if (match) {
+      items.push({ lineNumber: match[1], hsCode: match[2] ?? "", description: clean(match[3]), quantity: clean(match[4]), unit: match[5].toUpperCase(), unitPrice: clean(match[6]), amount: clean(match[7]), evidence: line });
+    }
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const header = splitTableCells(lines[index]).map((cell) => cell.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+    if (!header.length || !header.some((cell) => /description of goods|goods description|description/.test(cell)) ||
+        !header.some((cell) => /qty|quantity/.test(cell))) continue;
+    const column = (pattern: RegExp) => header.findIndex((cell) => pattern.test(cell));
+    const descriptionIndex = column(/description of goods|goods description|description/);
+    const hsIndex = column(/^hs code$|^hs code stated$/);
+    const quantityIndex = column(/qty|quantity/);
+    const unitIndex = column(/^unit$|unit of measure/);
+    const unitPriceIndex = column(/unit price/);
+    const amountIndex = column(/total amount|amount/);
+    for (let row = index + 1; row < lines.length; row += 1) {
+      const cells = splitTableCells(lines[row]);
+      if (!cells.length || cells.length <= Math.max(descriptionIndex, quantityIndex)) break;
+      const description = cells[descriptionIndex] ?? "";
+      if (!description || /^total$/i.test(description)) break;
+      const qty = parseQuantity(cells[quantityIndex] ?? "");
+      if (!qty.quantity) continue;
+      const unit = (unitIndex >= 0 ? cells[unitIndex] : qty.unit) || qty.unit;
+      items.push({
+        lineNumber: String(items.length + 1),
+        hsCode: hsIndex >= 0 ? cells[hsIndex] ?? "" : "",
+        description,
+        quantity: qty.quantity,
+        unit: unit.toUpperCase(),
+        unitPrice: unitPriceIndex >= 0 ? (cells[unitPriceIndex] ?? "").replace(/[$€£]/g, "") : "",
+        amount: amountIndex >= 0 ? (cells[amountIndex] ?? "").replace(/[$€£]/g, "") : "",
+        evidence: lines[row],
+      });
+    }
+    break;
   }
   return items;
 }
-
 function amountToNumber(value: string) {
   const match = value.replace(/,/g, "").match(/\d+(?:\.\d{1,2})?/);
   return match ? Number(match[0]) : Number.NaN;
@@ -222,6 +257,18 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     const match = line.match(/^\s*(?:(?:item|line|product)\s*)?#?\d+\b.*?\b([\d,]+)\s*(?:cartons?|boxes?|packages?)\b/i);
     return match ? [Number(match[1].replace(/,/g, ""))] : [];
   });
+  for (let index = 0; index < lines.length; index += 1) {
+    const header = splitTableCells(lines[index]).map((cell) => cell.toLowerCase());
+    const packageIndex = header.findIndex((cell) => /no\.? of packages|number of packages|packages/.test(cell));
+    if (packageIndex < 0 || !header.some((cell) => /description of goods|goods description/.test(cell))) continue;
+    for (let row = index + 1; row < lines.length; row += 1) {
+      const cells = splitTableCells(lines[row]);
+      if (!cells.length || cells.length <= packageIndex || /^total$/i.test(cells[0])) break;
+      const count = amountToNumber(cells[packageIndex]);
+      if (Number.isFinite(count)) cartonRows.push(count);
+    }
+    break;
+  }
   const statedPackages = values.get("packages")?.value ?? "";
   if (cartonRows.length && statedPackages) {
     const calculated = cartonRows.reduce((sum, count) => sum + count, 0);
