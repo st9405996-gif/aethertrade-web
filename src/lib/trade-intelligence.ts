@@ -91,8 +91,8 @@ function findLabelValue(lines: string[], aliases: readonly string[]) {
 }
 
 function findFirstMatch(lines: string[], patterns: RegExp[]) {
-  for (const line of lines) {
-    for (const pattern of patterns) {
+  for (const pattern of patterns) {
+    for (const line of lines) {
       const match = line.match(pattern);
       if (match?.[1]) return { value: clean(match[1]), evidence: line };
     }
@@ -150,12 +150,21 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   const subtotal = findFirstMatch(lines, [/^sub\s*total\s*[:\-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?([\d,]+(?:\.\d{1,2})?)\b/i]);
   if (subtotal.value) values.set("subtotal", subtotal);
 
-  const gross = findFirstMatch(lines, [/^(?:total\s+)?gross\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i]);
-  const net = findFirstMatch(lines, [/^(?:total\s+)?net\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i]);
+  const gross = findFirstMatch(lines, [
+    /^total\s+gross\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^gross\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+  ]);
+  const net = findFirstMatch(lines, [
+    /^total\s+net\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+    /^net\s+(?:weight|wt)\s*[:\-]?\s*([\d,]+(?:\.\d+)?\s*(?:kg|kgs|lb|lbs|tons?)?)/i,
+  ]);
   if (gross.value) values.set("grossWeight", gross);
   if (net.value) values.set("netWeight", net);
 
-  const packages = findFirstMatch(lines, [/^(?:total\s+)?(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:\-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i]);
+  const packages = findFirstMatch(lines, [
+    /^total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:\-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
+    /^(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:\-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
+  ]);
   if (packages.value) values.set("packages", packages);
 
   const hsCodes = [...new Set(lineItems.map((item) => item.hsCode).filter(Boolean))];
