@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const companySizes = ["1–10", "11–50", "51–200", "201–500", "501–1,000", "1,000+"];
 
-export function ProductDemoNextStep({ automation }: { automation: "product-intelligence" | "shipment-readiness" }) {
+export function ProductDemoNextStep({ automation, shipmentVolume }: { automation: "product-intelligence" | "shipment-readiness"; shipmentVolume?: string }) {
   const [companySize, setCompanySize] = useState("");
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -20,7 +20,7 @@ export function ProductDemoNextStep({ automation }: { automation: "product-intel
           </select>
         </label>
         <Button asChild variant="hero" disabled={!companySize}>
-          <Link to="/request-demo" search={{ automation, companySize }}>
+          <Link to="/request-demo" search={{ automation, companySize, shipmentVolume }}>
             Continue to demo request <ArrowRight />
           </Link>
         </Button>
