@@ -738,3 +738,139 @@ to create a white background.
 .klaro .cookie-notice-hidden {
   display: none !important;
 }
+
+
+/* AETHER-TRADE brand integration — keep Klaro controls native and accessible. */
+.klaro {
+  --border-radius: 14px;
+  --button-text-color: #ffffff;
+  --green1: #0284c7;
+  --green2: #0ea5e9;
+  --green3: #38bdf8;
+  --blue1: #0369a1;
+  --blue2: #0ea5e9;
+  --title-font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+.klaro .cookie-notice,
+.klaro .cookie-modal .cm-modal {
+  font-family: Inter, "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  border: 1px solid var(--klaro-border, #dbe4ee);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgb(15 23 42 / 18%);
+}
+.klaro .cookie-notice {
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+}
+.klaro .cookie-modal .cm-modal {
+  max-width: min(620px, calc(100vw - 28px));
+  padding: 24px;
+}
+.klaro .cookie-notice p,
+.klaro .cookie-modal p,
+.klaro .cookie-notice h1,
+.klaro .cookie-notice h2,
+.klaro .cookie-modal h1,
+.klaro .cookie-modal h2,
+.klaro .cookie-modal li {
+  line-height: 1.55;
+}
+.klaro .cm-btn {
+  min-height: 40px;
+  padding: 9px 15px !important;
+  border-radius: 9px !important;
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.klaro .cm-btn:hover { transform: translateY(-1px); }
+.klaro .cm-btn.cm-btn-success {
+  background: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+.klaro .cm-btn.cm-btn-success:hover { background: #0284c7 !important; }
+.klaro .cm-btn.cm-btn-info {
+  background: #e0f2fe !important;
+  color: #0c4a6e !important;
+}
+.klaro .cm-btn.cm-btn-info:hover { background: #bae6fd !important; }
+.klaro .cm-btn.cm-btn-danger,
+.klaro .cm-btn.cm-btn-close {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+.klaro a { color: #0284c7 !important; }
+.klaro .cm-list-input:checked + .cm-list-label .slider {
+  background-color: #0ea5e9 !important;
+}
+.klaro .cm-list-label .slider { border-radius: 999px; }
+.klaro .cm-list-label .slider::before { border-radius: 50%; }
+
+html.light .klaro {
+  --klaro-border: #dbe4ee;
+  --dark1: #ffffff;
+  --dark2: #f8fafc;
+  --dark3: #475569;
+  --light1: #0f172a;
+  --light2: #334155;
+  --light3: #64748b;
+  --white1: #ffffff;
+  --white2: #f1f5f9;
+  --white3: #e2e8f0;
+  --green1: #0284c7;
+  --green2: #0ea5e9;
+}
+html.light .klaro .cookie-notice,
+html.light .klaro .cookie-modal .cm-modal {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #dbe4ee !important;
+}
+html.light .klaro .cookie-notice p,
+html.light .klaro .cookie-modal p,
+html.light .klaro .cookie-modal h1,
+html.light .klaro .cookie-modal h2,
+html.light .klaro .cookie-modal li { color: #334155 !important; }
+
+html.dark .klaro {
+  --klaro-border: rgb(148 163 184 / 24%);
+  --dark1: #111827;
+  --dark2: #1e293b;
+  --dark3: #94a3b8;
+  --light1: #f8fafc;
+  --light2: #e2e8f0;
+  --light3: #cbd5e1;
+  --white1: #0f172a;
+  --white2: #1e293b;
+  --white3: #334155;
+  --green1: #38bdf8;
+  --green2: #0ea5e9;
+}
+html.dark .klaro .cookie-notice,
+html.dark .klaro .cookie-modal .cm-modal {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-color: rgb(148 163 184 / 24%) !important;
+}
+html.dark .klaro .cookie-notice p,
+html.dark .klaro .cookie-modal p,
+html.dark .klaro .cookie-modal h1,
+html.dark .klaro .cookie-modal h2,
+html.dark .klaro .cookie-modal li { color: #e2e8f0 !important; }
+html.dark .klaro .cm-btn.cm-btn-info {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+html.dark .klaro .cm-btn.cm-btn-danger,
+html.dark .klaro .cm-btn.cm-btn-close {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+@media (max-width: 600px) {
+  .klaro .cookie-notice { left: 12px; right: 12px; bottom: 12px; width: auto; }
+  .klaro .cookie-modal .cm-modal { margin: 12px; padding: 18px; }
+  .klaro .cm-btn { margin: 4px 6px 4px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .klaro .cm-btn { transition: none; }
+  .klaro .cm-btn:hover { transform: none; }
+}
