@@ -324,7 +324,7 @@ export function ShipmentReadinessDemo() {
                   </label>
                 </div>
                 <div className="mt-4">
-                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} />
+                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
                 </div>
                 </>
               )}
