@@ -46,16 +46,6 @@ function renderEvidenceLine(line: string, values: string[]) {
     : <span key={index}>{part.text}</span>);
 }
 
-function makeFindingDraft(reference: string, findings: string[]) {"));
-  if (!escaped.length) return line;
-  const matches = new Set(values);
-  return line.split(new RegExp(`(${escaped.join("|")})`, "g")).map((part, index) =>
-    matches.has(part)
-      ? <mark key={index} className="rounded bg-amber-300/40 px-0.5 font-semibold text-foreground ring-1 ring-amber-500/40 dark:bg-amber-400/20">{part}</mark>
-      : <span key={index}>{part}</span>
-  );
-}
-
 function makeFindingDraft(reference: string, findings: string[]) {
   const subject = `Clarification required for shipment ${reference}`;
   const body = `Hello,\n\nWe are reviewing the document set for shipment ${reference}. Could you please help clarify the following item(s)?\n\n${findings.map((item) => `- ${item}`).join("\n")}\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team`;
