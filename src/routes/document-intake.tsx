@@ -180,7 +180,7 @@ function ProductIntelligencePage() {
                 <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
                   <p className="text-sm font-semibold">Need to review your company’s shipment workflow?</p>
                   <p className="mt-1 text-sm text-muted-foreground">Share your company size and continue to the AETHER-TRADE inquiry.</p>
-                  <div className="mt-4"><ProductDemoNextStep automation="product-intelligence" /></div>
+                  <div className="mt-4"><ProductDemoNextStep automation="product-intelligence" showShipmentVolume /></div>
                 </div>
               </>
             )}
