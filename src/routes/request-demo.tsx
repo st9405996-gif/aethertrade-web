@@ -8,6 +8,7 @@ import { CmsPageSections } from "@/components/site/cms-page-renderer";
 const validateSearch = (search: Record<string, unknown>) => ({
   automation: typeof search["automation"] === "string" ? search["automation"] : undefined,
   shipmentVolume: typeof search["shipmentVolume"] === "string" && ["1–10", "11–50", "51–100", "101–200", "201–500", "501–1,000", "1,000+"].includes(search["shipmentVolume"]) ? search["shipmentVolume"] : undefined,
+  companySize: typeof search["companySize"] === "string" && ["1–10", "11–50", "51–200", "201–500", "501–1,000", "1,000+"].includes(search["companySize"]) ? search["companySize"] : undefined,
 });
 
 export const Route = createFileRoute("/request-demo")({
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/request-demo")({
 });
 
 function RequestDemoPage() {
-  const { automation, shipmentVolume } = Route.useSearch();
+  const { automation, shipmentVolume, companySize } = Route.useSearch();
   const { cmsPage } = Route.useLoaderData();
   return (
     <>
@@ -51,7 +52,7 @@ function RequestDemoPage() {
         })}
       />
       <CmsPageSections page={cmsPage} />
-      <InquiryForm kind="demo" automation={automation} initialShipmentVolume={shipmentVolume} />
+      <InquiryForm kind="demo" automation={automation} initialShipmentVolume={shipmentVolume} initialCompanySize={companySize} />
     </>
   );
 }
