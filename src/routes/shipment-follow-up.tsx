@@ -31,11 +31,11 @@ function ShipmentReadinessPage() {
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link to="/document-intake">Explore Product Intelligence</Link>
+          <a href="#interactive-demo">Try Live Sample</a>
         </Button>
       </PageHero>
       <ShipmentReadinessDemo />
-      <CtaBand title="Test Shipment Readiness against your operation." description="Request a private walkthrough to discuss your checklist, document formats and approval process." />
+      <CtaBand title="Test Shipment Readiness against your operation." description="Request a private walkthrough to discuss your checklist, document formats and approval process." primaryLabel="Request a private demo" automation="shipment-readiness" />
     </>
   );
 }
