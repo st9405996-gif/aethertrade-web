@@ -50,8 +50,6 @@ const FIELD_DEFINITIONS = [
   { key: "netWeight", label: "Net weight", aliases: ["total net weight", "net weight", "net wt"] },
 ] as const;
 
-type FieldKey = (typeof FIELD_DEFINITIONS)[number]["key"];
-
 function clean(value: string) {
   return value.trim().replace(/\s+/g, " ").replace(/[;,]+$/, "");
 }
