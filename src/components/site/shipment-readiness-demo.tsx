@@ -283,6 +283,7 @@ export function ShipmentReadinessDemo() {
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
               <p className="eyebrow">Review and approval</p><h3 className="text-lg font-semibold">Shipment result</h3>
               {!ownResult ? <div className="mt-5 rounded-lg bg-muted/40 p-6 text-center text-sm text-muted-foreground">Add both document texts and run the workflow. Findings and a draft will appear here together.</div> : (
+                <>
                 <div className="mt-4 space-y-4" aria-live="polite">
                   <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">{ownResult.comparison.filter((item) => item.status === "consistent").length} consistent</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">{ownResult.comparison.filter((item) => item.status === "mismatch").length} mismatches</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "unable").length} not comparable</span></div>
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
@@ -296,6 +297,7 @@ export function ShipmentReadinessDemo() {
                 <div className="mt-4">
                   <ProductDemoNextStep automation="shipment-readiness" />
                 </div>
+                </>
               )}
             </div>
           </div>
