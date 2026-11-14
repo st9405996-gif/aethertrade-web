@@ -17,10 +17,12 @@ export function InquiryForm({
   kind,
   automation = "",
   initialShipmentVolume,
+  initialCompanySize,
 }: {
   kind: "contact" | "demo";
   automation?: string | undefined;
   initialShipmentVolume?: string | undefined;
+  initialCompanySize?: string | undefined;
 }) {
   const navigate = useNavigate();
   const submit = useServerFn(submitInquiry);
@@ -73,7 +75,11 @@ export function InquiryForm({
     category: "General inquiry",
     automation,
     message: automation === "shipment-readiness" ? "I would like this for my business." : "",
-    requirements: automation === "shipment-readiness" ? "I would like to explore Shipment Readiness for my shipments." : "",
+    requirements: automation === "shipment-readiness"
+      ? "I would like to explore Shipment Readiness for my shipments."
+      : automation === "product-intelligence"
+        ? "I would like to explore Product Intelligence for our product and invoice review workflow."
+        : "",
     consent: false,
     website: "",
   });
@@ -93,12 +99,12 @@ export function InquiryForm({
       setErrors({ shipmentVolume: "Select your approximate monthly shipment volume." });
       return;
     }
-    const submissionValues = {
-      ...values,
-      requirements: values.automation === "shipment-readiness" && shipmentVolume
-        ? values.requirements + "\nMonthly shipment volume: " + shipmentVolume
-        : values.requirements,
-    };
+    const requirementDetails = [
+      values.requirements,
+      initialCompanySize ? "Company size: " + initialCompanySize + " employees" : "",
+      values.automation === "shipment-readiness" && shipmentVolume ? "Monthly shipment volume: " + shipmentVolume : "",
+    ].filter(Boolean);
+    const submissionValues = { ...values, requirements: requirementDetails.join("\n") };
     const parsed = inquirySchema.safeParse(submissionValues);
     if (!parsed.success) {
       const issues = parsed.error.issues;
@@ -253,12 +259,13 @@ export function InquiryForm({
                 ))}
               </select>
             </label>
+            {initialCompanySize && <p className="text-sm text-muted-foreground">Company size selected: <strong className="text-foreground">{initialCompanySize} employees</strong></p>}
             {values.automation === "shipment-readiness" && (
               <label className="grid gap-2 text-sm">
                 Monthly shipment volume *
                 <select className="h-10 rounded-md border border-input bg-background px-3" value={shipmentVolume}
                   onChange={(event) => { setShipmentVolume(event.target.value); setErrors((current) => ({ ...current, shipmentVolume: "" })); }}>
-                  <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101–200">101–200</option><option value="201–500">201–500</option><option value="501–1,000">501–1,000</option><option value="1,000+">1,000+</option>
+                  <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101+">100+ (101 or more)</option>
                 </select>
                 {errors["shipmentVolume"] && <span className="text-destructive">{errors["shipmentVolume"]}</span>}
               </label>

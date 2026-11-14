@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, CheckCircle2, FileSearch, ShieldCheck, Sparkles, Upload } from "lucide-react";
+import { FileSearch, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { PageHero } from "@/components/site/section";
 import { Button } from "@/components/ui/button";
-import { CtaBand } from "@/components/site/cta-band";
+import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { meta } from "@/components/site/blocks";
 import { analyzeTradeDocument, type DocumentAnalysis } from "@/lib/trade-intelligence";
 
@@ -70,17 +70,8 @@ function ProductIntelligencePage() {
       <PageHero
         eyebrow="Product 01 · Product Intelligence"
         title="Understand what the invoice actually says about the goods."
-        description="Extract stated product details, review the commercial description and surface attributes that are not present in the supplied text. Uncertain details stay unknown instead of being guessed."
-      >
-        <Button variant="hero" asChild>
-          <Link to="/request-demo" search={{ automation: "product-intelligence" }}>
-            Request a private demo <ArrowRight />
-          </Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to="/shipment-follow-up">Explore Shipment Readiness</Link>
-        </Button>
-      </PageHero>
+        description="Review invoice text, extract stated product details and identify information gaps. Unstated attributes remain unknown rather than being guessed."
+      />
 
       <section className="container-page section-pad">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
@@ -157,8 +148,8 @@ function ProductIntelligencePage() {
             )}
           </div>
         </div>
+        {analysis && <div className="mx-auto mt-6 max-w-3xl"><ProductDemoNextStep automation="product-intelligence" /></div>}
       </section>
-      <CtaBand title="Test Product Intelligence against your real workflow." description="Request a private walkthrough to discuss document formats, product data requirements and controlled pilot scope." />
     </>
   );
 }
