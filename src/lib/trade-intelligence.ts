@@ -210,6 +210,25 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     validations.push({ key: "line-item-subtotal", label: "Line items vs subtotal", status: "unable", expected: "", actual: subtotalValue, evidence: "A complete set of line-item amounts and a stated subtotal were not both available." });
   }
 
+  const cartonRows = lines.flatMap((line) => {
+    const match = line.match(/^\s*(?:(?:item|line|product)\s*)?#?\d+\b.*?\b([\d,]+)\s*(?:cartons?|boxes?|packages?)\b/i);
+    return match ? [Number(match[1].replace(/,/g, ""))] : [];
+  });
+  const statedPackages = values.get("packages")?.value ?? "";
+  if (cartonRows.length && statedPackages) {
+    const calculated = cartonRows.reduce((sum, count) => sum + count, 0);
+    const stated = amountToNumber(statedPackages);
+    const matches = Number.isFinite(stated) && calculated === stated;
+    validations.push({
+      key: "carton-count",
+      label: "Line carton counts vs total packages",
+      status: matches ? "consistent" : "mismatch",
+      expected: String(calculated),
+      actual: statedPackages,
+      evidence: cartonRows.join(" + ") + " = " + calculated + "; stated total " + statedPackages,
+    });
+  }
+
   return { fields, productDescription, lineItems, validations, productAttributes };
 }
 
