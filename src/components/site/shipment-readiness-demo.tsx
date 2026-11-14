@@ -106,11 +106,10 @@ export function ShipmentReadinessDemo() {
     const requests = [
       ...missing.map((item) => `Please share the outstanding ${item}, if it is required for this shipment.`),
       ...mismatches.map((item) => `${item.label} differs between the invoice ("${item.invoiceValue}") and packing list ("${item.packingValue}"). Please confirm the correct value and provide a revised document if needed.`),
-      ...unable.map((item) => `${item.label} could not be compared because it was not found in both supplied texts. Please confirm the detail if it is relevant.`),
     ];
     const draft = requests.length
       ? makeFindingDraft(reference.trim() || "shipment", requests)
-      : { subject: `Shipment ${reference.trim() || "review"} — no follow-up flagged`, body: "The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. Please complete the normal human review before proceeding." };
+      : { subject: `Shipment ${reference.trim() || "review"} — no follow-up flagged`, body: `The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. ${unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : ""}Please complete the normal human review before proceeding.` };
     setOwnResult({ comparison, missing, ...draft });
     setError("");
   }
@@ -216,20 +215,20 @@ export function ShipmentReadinessDemo() {
                 <input value={reference} onChange={(event) => { setReference(event.target.value); setOwnResult(null); }} className="h-10 rounded-md border border-input bg-background px-3" />
               </label>
               <div className="mt-4 grid gap-4">
-                <label className="grid gap-2 text-sm font-medium">Commercial invoice
-                  <textarea value={invoiceText} onChange={(event) => { setInvoiceText(event.target.value); setOwnResult(null); }} rows={7} className="w-full rounded-lg border border-input bg-background p-3 text-sm font-normal leading-6" placeholder="Paste invoice text here…" />
-                  <span className="flex flex-wrap items-center gap-2 text-xs font-normal text-muted-foreground"><Upload className="size-3" />Upload .txt or .csv text export
-                    <input type="file" accept=".txt,.csv,text/plain,text/csv" className="max-w-[190px] text-xs" onChange={(event) => void loadTextFile(event.target.files?.[0], "invoice")} />
-                    {invoiceFile && <span>{invoiceFile}</span>}
-                  </span>
-                </label>
-                <label className="grid gap-2 text-sm font-medium">Packing list
-                  <textarea value={packingText} onChange={(event) => { setPackingText(event.target.value); setOwnResult(null); }} rows={7} className="w-full rounded-lg border border-input bg-background p-3 text-sm font-normal leading-6" placeholder="Paste packing-list text here…" />
-                  <span className="flex flex-wrap items-center gap-2 text-xs font-normal text-muted-foreground"><Upload className="size-3" />Upload .txt or .csv text export
-                    <input type="file" accept=".txt,.csv,text/plain,text/csv" className="max-w-[190px] text-xs" onChange={(event) => void loadTextFile(event.target.files?.[0], "packing")} />
-                    {packingFile && <span>{packingFile}</span>}
-                  </span>
-                </label>
+                <div className="grid gap-2 text-sm font-medium">
+                  <label htmlFor="shipment-invoice-text">Commercial invoice</label>
+                  <textarea id="shipment-invoice-text" value={invoiceText} onChange={(event) => { setInvoiceText(event.target.value); setOwnResult(null); }} rows={7} className="w-full rounded-lg border border-input bg-background p-3 text-sm font-normal leading-6" placeholder="Paste invoice text here…" />
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-normal text-muted-foreground"><Upload className="size-3" /><label className="cursor-pointer underline underline-offset-2">Upload .txt or .csv text export
+                    <input type="file" accept=".txt,.csv,text/plain,text/csv" className="sr-only" onChange={(event) => void loadTextFile(event.target.files?.[0], "invoice")} />
+                  </label>{invoiceFile && <span>{invoiceFile}</span>}</div>
+                </div>
+                <div className="grid gap-2 text-sm font-medium">
+                  <label htmlFor="shipment-packing-text">Packing list</label>
+                  <textarea id="shipment-packing-text" value={packingText} onChange={(event) => { setPackingText(event.target.value); setOwnResult(null); }} rows={7} className="w-full rounded-lg border border-input bg-background p-3 text-sm font-normal leading-6" placeholder="Paste packing-list text here…" />
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-normal text-muted-foreground"><Upload className="size-3" /><label className="cursor-pointer underline underline-offset-2">Upload .txt or .csv text export
+                    <input type="file" accept=".txt,.csv,text/plain,text/csv" className="sr-only" onChange={(event) => void loadTextFile(event.target.files?.[0], "packing")} />
+                  </label>{packingFile && <span>{packingFile}</span>}</div>
+                </div>
               </div>
               <div className="mt-4 rounded-lg border border-border p-3">
                 <p className="text-sm font-semibold">Supporting document checklist</p>
