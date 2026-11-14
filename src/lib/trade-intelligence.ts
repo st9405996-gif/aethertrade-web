@@ -64,8 +64,9 @@ function normalizedLines(text: string) {
 
 function labelMatches(label: string, aliases: readonly string[]) {
   const normalized = normalizeLabel(label);
+  const segments = label.split("/");
   return aliases.some((alias) => normalized === normalizeLabel(alias) ||
-    normalized.split(" ").some((part) => part === normalizeLabel(alias)));
+    segments.some((segment) => normalizeLabel(segment) === normalizeLabel(alias)));
 }
 
 function findLabelValue(lines: string[], aliases: readonly string[]) {
