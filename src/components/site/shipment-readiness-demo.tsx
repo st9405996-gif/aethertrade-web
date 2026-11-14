@@ -252,7 +252,7 @@ export function ShipmentReadinessDemo() {
                   <p className="mt-2 text-xs text-muted-foreground">You can include this estimate when you continue to the demo request.</p>
                 </div>
                 <div className="mt-4">
-                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} />
+                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
                 </div>
               </div>
             )}
@@ -312,8 +312,19 @@ export function ShipmentReadinessDemo() {
                     <p className="mt-2 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Human approval required. This page prepares a draft; it does not send email.</p>
                   </div>
                 </div>
+                <div className="mt-4 rounded-xl border border-border p-4">
+                  <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
+                    <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
+                      <option value="">Select monthly volume</option>
+                      <option value="1–10">1–10 shipments</option>
+                      <option value="11–50">11–50 shipments</option>
+                      <option value="51–100">51–100 shipments</option>
+                      <option value="101+">101+ shipments</option>
+                    </select>
+                  </label>
+                </div>
                 <div className="mt-4">
-                  <ProductDemoNextStep automation="shipment-readiness" />
+                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
                 </div>
                 </>
               )}

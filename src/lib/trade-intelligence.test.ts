@@ -120,6 +120,53 @@ Subtotal: 25.00`;
     expect(result.validations.find((check) => check.key === "line-item-subtotal")?.status).toBe("mismatch");
   });
 
+  it("parses unnumbered invoice rows and pipe-delimited package breakdowns", () => {
+    const invoiceText = `COMMERCIAL INVOICE
+Invoice Number: INV-2026-089
+Invoice Date: November 15, 2026
+Seller / Exporter
+• Company Name: Alpha Exports Pakistan
+Buyer / Importer (Consignee)
+• Company Name: Global Retail Imports Inc.
+Currency: USD
+Line Items (Goods Description)
+| Description of Goods | HS Code | Qty | Unit | Unit Price ($) | Total Amount ($) | Country of Origin |
+| --- | --- | --- | --- | --- | --- | --- |
+| 100% Cotton Men's Polo Shirts | 6105.10 | 1,000 | Pcs | $5.50 | $5,500.00 | Pakistan |
+| Leather Casual Belts | 4203.30 | 500 | Pcs | $3.20 | $1,600.00 | Pakistan |
+| **Total** | | **1,500** | | | **$7,100.00** | |
+• Total Invoice Amount: $7,100.00 USD`;
+    const packingText = `PACKING LIST
+Reference Commercial Invoice No.: INV-2026-089
+Date: November 15, 2026
+| Marks & Numbers | Package Type | No. of Packages | Description of Goods | Qty / Pcs | Net Weight (kg) | Gross Weight (kg) | Dimensions (cm) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CARTON 01 - 25 | Export Cartons | 25 | Cotton Men's Polo Shirts | 1,000 Pcs | 220.00 kg | 245.00 kg | 60 x 40 x 50 cm |
+| CARTON 26 - 30 | Export Cartons | 5 | Leather Casual Belts | 500 Pcs | 85.00 kg | 95.00 kg | 50 x 30 x 40 cm |
+| **Total** | | **30 Cartons** | | **1,500 Pcs** | **305.00 kg** | **340.00 kg** | |
+Total Number of Packages: 30 Cartons
+Total Net Weight: 305.00 kg
+Total Gross Weight: 340.00 kg`;
+    const invoice = analyzeTradeDocument(invoiceText);
+    const packing = analyzeTradeDocument(packingText);
+    const field = (result: ReturnType<typeof analyzeTradeDocument>, key: string) => result.fields.find((item) => item.key === key)?.value;
+    expect(field(invoice, "exporter")).toBe("Alpha Exports Pakistan");
+    expect(field(invoice, "importer")).toBe("Global Retail Imports Inc.");
+    expect(field(invoice, "description")).toContain("Leather Casual Belts");
+    expect(field(invoice, "quantity")).toContain("1,000 PCS");
+    expect(field(invoice, "hsCode")).toBe("6105.10, 4203.30");
+    expect(field(invoice, "total")).toBe("7,100.00");
+    expect(invoice.validations.find((item) => item.key === "line-item-subtotal")?.status).toBe("consistent");
+    expect(packing.lineItems).toHaveLength(2);
+    expect(field(packing, "packages")).toBe("30 Cartons");
+    expect(field(packing, "grossWeight")).toBe("340.00 kg");
+    expect(field(packing, "netWeight")).toBe("305.00 kg");
+    expect(packing.validations.find((item) => item.key === "carton-count")).toMatchObject({ status: "consistent", expected: "30" });
+    const comparison = compareTradeDocuments(invoiceText, packingText);
+    expect(comparison.find((item) => item.key === "quantity")?.status).toBe("consistent");
+    expect(comparison.find((item) => item.key === "packages")?.status).toBe("packing-only");
+  });
+
   it("creates a draft only from the missing-document list supplied by the operator", () => {
     const result = buildMissingDocumentDraft("SHIP-1", ["Bill of lading"]);
     expect(result.subject).toContain("SHIP-1");
