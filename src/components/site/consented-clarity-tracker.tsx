@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { hasAnalyticsConsent, type ConsentManagerApi } from "@/lib/consentmanager-analytics";
+import { getKlaroManager, hasAnalyticsConsent } from "@/lib/consentmanager-analytics";
 
 const CLARITY_PROJECT_ID = "z94mamag59";
 type ClarityFunction = ((...args: unknown[]) => void) & { q?: unknown[][] };
 
 declare global {
   interface Window {
-    __cmp?: ConsentManagerApi;
     clarity?: ClarityFunction;
   }
 }
@@ -56,16 +55,15 @@ export function ConsentedClarityTracker() {
       }
     };
 
-    const cmp = window.__cmp;
-    if (!cmp) return;
+    const manager = getKlaroManager();
+    if (!manager) return;
 
-    cmp("addEventListener", ["settings", syncClarityConsent, true], null);
-    cmp("addEventListener", ["consent", syncClarityConsent, true], null);
+    const watcher = { update: () => syncClarityConsent() };
+    manager.watch(watcher);
     syncClarityConsent();
 
     return () => {
-      cmp("removeEventListener", ["settings", syncClarityConsent, true], null);
-      cmp("removeEventListener", ["consent", syncClarityConsent, true], null);
+      manager.unwatch(watcher);
     };
   }, []);
 

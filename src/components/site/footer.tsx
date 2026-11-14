@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
 import { getPublicWebsiteSettings } from "@/lib/public-website-settings.functions";
 import { filterCareersLinks } from "@/lib/careers-visibility";
+import { openCookieSettings } from "@/lib/consentmanager-analytics";
 
 export function Footer() {
   const { data, isError: navigationError } = useQuery({
@@ -141,6 +142,13 @@ export function Footer() {
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} AETHER-TRADE. All rights reserved.</p>
+          <button
+            type="button"
+            onClick={openCookieSettings}
+            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Cookie settings
+          </button>
           <p className="font-mono tracking-widest">GLOBAL TRADE TECHNOLOGY & AUTOMATION</p>
         </div>
       </div>

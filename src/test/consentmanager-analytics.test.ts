@@ -1,42 +1,70 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hasAnalyticsConsent, type ConsentManagerApi } from "@/lib/consentmanager-analytics";
+import {
+  hasAnalyticsConsent,
+  openCookieSettings,
+  type KlaroConsentManager,
+} from "@/lib/consentmanager-analytics";
 
 afterEach(() => {
-  delete window.__cmp;
+  delete window.klaro;
 });
 
+function createManager(consent = false) {
+  return {
+    getConsent: vi.fn((name: string) => name === "analytics" && consent),
+    watch: vi.fn(),
+    unwatch: vi.fn(),
+  } satisfies KlaroConsentManager;
+}
+
 describe("hasAnalyticsConsent", () => {
-  it("fails closed when ConsentManager is unavailable", () => {
+  it("fails closed when Klaro is unavailable", () => {
     expect(hasAnalyticsConsent()).toBe(false);
   });
 
-  it("requires an explicit true choice for audience-statistics purpose 8", () => {
-    const cmp = vi.fn<ConsentManagerApi>().mockReturnValue({
-      purposeConsents: { "8": true },
-    });
-    window.__cmp = cmp;
+  it("allows analytics only after an explicit Klaro opt-in", () => {
+    const manager = createManager(true);
+    window.klaro = { getManager: () => manager, show: vi.fn() };
 
     expect(hasAnalyticsConsent()).toBe(true);
-    expect(cmp).toHaveBeenCalledWith("getCMPData", null, null, false);
+    expect(manager.getConsent).toHaveBeenCalledWith("analytics");
   });
 
-  it.each([
-    ["denied", { purposeConsents: { "8": false } }],
-    ["missing", { purposeConsents: {} }],
-    ["string-valued", { purposeConsents: { "8": "true" } }],
-    ["malformed", { purposeConsents: null }],
-    ["empty", null],
-  ])("fails closed for %s consent data", (_label, data) => {
-    window.__cmp = vi.fn<ConsentManagerApi>().mockReturnValue(data);
+  it("fails closed when analytics consent is denied", () => {
+    const manager = createManager(false);
+    window.klaro = { getManager: () => manager, show: vi.fn() };
 
     expect(hasAnalyticsConsent()).toBe(false);
   });
 
-  it("fails closed when ConsentManager throws", () => {
-    window.__cmp = vi.fn<ConsentManagerApi>(() => {
-      throw new Error("CMP unavailable");
-    });
+  it("fails closed when Klaro has no manager", () => {
+    window.klaro = {
+      getManager: () => {
+        throw new Error("Klaro unavailable");
+      },
+      show: vi.fn(),
+    };
 
     expect(hasAnalyticsConsent()).toBe(false);
+  });
+
+  it("reopens the preference dialog so consent can be changed", () => {
+    const show = vi.fn();
+    window.klaro = { getManager: () => createManager(), show };
+
+    openCookieSettings();
+
+    expect(show).toHaveBeenCalledWith(undefined, true);
+  });
+
+  it("does not throw when the preference dialog is unavailable", () => {
+    window.klaro = {
+      getManager: () => createManager(),
+      show: () => {
+        throw new Error("Klaro unavailable");
+      },
+    };
+
+    expect(() => openCookieSettings()).not.toThrow();
   });
 });

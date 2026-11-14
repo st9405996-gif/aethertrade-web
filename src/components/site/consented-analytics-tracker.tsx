@@ -2,15 +2,15 @@ import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { trackAnalyticsEvent } from "@/lib/analytics.functions";
 
-import { hasAnalyticsConsent, type ConsentManagerApi } from "@/lib/consentmanager-analytics";
+import { getKlaroManager, hasAnalyticsConsent } from "@/lib/consentmanager-analytics";
 
 export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
   const sendEvent = useServerFn(trackAnalyticsEvent);
   const lastTrackedPath = useRef<string | null>(null);
 
   useEffect(() => {
-    const cmp = window.__cmp;
-    if (!cmp) return;
+    const manager = getKlaroManager();
+    if (!manager) return;
 
     const checkConsentAndTrack = () => {
       if (!hasAnalyticsConsent()) {
@@ -50,13 +50,12 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       );
     };
 
-    cmp("addEventListener", ["settings", checkConsentAndTrack, true], null);
-    cmp("addEventListener", ["consent", checkConsentAndTrack, true], null);
+    const watcher = { update: () => checkConsentAndTrack() };
+    manager.watch(watcher);
     document.addEventListener("click", trackCtaClick, true);
     checkConsentAndTrack();
     return () => {
-      cmp("removeEventListener", ["settings", checkConsentAndTrack, true], null);
-      cmp("removeEventListener", ["consent", checkConsentAndTrack, true], null);
+      manager.unwatch(watcher);
       document.removeEventListener("click", trackCtaClick, true);
     };
   }, [pathname, sendEvent]);

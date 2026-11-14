@@ -1,27 +1,42 @@
-export type ConsentManagerData = {
-  purposeConsents?: Record<string, boolean>;
+export type KlaroConsentWatcher = {
+  update: (manager: unknown, name: string, data: unknown) => void;
 };
-export type ConsentManagerApi = (
-  command: string,
-  parameter?: unknown,
-  callback?: unknown,
-  async?: boolean,
-) => unknown;
+
+export type KlaroConsentManager = {
+  getConsent: (name: string) => boolean;
+  watch: (watcher: KlaroConsentWatcher) => void;
+  unwatch: (watcher: KlaroConsentWatcher) => void;
+};
+
+type KlaroApi = {
+  getManager: () => KlaroConsentManager;
+  show: (config?: unknown, modal?: boolean) => unknown;
+};
 
 declare global {
   interface Window {
-    __cmp?: ConsentManagerApi;
+    klaro?: KlaroApi;
   }
 }
 
-/** Require an explicit ConsentManager audience-statistics purpose choice; fail closed otherwise. */
-export function hasAnalyticsConsent(): boolean {
-  const cmp = window.__cmp;
-  if (!cmp) return false;
+/** Fail closed: analytics is enabled only after an explicit Klaro opt-in. */
+export function getKlaroManager(): KlaroConsentManager | null {
   try {
-    const result = cmp("getCMPData", null, null, false) as ConsentManagerData | null;
-    return result?.purposeConsents?.["8"] === true;
+    return window.klaro?.getManager() ?? null;
   } catch {
-    return false;
+    return null;
+  }
+}
+
+export function hasAnalyticsConsent(): boolean {
+  return getKlaroManager()?.getConsent("analytics") === true;
+}
+
+/** Reopen the preference dialog so visitors can change or withdraw consent. */
+export function openCookieSettings(): void {
+  try {
+    window.klaro?.show(undefined, true);
+  } catch {
+    // Consent settings must never interrupt normal site navigation.
   }
 }
