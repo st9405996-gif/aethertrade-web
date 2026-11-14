@@ -18,6 +18,44 @@ type OwnResult = {
   body: string;
 };
 
+function renderEvidenceLine(line: string, values: string[]) {
+  const candidates = values.filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!candidates.length) return line;
+  const parts: { text: string; highlighted: boolean }[] = [];
+  let remaining = line;
+  while (remaining.length) {
+    let matchIndex = -1;
+    let matchValue = "";
+    for (const value of candidates) {
+      const index = remaining.indexOf(value);
+      if (index !== -1 && (matchIndex === -1 || index < matchIndex)) {
+        matchIndex = index;
+        matchValue = value;
+      }
+    }
+    if (matchIndex === -1) {
+      parts.push({ text: remaining, highlighted: false });
+      break;
+    }
+    if (matchIndex > 0) parts.push({ text: remaining.slice(0, matchIndex), highlighted: false });
+    parts.push({ text: matchValue, highlighted: true });
+    remaining = remaining.slice(matchIndex + matchValue.length);
+  }
+  return parts.map((part, index) => part.highlighted
+    ? <mark key={index} className="rounded bg-amber-300/40 px-0.5 font-semibold text-foreground ring-1 ring-amber-500/40 dark:bg-amber-400/20">{part.text}</mark>
+    : <span key={index}>{part.text}</span>);
+}
+
+function makeFindingDraft(reference: string, findings: string[]) {"));
+  if (!escaped.length) return line;
+  const matches = new Set(values);
+  return line.split(new RegExp(`(${escaped.join("|")})`, "g")).map((part, index) =>
+    matches.has(part)
+      ? <mark key={index} className="rounded bg-amber-300/40 px-0.5 font-semibold text-foreground ring-1 ring-amber-500/40 dark:bg-amber-400/20">{part}</mark>
+      : <span key={index}>{part}</span>
+  );
+}
+
 function makeFindingDraft(reference: string, findings: string[]) {
   const subject = `Clarification required for shipment ${reference}`;
   const body = `Hello,\n\nWe are reviewing the document set for shipment ${reference}. Could you please help clarify the following item(s)?\n\n${findings.map((item) => `- ${item}`).join("\n")}\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team`;
@@ -169,12 +207,22 @@ export function ShipmentReadinessDemo() {
               ))}
             </div>
             <details className="mt-3 rounded-lg border border-border px-3 py-2">
-              <summary className="cursor-pointer text-sm font-medium">View full sample document text</summary>
+              <summary className="cursor-pointer text-sm font-medium">View sample documents line by line</summary>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {selectedScenario.documents.map((document) => (
                   <div key={document.name} className="min-w-0">
                     <p className="text-xs font-semibold">{document.name}</p>
-                    <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">{document.content}</pre>
+                    <div className="mt-2 overflow-hidden rounded-lg bg-muted/50 p-3 font-mono text-xs leading-6">
+                      {document.content.split("\n").map((line, lineIndex) => {
+                        const evidenceValues = result?.findings.flatMap((finding) =>
+                          finding.evidence.filter((item) => item.document === document.name).map((item) => item.value)
+                        ) ?? [];
+                        return <div key={lineIndex} className="grid grid-cols-[2rem_minmax(0,1fr)] gap-2 break-words">
+                          <span className="select-none text-right text-muted-foreground/60">{lineIndex + 1}</span>
+                          <span>{renderEvidenceLine(line, evidenceValues)}</span>
+                        </div>;
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -199,7 +247,7 @@ export function ShipmentReadinessDemo() {
                 <div className="rounded-xl border border-border p-4">
                   <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
                     <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
-                      <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="50+">50+</option>
+                      <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101+">101+ (100+)</option>
                     </select>
                   </label>
                   <Button className="mt-3" asChild variant="hero" disabled={!monthlyVolume}><Link to="/request-demo" search={{ automation: "shipment-readiness", shipmentVolume: monthlyVolume }}>Discuss a pilot <ArrowRight /></Link></Button>
