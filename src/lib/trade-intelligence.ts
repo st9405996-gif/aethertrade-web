@@ -283,7 +283,9 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     if (packageIndex < 0 || descriptionIndex < 0) continue;
     for (let row = index + 1; row < lines.length; row += 1) {
       const cells = splitTableCells(lines[row]);
-      if (!cells.length || cells.length <= packageIndex || /^total$/i.test((cells[descriptionIndex] ?? "").trim())) break;
+      const firstValue = cells.find((cell) => cell.trim())?.replace(/\*/g, "").trim() ?? "";
+      if (!cells.length || cells.length <= packageIndex || /^total$/i.test(firstValue) ||
+          /^total$/i.test((cells[descriptionIndex] ?? "").replace(/\*/g, "").trim())) break;
       const count = amountToNumber(cells[packageIndex]);
       if (Number.isFinite(count)) cartonRows.push(count);
     }
