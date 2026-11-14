@@ -184,7 +184,7 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     { label: "Material / composition", pattern: /\b(stainless steel|steel|aluminium|aluminum|plastic|rubber|cotton|polyester|wood|ceramic|copper|brass|alloy)\b/i },
     { label: "Intended use / function", pattern: /\b(used for|designed for|intended for|application\s*:\s*|for use in)\b[^,;.]*/i },
     { label: "Model / part number", pattern: /\b(model|part\s*(?:no|number)|p\/n|sku)\s*[:#-]?\s*[A-Z0-9-]+/i },
-    { label: "Dimensions / size", pattern: /\b\d+(?:\.\d+)?\s*(?:mm|cm|m|inch|inches|")\b/i },
+    { label: "Dimensions / size", pattern: /\b\d+(?:\.\d+)?\s*[x×]\s*\d+(?:\.\d+)?\s*(?:mm|cm|m)?\b|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|inch|inches|")\b/i },
     { label: "Power / capacity", pattern: /\b\d+(?:\.\d+)?\s*(?:w|kw|v|volt|amps?|mah|litres?|liters?|ml)\b/i },
   ];
   const productAttributes = attributeRules.map((rule) => {
