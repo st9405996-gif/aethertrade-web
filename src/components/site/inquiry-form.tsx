@@ -75,7 +75,11 @@ export function InquiryForm({
     category: "General inquiry",
     automation,
     message: automation === "shipment-readiness" ? "I would like this for my business." : "",
-    requirements: automation === "shipment-readiness" ? "I would like to explore Shipment Readiness for my shipments." : "",
+    requirements: automation === "shipment-readiness"
+      ? "I would like to explore Shipment Readiness for my shipments."
+      : automation === "product-intelligence"
+        ? "I would like to explore Product Intelligence for our product and invoice review workflow."
+        : "",
     consent: false,
     website: "",
   });
