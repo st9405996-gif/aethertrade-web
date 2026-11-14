@@ -121,7 +121,7 @@ function findFirstMatch(lines: string[], patterns: RegExp[]) {
 }
 
 function splitTableCells(line: string) {
-  if (line.includes("|")) return line.split("|").map((cell) => clean(cell));
+  if (line.includes("|")) return line.split("|").map((cell) => clean(cell).replace(/^\\*+|\\*+$/g, ""));
   if (line.includes("\t")) return line.split("\t").map((cell) => clean(cell));
   return [];
 }
@@ -154,7 +154,7 @@ function parseLineItems(lines: string[]): TradeLineItem[] {
     const amountIndex = column(/total amount|amount/);
     for (let row = index + 1; row < lines.length; row += 1) {
       const cells = splitTableCells(lines[row]);
-      if (!cells.length || cells.length <= Math.max(descriptionIndex, quantityIndex)) break;
+      if (!cells.length || cells.length <= Math.max(descriptionIndex, quantityIndex) || /^total$/i.test((cells[0] ?? "").replace(/\\*/g, "").trim())) break;
       const description = cells[descriptionIndex] ?? "";
       if (!description || /^total$/i.test(description)) break;
       const qty = parseQuantity(cells[quantityIndex] ?? "");
@@ -282,7 +282,7 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     if (packageIndex < 0 || !header.some((cell) => /description of goods|goods description/.test(cell))) continue;
     for (let row = index + 1; row < lines.length; row += 1) {
       const cells = splitTableCells(lines[row]);
-      if (!cells.length || cells.length <= packageIndex || /^total$/i.test(cells[0])) break;
+      if (!cells.length || cells.length <= packageIndex || /^total$/i.test((cells[0] ?? "").replace(/\\*/g, "").trim())) break;
       const count = amountToNumber(cells[packageIndex]);
       if (Number.isFinite(count)) cartonRows.push(count);
     }
