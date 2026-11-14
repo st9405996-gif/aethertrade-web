@@ -106,6 +106,20 @@ Total Packages: 8 cartons`;
     });
   });
 
+  it("prefers explicit total labels and flags an incorrect subtotal", () => {
+    const text = `COMMERCIAL INVOICE
+Gross Weight: 900 kg
+Total Gross Weight: 1,050 kg
+Packages: 10 cartons
+Total Cartons: 12 cartons
+1 123456 Cotton fabric 10 PCS 2.00 20.00
+Subtotal: 25.00`;
+    const result = analyzeTradeDocument(text);
+    expect(result.fields.find((field) => field.key === "grossWeight")?.value).toBe("1,050 kg");
+    expect(result.fields.find((field) => field.key === "packages")?.value).toBe("12 cartons");
+    expect(result.validations.find((check) => check.key === "line-item-subtotal")?.status).toBe("mismatch");
+  });
+
   it("creates a draft only from the missing-document list supplied by the operator", () => {
     const result = buildMissingDocumentDraft("SHIP-1", ["Bill of lading"]);
     expect(result.subject).toContain("SHIP-1");
