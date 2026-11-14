@@ -247,7 +247,7 @@ export function ShipmentReadinessDemo() {
                 <div className="rounded-xl border border-border p-4">
                   <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
                     <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
-                      <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101+">101+ (100+)</option>
+                      <option value="">Select monthly volume</option><option value="1–10">1–10</option><option value="11–50">11–50</option><option value="51–100">51–100</option><option value="101+">100+ (101 or more)</option>
                     </select>
                   </label>
                   <Button className="mt-3" asChild variant="hero" disabled={!monthlyVolume}><Link to="/request-demo" search={{ automation: "shipment-readiness", shipmentVolume: monthlyVolume }}>Discuss a pilot <ArrowRight /></Link></Button>
