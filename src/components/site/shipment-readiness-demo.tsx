@@ -252,7 +252,7 @@ export function ShipmentReadinessDemo() {
                   <p className="mt-2 text-xs text-muted-foreground">You can include this estimate when you continue to the demo request.</p>
                 </div>
                 <div className="mt-4">
-                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} />
+                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
                 </div>
               </div>
             )}
