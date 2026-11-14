@@ -12,11 +12,11 @@ Invoice No: INV-2048
 Invoice Date: 12 Nov 2026
 Exporter: Northstar Components Ltd.
 Importer: Harborline Trading FZE
-Goods Description: Industrial stainless steel valve assemblies, model VA-240, for fluid control systems
+Goods Description: Industrial stainless steel valve assemblies, model VA-240, designed for fluid control systems
 Quantity: 240 units
 Currency: USD
 Invoice Total: USD 18,720.00
-HS Code: Not stated`;
+HS Code: 8481.80`;
 
 export const Route = createFileRoute("/document-intake")({
   head: () => ({
@@ -127,28 +127,65 @@ function ProductIntelligencePage() {
               )}
             </div>
             {analysis && (
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <p className="eyebrow">Product description review</p>
-                <h2 className="mt-1 text-xl font-semibold">What is stated — and what is not</h2>
-                <p className="mt-3 rounded-lg bg-muted/40 p-3 text-sm">{analysis.productDescription || "No clearly labelled goods description was found in the supplied text."}</p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-border p-4">
-                    <p className="text-sm font-semibold">Attributes found ({foundAttributes.length})</p>
-                    {foundAttributes.length ? foundAttributes.map((item) => <p key={item.label} className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">✓ {item.label}: {item.evidence}</p>) : <p className="mt-2 text-sm text-muted-foreground">No listed attributes detected.</p>}
+              <>
+                {analysis.lineItems.length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card p-6">
+                    <p className="eyebrow">Line-item extraction</p>
+                    <h2 className="mt-1 text-xl font-semibold">{analysis.lineItems.length} product line(s) detected</h2>
+                    <div className="mt-4 space-y-3">
+                      {analysis.lineItems.map((item) => (
+                        <article key={item.lineNumber} className="rounded-lg border border-border p-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm font-semibold">Item {item.lineNumber}: {item.description}</p>
+                            {item.hsCode && <span className="rounded-full bg-muted px-2 py-1 text-xs">HS {item.hsCode}</span>}
+                          </div>
+                          <p className="mt-2 text-xs text-muted-foreground">Quantity: {item.quantity} {item.unit} · Unit price: {item.unitPrice} · Amount: {item.amount}</p>
+                          <p className="mt-1 break-words text-xs text-muted-foreground">Evidence: {item.evidence}</p>
+                        </article>
+                      ))}
+                    </div>
                   </div>
-                  <div className="rounded-xl border border-border p-4">
-                    <p className="text-sm font-semibold">Not detected ({missingAttributes.length})</p>
-                    {missingAttributes.map((item) => <p key={item.label} className="mt-2 text-sm text-amber-700 dark:text-amber-300">• {item.label}</p>)}
+                )}
+                <div className="rounded-2xl border border-border bg-card p-6">
+                  <p className="eyebrow">Internal checks</p>
+                  <h2 className="mt-1 text-xl font-semibold">Invoice calculation validation</h2>
+                  {analysis.validations.map((check) => (
+                    <div key={check.key} className="mt-3 rounded-lg border border-border p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-medium">{check.label}</p>
+                        <span className={`rounded-full px-2 py-1 text-[10px] ${check.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : check.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{check.status}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{check.status === "unable" ? check.evidence : `Calculated: ${check.expected} · Stated: ${check.actual}`}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-6">
+                  <p className="eyebrow">Product description review</p>
+                  <h2 className="mt-1 text-xl font-semibold">What is stated — and what is not</h2>
+                  <p className="mt-3 rounded-lg bg-muted/40 p-3 text-sm">{analysis.productDescription || "No clearly labelled goods description was found in the supplied text."}</p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-border p-4">
+                      <p className="text-sm font-semibold">Attributes found ({foundAttributes.length})</p>
+                      {foundAttributes.length ? foundAttributes.map((item) => <p key={item.label} className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">✓ {item.label}: {item.evidence}</p>) : <p className="mt-2 text-sm text-muted-foreground">No listed attributes detected.</p>}
+                    </div>
+                    <div className="rounded-xl border border-border p-4">
+                      <p className="text-sm font-semibold">Not detected ({missingAttributes.length})</p>
+                      {missingAttributes.map((item) => <p key={item.label} className="mt-2 text-sm text-amber-700 dark:text-amber-300">• {item.label}</p>)}
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+                    {missingFields.length} standard invoice field(s) were not detected. Attribute checks are prompts for further review, not a legal or customs classification decision.
                   </div>
                 </div>
-                <div className="mt-4 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-                  {missingFields.length} standard invoice field(s) were not detected. Attribute checks are prompts for further review, not a legal or customs classification decision.
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+                  <p className="text-sm font-semibold">Need to review your company’s shipment workflow?</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Share your company size and continue to the AETHER-TRADE inquiry.</p>
+                  <div className="mt-4"><ProductDemoNextStep automation="product-intelligence" /></div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
-        {analysis && <div className="mx-auto mt-6 max-w-3xl"><ProductDemoNextStep automation="product-intelligence" /></div>}
       </section>
     </>
   );

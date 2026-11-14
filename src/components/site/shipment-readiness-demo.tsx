@@ -3,7 +3,7 @@ import { CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkl
 import { Button } from "@/components/ui/button";
 import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { buildShipmentReadinessScenario, SHIPMENT_READINESS_SCENARIOS, type ShipmentReadinessDemoResult, type ShipmentReadinessScenarioId } from "@/lib/shipment-readiness-demo";
-import { compareTradeDocuments, type ComparisonRow } from "@/lib/trade-intelligence";
+import { analyzeTradeDocument, compareTradeDocuments, type ComparisonRow, type InternalValidation } from "@/lib/trade-intelligence";
 
 const stages = ["Reading document text", "Comparing shipment details", "Preparing follow-up draft"];
 const initialSupportingDocs = [
@@ -16,6 +16,7 @@ type OwnResult = {
   missing: string[];
   subject: string;
   body: string;
+  validations: { document: string; check: InternalValidation }[];
 };
 
 function renderEvidenceLine(line: string, values: string[]) {
@@ -127,18 +128,26 @@ export function ShipmentReadinessDemo() {
       setOwnResult(null);
       return;
     }
+    const invoiceAnalysis = analyzeTradeDocument(invoiceText);
+    const packingAnalysis = analyzeTradeDocument(packingText);
     const comparison = compareTradeDocuments(invoiceText, packingText);
+    const validations = [
+      ...invoiceAnalysis.validations.map((check) => ({ document: "Commercial invoice", check })),
+      ...packingAnalysis.validations.map((check) => ({ document: "Packing list", check })),
+    ];
     const missing = supportingDocs.filter((item) => !item.received).map((item) => item.name);
     const mismatches = comparison.filter((item) => item.status === "mismatch");
+    const calculationMismatches = validations.filter((item) => item.check.status === "mismatch");
     const unable = comparison.filter((item) => item.status === "unable");
     const requests = [
       ...missing.map((item) => `Please share the outstanding ${item}, if it is required for this shipment.`),
       ...mismatches.map((item) => `${item.label} differs between the invoice ("${item.invoiceValue}") and packing list ("${item.packingValue}"). Please confirm the correct value and provide a revised document if needed.`),
+      ...calculationMismatches.map(({ document, check }) => `${document}: ${check.label} does not match (calculated ${check.expected}; stated ${check.actual}). Please verify the source figures.`),
     ];
     const draft = requests.length
       ? makeFindingDraft(reference.trim() || "shipment", requests)
       : { subject: `Shipment ${reference.trim() || "review"} — no follow-up flagged`, body: `The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. ${unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : ""}Please complete the normal human review before proceeding.` };
-    setOwnResult({ comparison, missing, ...draft });
+    setOwnResult({ comparison, missing, validations, ...draft });
     setError("");
   }
 
@@ -285,8 +294,17 @@ export function ShipmentReadinessDemo() {
               {!ownResult ? <div className="mt-5 rounded-lg bg-muted/40 p-6 text-center text-sm text-muted-foreground">Add both document texts and run the workflow. Findings and a draft will appear here together.</div> : (
                 <>
                 <div className="mt-4 space-y-4" aria-live="polite">
-                  <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">{ownResult.comparison.filter((item) => item.status === "consistent").length} consistent</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">{ownResult.comparison.filter((item) => item.status === "mismatch").length} mismatches</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "unable").length} not comparable</span></div>
-                  <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
+                  <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">{ownResult.comparison.filter((item) => item.status === "consistent").length} consistent</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">{ownResult.comparison.filter((item) => item.status === "mismatch").length} mismatches</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "unable").length} not found in either</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "invoice-only").length} invoice only</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "packing-only").length} packing-list only</span></div>
+                  <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-sm font-semibold">Internal document calculations</p>
+                    {ownResult.validations.map(({ document, check }) => (
+                      <div key={document + check.key} className="mt-2 rounded-md bg-muted/40 p-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-medium">{document}: {check.label}</span><span className="text-[10px] uppercase text-muted-foreground">{check.status}</span></div>
+                        <p className="mt-1 text-xs text-muted-foreground">{check.status === "unable" ? check.evidence : `Calculated: ${check.expected} · Stated: ${check.actual}`}</p>
+                      </div>
+                    ))}
+                  </div>
                   <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
                     <div className="flex items-center gap-2"><Mail className="size-4 text-primary" /><p className="text-sm font-semibold">Prepared follow-up draft</p></div>
                     <p className="mt-3 text-xs text-muted-foreground">Subject</p><p className="text-sm font-medium">{ownResult.subject}</p>
