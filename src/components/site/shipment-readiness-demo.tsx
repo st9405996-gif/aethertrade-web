@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildShipmentReadinessScenario, SHIPMENT_READINESS_SCENARIOS, type ShipmentReadinessDemoResult, type ShipmentReadinessScenarioId } from "@/lib/shipment-readiness-demo";
-import { buildMissingDocumentDraft, compareTradeDocuments, type ComparisonRow } from "@/lib/trade-intelligence";
+import { compareTradeDocuments, type ComparisonRow } from "@/lib/trade-intelligence";
 
 const stages = ["Reading document text", "Comparing shipment details", "Preparing follow-up draft"];
 const initialSupportingDocs = [
@@ -119,7 +119,7 @@ export function ShipmentReadinessDemo() {
     ? result.findings.map((finding) => `${finding.label}: ${finding.detail}`)
     : [];
   const sampleDraft = sampleDraftItems.length
-    ? makeFindingDraft(result?.scenarioId ?? "shipment", sampleDraftItems)
+    ? makeFindingDraft("SAMPLE-" + (result?.scenarioId ?? "shipment"), sampleDraftItems)
     : null;
 
   return (
