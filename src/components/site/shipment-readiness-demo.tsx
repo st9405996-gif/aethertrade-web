@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkles, Upload } from "lucide-react";
+import { CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { buildShipmentReadinessScenario, SHIPMENT_READINESS_SCENARIOS, type ShipmentReadinessDemoResult, type ShipmentReadinessScenarioId } from "@/lib/shipment-readiness-demo";
@@ -244,7 +243,7 @@ export function ShipmentReadinessDemo() {
                   <p className="mt-2 text-xs text-muted-foreground">You can include this estimate when you continue to the demo request.</p>
                 </div>
                 <div className="mt-4">
-                  <ProductDemoNextStep automation="shipment-readiness" />
+                  <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} />
                 </div>
               </div>
             )}
