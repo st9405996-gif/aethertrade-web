@@ -293,6 +293,9 @@ export function ShipmentReadinessDemo() {
                     <p className="mt-2 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Human approval required. This page prepares a draft; it does not send email.</p>
                   </div>
                 </div>
+                <div className="mt-4">
+                  <ProductDemoNextStep automation="shipment-readiness" />
+                </div>
               )}
             </div>
           </div>
