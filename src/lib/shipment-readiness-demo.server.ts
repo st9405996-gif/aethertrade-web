@@ -25,7 +25,7 @@ function json(body: unknown, status = 200): Response {
 function fallback(result: ShipmentReadinessDemoResult): ShipmentReadinessDemoResult {
   return { ...result, aiStatus: "fallback" };
 }
-async function hasGroqQuota(env: ServerEnv, remoteIp: string | undefined, fetchImpl: typeof fetch): Promise<boolean> {
+async function hasGrokQuota(env: ServerEnv, remoteIp: string | undefined, fetchImpl: typeof fetch): Promise<boolean> {
   const supabaseUrl = (env["SUPABASE_URL"] ?? env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
   const serviceRoleKey = env["SUPABASE_SERVICE_ROLE_KEY"] ?? "";
   const abuseHashSecret = env["ABUSE_HASH_SECRET"] ?? "";
@@ -64,7 +64,7 @@ async function generateExplanation(
     body: JSON.stringify({
       model,
       temperature: 0.2,
-      max_completion_tokens: 320,
+      max_tokens: 320,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content:
