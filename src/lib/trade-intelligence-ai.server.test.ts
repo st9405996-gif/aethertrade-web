@@ -75,16 +75,18 @@ describe("Grok trade document review", () => {
     expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
     expect(payload.analysis.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-5001");
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.x.ai/v1/chat/completions");
+    expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.x.ai/v1/responses");
   });
 
   it("uses Grok to review invoice and packing-list context while retaining deterministic comparisons", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
     const packingText = "PACKING LIST\nReference Invoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
     const fetchMock = mockGrokFetch({
-      choices: [{
-        message: {
-          content: JSON.stringify({
+      output: [{
+        type: "message",
+        content: [{
+          type: "output_text",
+          text: JSON.stringify({
             summary: "The documents refer to the same invoice but state different quantities. Confirm the final packed quantity before revising either record.",
             observations: [{
               label: "Quantity difference",
@@ -94,7 +96,7 @@ describe("Grok trade document review", () => {
             }],
             questions: ["Which quantity is supported by the final packing record?"],
           }),
-        },
+        }],
       }],
     });
     const response = await handleShipmentReadinessAnalysis(
