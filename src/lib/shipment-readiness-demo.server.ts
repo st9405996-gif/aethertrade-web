@@ -9,8 +9,8 @@ const generatedCopySchema = z.object({
   explanation: z.string().trim().min(30).max(700),
   questions: z.array(z.string().trim().min(10).max(220)).min(1).max(2),
 });
-const DEFAULT_MODEL = "openai/gpt-oss-20b";
-const GROQ_TIMEOUT_MS = 7_000;
+const DEFAULT_MODEL = "grok-3-mini";
+const GROK_TIMEOUT_MS = 7_000;
 const PER_IP_LIMIT = 8;
 const PER_IP_WINDOW_SECONDS = 60 * 60;
 const GLOBAL_LIMIT = 50;
@@ -33,12 +33,12 @@ async function hasGroqQuota(env: ServerEnv, remoteIp: string | undefined, fetchI
   const ipHash = await hmacSha256Hex(abuseHashSecret, remoteIp ?? "unknown-client");
   const perIp = await consumeSubmissionQuota(
     { supabaseUrl, serviceRoleKey, limit: PER_IP_LIMIT, windowSeconds: PER_IP_WINDOW_SECONDS },
-    "shipment-readiness-demo:ip:" + ipHash, fetchImpl,
+    "shipment-readiness-demo:grok:ip:" + ipHash, fetchImpl,
   );
   if (perIp !== "allowed") return false;
   const global = await consumeSubmissionQuota(
     { supabaseUrl, serviceRoleKey, limit: GLOBAL_LIMIT, windowSeconds: GLOBAL_WINDOW_SECONDS },
-    "shipment-readiness-demo:global", fetchImpl,
+    "shipment-readiness-demo:grok:global", fetchImpl,
   );
   return global === "allowed";
 }
@@ -54,7 +54,7 @@ function extractCandidateText(payload: unknown): string {
 async function generateExplanation(
   result: ShipmentReadinessDemoResult, apiKey: string, model: string, fetchImpl: typeof fetch,
 ): Promise<Pick<ShipmentReadinessDemoResult, "explanation" | "questions"> | null> {
-  const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+  const endpoint = "https://api.x.ai/v1/chat/completions";
   const response = await fetchImpl(endpoint, {
     method: "POST",
     headers: {
@@ -79,10 +79,10 @@ async function generateExplanation(
         }) },
       ],
     }),
-    signal: AbortSignal.timeout(GROQ_TIMEOUT_MS),
+    signal: AbortSignal.timeout(GROK_TIMEOUT_MS),
   });
   if (!response.ok) {
-    console.warn("shipment-readiness-demo: Groq request unavailable", { status: response.status });
+    console.warn("shipment-readiness-demo: Grok request unavailable", { status: response.status });
     return null;
   }
   const payload: unknown = await response.json().catch(() => undefined);
@@ -115,17 +115,17 @@ export async function handleShipmentReadinessDemo(
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return json({ message: "Choose one of the available demo scenarios." }, 400);
   const result = buildShipmentReadinessScenario(parsed.data.scenarioId as ShipmentReadinessScenarioId);
-  const apiKey = env["GROQ_API_KEY"]?.trim();
+  const apiKey = env["GROK_API_KEY"]?.trim();
   if (!apiKey) return json(fallback(result));
   try {
     const allowed = await hasGroqQuota(env, request.headers.get("cf-connecting-ip") ?? undefined, fetchImpl);
     if (!allowed) return json(fallback(result));
-    const model = (env["GROQ_MODEL"] ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
+    const model = (env["GROK_MODEL"] ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
     if (!/^[a-z0-9._/-]{3,100}$/i.test(model)) return json(fallback(result));
     const generated = await generateExplanation(result, apiKey, model, fetchImpl);
     return generated ? json({ ...result, ...generated, aiStatus: "ai" }) : json(fallback(result));
   } catch (error) {
-    console.warn("shipment-readiness-demo: optional AI explanation unavailable", error instanceof Error ? error.name : "unknown");
+    console.warn("shipment-readiness-demo: optional Grok explanation unavailable", error instanceof Error ? error.name : "unknown");
     return json(fallback(result));
   }
 }
