@@ -117,7 +117,7 @@ export function ShipmentReadinessDemo() {
       return;
     }
     if (!/\.(txt|csv)$/i.test(file.name)) {
-      setError("This MVP accepts .txt or .csv text exports only. PDF/OCR processing is not connected yet.");
+      setError("This demo currently accepts .txt or .csv text exports. Scanned PDF and OCR processing are not available.");
       return;
     }
     const text = await file.text();
@@ -162,7 +162,7 @@ export function ShipmentReadinessDemo() {
       aiReview: {
         status: "fallback",
         model: "Deterministic rules only",
-        summary: "Groq AI could not be reached. Document matching, calculations and the follow-up draft are based on the rules engine.",
+        summary: "AI-assisted review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -177,7 +177,7 @@ export function ShipmentReadinessDemo() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ reference, invoiceText, packingText, supportingDocs }),
       });
-      if (!response.ok) throw new Error("Groq shipment review unavailable");
+      if (!response.ok) throw new Error("AI shipment review unavailable");
       const payload = await response.json() as OwnResult;
       if (!Array.isArray(payload.comparison) || !Array.isArray(payload.validations) ||
           !Array.isArray(payload.missing) || !payload.aiReview || typeof payload.subject !== "string" ||
@@ -327,8 +327,8 @@ export function ShipmentReadinessDemo() {
                 {supportingDocs.map((item, index) => <label key={item.name} className="mt-2 flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2"><input type="checkbox" checked={item.received} onChange={(event) => { setSupportingDocs((current) => current.map((doc, i) => i === index ? { ...doc, received: event.target.checked } : doc)); setOwnResult(null); }} />{item.name}</span><span className="text-xs text-muted-foreground">{item.received ? "Received" : "Marked missing"}</span></label>)}
               </div>
               {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-              <Button className="mt-4 w-full" onClick={analyzeOwnShipment} disabled={analyzing}><Sparkles /> {analyzing ? "Groq is reviewing shipment…" : "Analyze shipment with Groq AI"}</Button>
-              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Text-only MVP: .txt/.csv supported; scanned PDFs and OCR are not connected. When you run AI review, invoice and packing-list text are sent securely from our server to Groq API. The API key stays server-side. Do not submit confidential shipment data.</p>
+              <Button className="mt-4 w-full" onClick={analyzeOwnShipment} disabled={analyzing}><Sparkles /> {analyzing ? "AETHER-TRADE is analyzing shipment…" : "Analyze shipment with AETHER-TRADE"}</Button>
+              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />AETHER-TRADE compares invoice and packing-list fields, applies deterministic validation rules and adds AI-assisted contextual review. For AI review, submitted document text is processed by our AI provider, Groq, through a server-side integration. This demo accepts .txt/.csv text exports only; scanned PDFs and OCR are not available. Do not submit confidential shipment data.</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
               <p className="eyebrow">Review and approval</p><h3 className="text-lg font-semibold">Shipment result</h3>
@@ -339,11 +339,11 @@ export function ShipmentReadinessDemo() {
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
                   <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI shipment review</p><p className="text-sm font-semibold">Groq cross-document reasoning</p></div>
-                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Groq AI active" : "Rules-only fallback"}</span>
+                      <div><p className="eyebrow">AI shipment review</p><p className="text-sm font-semibold">AETHER-TRADE cross-document review</p></div>
+                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "AI review active" : "Rules-only fallback"}</span>
                     </div>
                     <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">Model: {ownResult.aiReview.model}. Deterministic field comparisons and calculations remain the source of truth for numeric outcomes.</p>
+                    <p className="mt-2 text-xs text-muted-foreground">AI-assisted observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
                     {ownResult.aiReview.observations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Additional observations</p>{ownResult.aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
                     {ownResult.aiReview.questions.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">AI clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{ownResult.aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
                   </div>
