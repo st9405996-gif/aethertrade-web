@@ -44,17 +44,28 @@ async function hasGrokQuota(env: ServerEnv, remoteIp: string | undefined, fetchI
 }
 function extractCandidateText(payload: unknown): string {
   if (!payload || typeof payload !== "object") return "";
-  const choices = (payload as { choices?: unknown }).choices;
-  if (!Array.isArray(choices) || !choices[0] || typeof choices[0] !== "object") return "";
-  const message = (choices[0] as { message?: unknown }).message;
-  if (!message || typeof message !== "object") return "";
-  const content = (message as { content?: unknown }).content;
-  return typeof content === "string" ? content.trim() : "";
+  const direct = (payload as { output_text?: unknown }).output_text;
+  if (typeof direct === "string") return direct.trim();
+  const output = (payload as { output?: unknown }).output;
+  if (!Array.isArray(output)) return "";
+  for (const item of output) {
+    if (!item || typeof item !== "object") continue;
+    const content = (item as { content?: unknown }).content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (part && typeof part === "object" &&
+          (part as { type?: unknown }).type === "output_text" &&
+          typeof (part as { text?: unknown }).text === "string") {
+        return ((part as { text: string }).text).trim();
+      }
+    }
+  }
+  return "";
 }
 async function generateExplanation(
   result: ShipmentReadinessDemoResult, apiKey: string, model: string, fetchImpl: typeof fetch,
 ): Promise<Pick<ShipmentReadinessDemoResult, "explanation" | "questions"> | null> {
-  const endpoint = "https://api.x.ai/v1/chat/completions";
+  const endpoint = "https://api.x.ai/v1/responses";
   const response = await fetchImpl(endpoint, {
     method: "POST",
     headers: {
@@ -64,9 +75,10 @@ async function generateExplanation(
     body: JSON.stringify({
       model,
       temperature: 0.2,
-      max_tokens: 320,
-      response_format: { type: "json_object" },
-      messages: [
+      store: false,
+      max_output_tokens: 320,
+      text: { format: { type: "json_object" } },
+      input: [
         { role: "system", content:
           "You explain a precomputed shipment-document finding to a trade operations professional. " +
           "The supplied finding is the only source of truth. Do not add, remove, reinterpret, or invent findings. " +
