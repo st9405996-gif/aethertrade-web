@@ -232,7 +232,7 @@ export async function handleProductIntelligenceAI(
   try {
     body = JSON.parse(await validRequest(request, 110_000));
   } catch (error) {
-    return json({ message: error instanceof Error && error.message === "too-large" ? "Request is too large." : "Invalid JSON request." }, 400);
+    return json({ message: error instanceof Error && error.message === "too-large" ? "Request is too large." : "Invalid JSON request." }, error instanceof Error && error.message === "too-large" ? 413 : 400);
   }
   const parsed = z.object({ invoiceText: z.string().trim().min(20).max(MAX_DOCUMENT_CHARS) }).strict().safeParse(body);
   if (!parsed.success) return json({ message: "Provide invoice text between 20 and 45,000 characters." }, 400);
