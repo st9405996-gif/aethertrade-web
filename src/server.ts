@@ -260,6 +260,14 @@ export default {
       const { handleShipmentReadinessDemo } = await import("./lib/shipment-readiness-demo.server");
       return withSecurityHeaders(await handleShipmentReadinessDemo(request, readServerEnv()));
     }
+    if (requestUrl.pathname === "/api/demo/product-intelligence") {
+      const { handleProductIntelligenceAI } = await import("./lib/trade-intelligence-ai.server");
+      return withSecurityHeaders(await handleProductIntelligenceAI(request, readServerEnv()));
+    }
+    if (requestUrl.pathname === "/api/demo/shipment-readiness-analysis") {
+      const { handleShipmentReadinessAnalysis } = await import("./lib/trade-intelligence-ai.server");
+      return withSecurityHeaders(await handleShipmentReadinessAnalysis(request, readServerEnv()));
+    }
     if (requestUrl.pathname.startsWith("/api/admin-supabase/"))
       return withSecurityHeaders(await proxyAdminSupabase(request));
     const seoDocument = await dynamicSeoDocument(requestUrl.pathname, readServerEnv());
