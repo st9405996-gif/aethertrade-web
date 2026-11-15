@@ -6,7 +6,7 @@ import {
 
 const env = {
   GROQ_API_KEY: "test-groq-key",
-  GROQ_MODEL: "grok-3-mini",
+  GROQ_MODEL: "openai/gpt-oss-20b",
   SUPABASE_URL: "https://example.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-role",
   ABUSE_HASH_SECRET: "test-abuse-secret-that-is-at-least-thirty-two-characters",
