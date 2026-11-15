@@ -85,7 +85,7 @@ async function quotaAllowed(
   remoteIp: string | undefined,
   fetchImpl: typeof fetch,
 ): Promise<boolean> {
-  const supabaseUrl = (env["SUPABASE_URL"] ?? env["VITE_SUPABASE_URL"] ?? "").replace(/\\/+$/, "");
+  const supabaseUrl = (env["SUPABASE_URL"] ?? env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
   const serviceRoleKey = env["SUPABASE_SERVICE_ROLE_KEY"] ?? "";
   const abuseHashSecret = env["ABUSE_HASH_SECRET"] ?? "";
   if (!supabaseUrl || !serviceRoleKey || abuseHashSecret.length < 32) return false;
