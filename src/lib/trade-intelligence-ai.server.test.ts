@@ -18,7 +18,7 @@ function mockGrokFetch(aiPayload: unknown) {
     if (url.includes("/rpc/consume_submission_quota")) {
       return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
     }
-    if (url === "https://api.x.ai/v1/chat/completions") {
+    if (url === "https://api.x.ai/v1/responses") {
       return new Response(JSON.stringify(aiPayload), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -45,9 +45,11 @@ describe("Grok trade document review", () => {
   it("uses Grok for Product Intelligence and only keeps suggestions with source evidence", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5001\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
     const fetchMock = mockGrokFetch({
-      choices: [{
-        message: {
-          content: JSON.stringify({
+      output: [{
+        type: "message",
+        content: [{
+          type: "output_text",
+          text: JSON.stringify({
             summary: "The invoice identifies its reference, exporter, goods and quantity. The buyer and invoice value are not stated in the supplied excerpt.",
             suggestions: [
               { label: "Invoice number", value: "INV-5001", evidence: "Invoice Number: INV-5001" },
@@ -56,7 +58,7 @@ describe("Grok trade document review", () => {
             observations: [],
             questions: ["Who is the importer or consignee for this transaction?"],
           }),
-        },
+        }],
       }],
     });
     const response = await handleProductIntelligenceAI(
