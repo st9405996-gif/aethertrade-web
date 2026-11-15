@@ -5,7 +5,7 @@ import { analyzeTradeDocument, compareTradeDocuments, type ComparisonRow, type D
 
 type ServerEnv = Record<string, string | undefined>;
 type AiStatus = "ai" | "fallback";
-type GrokReview = {
+type GroqReview = {
   status: AiStatus;
   model: string;
   summary: string;
@@ -13,7 +13,7 @@ type GrokReview = {
   suggestions: { label: string; value: string; evidence: string }[];
   observations: { label: string; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
 };
-const DEFAULT_MODEL = "grok-3-mini";
+const DEFAULT_MODEL = "openai/gpt-oss-20b";
 const TIMEOUT_MS = 12_000;
 const MAX_DOCUMENT_CHARS = 45_000;
 const PER_IP_LIMIT = 8;
@@ -59,7 +59,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function fallbackReview(summary: string): GrokReview {
+function fallbackReview(summary: string): GroqReview {
   return {
     status: "fallback",
     model: "Deterministic rules only",
@@ -72,23 +72,12 @@ function fallbackReview(summary: string): GrokReview {
 
 function extractCandidateText(payload: unknown): string {
   if (!payload || typeof payload !== "object") return "";
-  const direct = (payload as { output_text?: unknown }).output_text;
-  if (typeof direct === "string") return direct.trim();
-  const output = (payload as { output?: unknown }).output;
-  if (!Array.isArray(output)) return "";
-  for (const item of output) {
-    if (!item || typeof item !== "object") continue;
-    const content = (item as { content?: unknown }).content;
-    if (!Array.isArray(content)) continue;
-    for (const part of content) {
-      if (part && typeof part === "object" &&
-          (part as { type?: unknown }).type === "output_text" &&
-          typeof (part as { text?: unknown }).text === "string") {
-        return ((part as { text: string }).text).trim();
-      }
-    }
-  }
-  return "";
+  const choices = (payload as { choices?: unknown }).choices;
+  if (!Array.isArray(choices) || !choices[0] || typeof choices[0] !== "object") return "";
+  const message = (choices[0] as { message?: unknown }).message;
+  if (!message || typeof message !== "object") return "";
+  const content = (message as { content?: unknown }).content;
+  return typeof content === "string" ? content.trim() : "";
 }
 
 async function quotaAllowed(
@@ -115,20 +104,20 @@ async function quotaAllowed(
   return global === "allowed";
 }
 
-async function requestGrok<T>(
+async function requestGroq<T>(
   prompt: string,
   schema: z.ZodType<T>,
   env: ServerEnv,
   remoteIp: string | undefined,
   fetchImpl: typeof fetch,
 ): Promise<{ value: T; model: string } | null> {
-  const apiKey = env["GROK_API_KEY"]?.trim();
+  const apiKey = env["GROQ_API_KEY"]?.trim();
   if (!apiKey) return null;
   if (!(await quotaAllowed(env, remoteIp, fetchImpl))) return null;
-  const model = (env["GROK_MODEL"] ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
+  const model = (env["GROQ_MODEL"] ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
   if (!/^[a-z0-9._/-]{3,100}$/i.test(model)) return null;
 
-  const response = await fetchImpl("https://api.x.ai/v1/responses", {
+  const response = await fetchImpl("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -137,10 +126,9 @@ async function requestGrok<T>(
     body: JSON.stringify({
       model,
       temperature: 0.1,
-      store: false,
-      max_output_tokens: 1_400,
-      text: { format: { type: "json_object" } },
-      input: [
+      max_completion_tokens: 1_400,
+      response_format: { type: "json_object" },
+      messages: [
         {
           role: "system",
           content:
@@ -158,7 +146,7 @@ async function requestGrok<T>(
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!response.ok) {
-    console.warn("grok-trade-review: xAI request unavailable", { status: response.status });
+    console.warn("groq-trade-review: Groq request unavailable", { status: response.status });
     return null;
   }
   const payload: unknown = await response.json().catch(() => undefined);
@@ -181,7 +169,7 @@ function makeReview(
   result: z.infer<typeof productReviewSchema>,
   source: string,
   model: string,
-): GrokReview {
+): GroqReview {
   return {
     status: "ai",
     model,
@@ -197,7 +185,7 @@ function makeShipmentReview(
   invoiceText: string,
   packingText: string,
   model: string,
-): GrokReview {
+): GroqReview {
   const sourceFor = (document: "invoice" | "packing-list" | "both") =>
     document === "invoice" ? invoiceText : document === "packing-list" ? packingText : invoiceText + "\n" + packingText;
   return {
@@ -250,9 +238,9 @@ export async function handleProductIntelligenceAI(
   if (!parsed.success) return json({ message: "Provide invoice text between 20 and 45,000 characters." }, 400);
   const invoiceText = parsed.data.invoiceText;
   const analysis: DocumentAnalysis = analyzeTradeDocument(invoiceText);
-  const fallback = fallbackReview("Grok AI is unavailable or its request limit has been reached. The displayed extraction and calculations are from the deterministic document parser.");
+  const fallback = fallbackReview("Groq AI is unavailable or its request limit has been reached. The displayed extraction and calculations are from the deterministic document parser.");
   try {
-    const generated = await requestGrok(
+    const generated = await requestGroq(
       "Review this commercial invoice. Return JSON with: summary (what the invoice says and the main information gaps), suggestions (candidate field extractions with label, value, and exact evidence), observations (notable ambiguities or inconsistencies with label, detail, document='invoice', and exact evidence), and questions (up to three useful clarification questions). Do not guess missing data.\n\nINVOICE TEXT:\n" +
         invoiceText +
         "\n\nDETERMINISTIC EXTRACTION (reference only):\n" +
@@ -265,7 +253,7 @@ export async function handleProductIntelligenceAI(
     const aiReview = generated ? makeReview(generated.value, invoiceText, generated.model) : fallback;
     return json({ analysis, aiReview });
   } catch (error) {
-    console.warn("grok-trade-review: product-intelligence review unavailable", error instanceof Error ? error.name : "unknown");
+    console.warn("groq-trade-review: product-intelligence review unavailable", error instanceof Error ? error.name : "unknown");
     return json({ analysis, aiReview: fallback });
   }
 }
@@ -320,9 +308,9 @@ export async function handleShipmentReadinessAnalysis(
     ? "Hello,\n\nWe are reviewing the document set for shipment " + safeReference + ". Could you please help clarify the following item(s)?\n\n" + requests.map((item) => "- " + item).join("\n") + "\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team"
     : "The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. " + (unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : "") + "Please complete the normal human review before proceeding.";
 
-  const fallback = fallbackReview("Grok AI is unavailable or its request limit has been reached. Document matching, calculations and the follow-up draft below are from deterministic rules.");
+  const fallback = fallbackReview("Groq AI is unavailable or its request limit has been reached. Document matching, calculations and the follow-up draft below are from deterministic rules.");
   try {
-    const generated = await requestGrok(
+    const generated = await requestGroq(
       "Review this shipment's commercial invoice and packing list together. Return JSON with: summary, observations (each with label, detail, document='invoice'|'packing-list'|'both', and an exact evidence excerpt), and one to three clarification questions. Look for semantic product-description differences, ambiguous units, missing cross-document details, and context that a literal field comparison may miss. Do not duplicate already-known findings unless adding useful context. Never decide which document is correct. Do not infer legal or customs requirements.\n\nINVOICE TEXT:\n" +
         invoiceText +
         "\n\nPACKING LIST TEXT:\n" +
@@ -339,7 +327,7 @@ export async function handleShipmentReadinessAnalysis(
       : fallback;
     return json({ comparison, validations, missing, subject, body: draftBody, aiReview });
   } catch (error) {
-    console.warn("grok-trade-review: shipment review unavailable", error instanceof Error ? error.name : "unknown");
+    console.warn("groq-trade-review: shipment review unavailable", error instanceof Error ? error.name : "unknown");
     return json({ comparison, validations, missing, subject, body: draftBody, aiReview: fallback });
   }
 }
