@@ -33,12 +33,12 @@ async function hasGroqQuota(env: ServerEnv, remoteIp: string | undefined, fetchI
   const ipHash = await hmacSha256Hex(abuseHashSecret, remoteIp ?? "unknown-client");
   const perIp = await consumeSubmissionQuota(
     { supabaseUrl, serviceRoleKey, limit: PER_IP_LIMIT, windowSeconds: PER_IP_WINDOW_SECONDS },
-    "shipment-readiness-demo:grok:ip:" + ipHash, fetchImpl,
+    "shipment-readiness-demo:groq:ip:" + ipHash, fetchImpl,
   );
   if (perIp !== "allowed") return false;
   const global = await consumeSubmissionQuota(
     { supabaseUrl, serviceRoleKey, limit: GLOBAL_LIMIT, windowSeconds: GLOBAL_WINDOW_SECONDS },
-    "shipment-readiness-demo:grok:global", fetchImpl,
+    "shipment-readiness-demo:groq:global", fetchImpl,
   );
   return global === "allowed";
 }
