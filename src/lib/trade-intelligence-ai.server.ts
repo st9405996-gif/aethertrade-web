@@ -150,9 +150,7 @@ async function requestGrok<T>(
     return null;
   }
   const payload: unknown = await response.json().catch(() => undefined);
-  const raw = extractCandidateText(payload)
-    .replace(/^\x60\x60\x60(?:json)?\\s*/i, "")
-    .replace(/\\s*\x60\x60\x60$/, "");
+  const raw = extractCandidateText(payload);
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -189,7 +187,7 @@ function makeShipmentReview(
   model: string,
 ): GrokReview {
   const sourceFor = (document: "invoice" | "packing-list" | "both") =>
-    document === "invoice" ? invoiceText : document === "packing-list" ? packingText : invoiceText + "\\n" + packingText;
+    document === "invoice" ? invoiceText : document === "packing-list" ? packingText : invoiceText + "\n" + packingText;
   return {
     status: "ai",
     model,
@@ -243,9 +241,9 @@ export async function handleProductIntelligenceAI(
   const fallback = fallbackReview("Grok AI is unavailable or its request limit has been reached. The displayed extraction and calculations are from the deterministic document parser.");
   try {
     const generated = await requestGrok(
-      "Review this commercial invoice. Return JSON with: summary (what the invoice says and the main information gaps), suggestions (candidate field extractions with label, value, and exact evidence), observations (notable ambiguities or inconsistencies with label, detail, document='invoice', and exact evidence), and questions (up to three useful clarification questions). Do not guess missing data.\n\nINVOICE TEXT:\\n" +
+      "Review this commercial invoice. Return JSON with: summary (what the invoice says and the main information gaps), suggestions (candidate field extractions with label, value, and exact evidence), observations (notable ambiguities or inconsistencies with label, detail, document='invoice', and exact evidence), and questions (up to three useful clarification questions). Do not guess missing data.\n\nINVOICE TEXT:\n" +
         invoiceText +
-        "\\n\\nDETERMINISTIC EXTRACTION (reference only):\\n" +
+        "\n\nDETERMINISTIC EXTRACTION (reference only):\n" +
         JSON.stringify(analysis),
       productReviewSchema,
       env,
@@ -307,17 +305,17 @@ export async function handleShipmentReadinessAnalysis(
     ? "Clarification required for shipment " + safeReference
     : "Shipment " + safeReference + " — no follow-up flagged";
   const draftBody = requests.length
-    ? "Hello,\\n\\nWe are reviewing the document set for shipment " + safeReference + ". Could you please help clarify the following item(s)?\\n\\n" + requests.map((item) => "- " + item).join("\\n") + "\\n\\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\\n\\nThank you,\\nLogistics coordination team"
+    ? "Hello,\n\nWe are reviewing the document set for shipment " + safeReference + ". Could you please help clarify the following item(s)?\n\n" + requests.map((item) => "- " + item).join("\n") + "\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team"
     : "The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. " + (unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : "") + "Please complete the normal human review before proceeding.";
 
   const fallback = fallbackReview("Grok AI is unavailable or its request limit has been reached. Document matching, calculations and the follow-up draft below are from deterministic rules.");
   try {
     const generated = await requestGrok(
-      "Review this shipment's commercial invoice and packing list together. Return JSON with: summary, observations (each with label, detail, document='invoice'|'packing-list'|'both', and an exact evidence excerpt), and one to three clarification questions. Look for semantic product-description differences, ambiguous units, missing cross-document details, and context that a literal field comparison may miss. Do not duplicate already-known findings unless adding useful context. Never decide which document is correct. Do not infer legal or customs requirements.\n\nINVOICE TEXT:\\n" +
+      "Review this shipment's commercial invoice and packing list together. Return JSON with: summary, observations (each with label, detail, document='invoice'|'packing-list'|'both', and an exact evidence excerpt), and one to three clarification questions. Look for semantic product-description differences, ambiguous units, missing cross-document details, and context that a literal field comparison may miss. Do not duplicate already-known findings unless adding useful context. Never decide which document is correct. Do not infer legal or customs requirements.\n\nINVOICE TEXT:\n" +
         invoiceText +
-        "\\n\\nPACKING LIST TEXT:\\n" +
+        "\n\nPACKING LIST TEXT:\n" +
         packingText +
-        "\\n\\nDETERMINISTIC COMPARISON AND CHECKS (source of truth for numeric outcomes):\\n" +
+        "\n\nDETERMINISTIC COMPARISON AND CHECKS (source of truth for numeric outcomes):\n" +
         JSON.stringify({ comparison, validations, missingSupportingDocuments: missing }),
       shipmentReviewSchema,
       env,
