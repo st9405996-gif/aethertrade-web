@@ -144,8 +144,8 @@ describe("Grok trade document review", () => {
     expect(tooShort.status).toBe(400);
     const oversized = await handleShipmentReadinessAnalysis(
       request("/api/demo/shipment-readiness-analysis", {
-        invoiceText: "x".repeat(50_000),
-        packingText: "y".repeat(50_000),
+        invoiceText: "x".repeat(60_000),
+        packingText: "y".repeat(60_000),
       }),
       env,
       fetchMock,
