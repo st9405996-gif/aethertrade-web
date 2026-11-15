@@ -11,7 +11,17 @@ const initialSupportingDocs = [
   { name: "Certificate of origin", received: false },
 ];
 
+type GrokReview = {
+  status: "ai" | "fallback";
+  model: string;
+  summary: string;
+  questions: string[];
+  suggestions: { label: string; value: string; evidence: string }[];
+  observations: { label: string; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
+};
+
 type OwnResult = {
+  aiReview: GrokReview;
   comparison: ComparisonRow[];
   missing: string[];
   subject: string;
@@ -122,7 +132,7 @@ export function ShipmentReadinessDemo() {
     setOwnResult(null);
   }
 
-  function analyzeOwnShipment() {
+  async function analyzeOwnShipment() {
     if (invoiceText.trim().length < 20 || packingText.trim().length < 20) {
       setError("Add at least 20 characters of invoice text and packing-list text before analysis.");
       setOwnResult(null);
@@ -147,8 +157,39 @@ export function ShipmentReadinessDemo() {
     const draft = requests.length
       ? makeFindingDraft(reference.trim() || "shipment", requests)
       : { subject: `Shipment ${reference.trim() || "review"} — no follow-up flagged`, body: `The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. ${unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : ""}Please complete the normal human review before proceeding.` };
-    setOwnResult({ comparison, missing, validations, ...draft });
+    const fallbackResult: OwnResult = {
+      comparison, missing, validations, ...draft,
+      aiReview: {
+        status: "fallback",
+        model: "Deterministic rules only",
+        summary: "Grok AI could not be reached. Document matching, calculations and the follow-up draft are based on the rules engine.",
+        questions: [],
+        suggestions: [],
+        observations: [],
+      },
+    };
     setError("");
+    setOwnResult(null);
+    setAnalyzing(true);
+    try {
+      const response = await fetch("/api/demo/shipment-readiness-analysis", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reference, invoiceText, packingText, supportingDocs }),
+      });
+      if (!response.ok) throw new Error("Grok shipment review unavailable");
+      const payload = await response.json() as OwnResult;
+      if (!Array.isArray(payload.comparison) || !Array.isArray(payload.validations) ||
+          !Array.isArray(payload.missing) || !payload.aiReview || typeof payload.subject !== "string" ||
+          typeof payload.body !== "string") {
+        throw new Error("Unexpected shipment review response");
+      }
+      setOwnResult(payload);
+    } catch {
+      setOwnResult(fallbackResult);
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   const sampleDraftItems = result
@@ -286,8 +327,8 @@ export function ShipmentReadinessDemo() {
                 {supportingDocs.map((item, index) => <label key={item.name} className="mt-2 flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2"><input type="checkbox" checked={item.received} onChange={(event) => { setSupportingDocs((current) => current.map((doc, i) => i === index ? { ...doc, received: event.target.checked } : doc)); setOwnResult(null); }} />{item.name}</span><span className="text-xs text-muted-foreground">{item.received ? "Received" : "Marked missing"}</span></label>)}
               </div>
               {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-              <Button className="mt-4 w-full" onClick={analyzeOwnShipment}><Sparkles /> Analyze shipment & prepare follow-up</Button>
-              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Text-only MVP: .txt/.csv supported; scanned PDFs and OCR are not connected. This public demo is not for confidential shipment data.</p>
+              <Button className="mt-4 w-full" onClick={analyzeOwnShipment} disabled={analyzing}><Sparkles /> {analyzing ? "Grok is reviewing shipment…" : "Analyze shipment with Grok AI"}</Button>
+              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Text-only MVP: .txt/.csv supported; scanned PDFs and OCR are not connected. When you run AI review, invoice and packing-list text are sent securely from our server to xAI Grok. The API key stays server-side. Do not submit confidential shipment data.</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
               <p className="eyebrow">Review and approval</p><h3 className="text-lg font-semibold">Shipment result</h3>
@@ -296,6 +337,16 @@ export function ShipmentReadinessDemo() {
                 <div className="mt-4 space-y-4" aria-live="polite">
                   <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">{ownResult.comparison.filter((item) => item.status === "consistent").length} consistent</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">{ownResult.comparison.filter((item) => item.status === "mismatch").length} mismatches</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "unable").length} not found in either</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "invoice-only").length} invoice only</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "packing-only").length} packing-list only</span></div>
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="eyebrow">AI shipment review</p><p className="text-sm font-semibold">Grok cross-document reasoning</p></div>
+                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Grok AI active" : "Rules-only fallback"}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Model: {ownResult.aiReview.model}. Deterministic field comparisons and calculations remain the source of truth for numeric outcomes.</p>
+                    {ownResult.aiReview.observations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Additional observations</p>{ownResult.aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
+                    {ownResult.aiReview.questions.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">AI clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{ownResult.aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
+                  </div>
                   <div className="rounded-lg border border-border p-3">
                     <p className="text-sm font-semibold">Internal document calculations</p>
                     {ownResult.validations.map(({ document, check }) => (
