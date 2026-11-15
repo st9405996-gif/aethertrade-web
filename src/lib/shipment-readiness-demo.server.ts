@@ -118,7 +118,7 @@ export async function handleShipmentReadinessDemo(
   const apiKey = env["GROK_API_KEY"]?.trim();
   if (!apiKey) return json(fallback(result));
   try {
-    const allowed = await hasGroqQuota(env, request.headers.get("cf-connecting-ip") ?? undefined, fetchImpl);
+    const allowed = await hasGrokQuota(env, request.headers.get("cf-connecting-ip") ?? undefined, fetchImpl);
     if (!allowed) return json(fallback(result));
     const model = (env["GROK_MODEL"] ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
     if (!/^[a-z0-9._/-]{3,100}$/i.test(model)) return json(fallback(result));
