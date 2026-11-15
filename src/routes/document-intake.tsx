@@ -7,7 +7,7 @@ import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { meta } from "@/components/site/blocks";
 import { analyzeTradeDocument, type DocumentAnalysis } from "@/lib/trade-intelligence";
 
-type GrokReview = {
+type GroqReview = {
   status: "ai" | "fallback";
   model: string;
   summary: string;
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/document-intake")({
 function ProductIntelligencePage() {
   const [sourceText, setSourceText] = useState("");
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
-  const [aiReview, setAiReview] = useState<GrokReview | null>(null);
+  const [aiReview, setAiReview] = useState<GroqReview | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
@@ -81,8 +81,8 @@ function ProductIntelligencePage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ invoiceText: sourceText }),
       });
-      if (!response.ok) throw new Error("Grok review unavailable");
-      const payload = await response.json() as { analysis?: DocumentAnalysis; aiReview?: GrokReview };
+      if (!response.ok) throw new Error("Groq review unavailable");
+      const payload = await response.json() as { analysis?: DocumentAnalysis; aiReview?: GroqReview };
       if (!payload.analysis || !payload.aiReview || !Array.isArray(payload.analysis.fields)) {
         throw new Error("Unexpected AI review response");
       }
@@ -92,7 +92,7 @@ function ProductIntelligencePage() {
       setAiReview({
         status: "fallback",
         model: "Deterministic rules only",
-        summary: "Grok AI could not be reached. The extraction and calculations shown are from the local rules-based parser.",
+        summary: "Groq AI could not be reached. The extraction and calculations shown are from the local rules-based parser.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -121,7 +121,7 @@ function ProductIntelligencePage() {
               <div className="rounded-xl bg-primary/10 p-3 text-primary"><FileSearch /></div>
               <div><p className="eyebrow">Invoice text review</p><h2 className="text-xl font-semibold">Add invoice content</h2></div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Paste text copied from a commercial invoice, or upload a .txt/.csv text export. When you run analysis, invoice text is sent securely from our server to xAI Grok for AI review. The API key stays server-side. Do not submit confidential customer or shipment data.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Paste text copied from a commercial invoice, or upload a .txt/.csv text export. When you run analysis, invoice text is sent securely from our server to Groq API for AI review. The API key stays server-side. Do not submit confidential customer or shipment data.</p>
             <textarea
               value={sourceText}
               onChange={(event) => { setSourceText(event.target.value); setAnalysis(null); setError(""); }}
@@ -139,10 +139,10 @@ function ProductIntelligencePage() {
               <button type="button" className="text-sm text-primary underline underline-offset-4" onClick={() => { setSourceText(sampleInvoice); setFileName("Illustrative sample"); setAnalysis(null); setAiReview(null); setError(""); }}>Load sample invoice</button>
             </div>
             {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-            <Button className="mt-5 w-full" onClick={runAnalysis} disabled={isAnalyzing}><Sparkles /> {isAnalyzing ? "Grok is reviewing invoice…" : "Analyse with Grok AI"}</Button>
+            <Button className="mt-5 w-full" onClick={runAnalysis} disabled={isAnalyzing}><Sparkles /> {isAnalyzing ? "Groq is reviewing invoice…" : "Analyse with Groq AI"}</Button>
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              <p>Text-based extraction only. Grok reviews the supplied text for context and ambiguities; calculations remain rules-based. Scanned PDFs, OCR, live HS-code lookup and customs rulings are not connected. Do not enter confidential customer or shipment data in this public demo.</p>
+              <p>Text-based extraction only. Groq reviews the supplied text for context and ambiguities; calculations remain rules-based. Scanned PDFs, OCR, live HS-code lookup and customs rulings are not connected. Do not enter confidential customer or shipment data in this public demo.</p>
             </div>
           </div>
 
@@ -172,8 +172,8 @@ function ProductIntelligencePage() {
                 {aiReview && (
                   <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI document review</p><h2 className="mt-1 text-xl font-semibold">Grok intelligence review</h2></div>
-                      <span className={`rounded-full px-3 py-1 text-xs ${aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{aiReview.status === "ai" ? "Grok AI active" : "Rules-only fallback"}</span>
+                      <div><p className="eyebrow">AI document review</p><h2 className="mt-1 text-xl font-semibold">Groq intelligence review</h2></div>
+                      <span className={`rounded-full px-3 py-1 text-xs ${aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{aiReview.status === "ai" ? "Groq AI active" : "Rules-only fallback"}</span>
                     </div>
                     <p className="mt-3 text-sm leading-6">{aiReview.summary}</p>
                     <p className="mt-2 text-xs text-muted-foreground">Model: {aiReview.model}. AI suggestions are evidence-checked against the supplied invoice; deterministic calculations remain authoritative.</p>
