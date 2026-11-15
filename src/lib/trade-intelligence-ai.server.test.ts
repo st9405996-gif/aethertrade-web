@@ -5,20 +5,20 @@ import {
 } from "./trade-intelligence-ai.server";
 
 const env = {
-  GROK_API_KEY: "test-grok-key",
-  GROK_MODEL: "grok-3-mini",
+  GROQ_API_KEY: "test-groq-key",
+  GROQ_MODEL: "grok-3-mini",
   SUPABASE_URL: "https://example.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-role",
   ABUSE_HASH_SECRET: "test-abuse-secret-that-is-at-least-thirty-two-characters",
 };
 
-function mockGrokFetch(aiPayload: unknown) {
+function mockGroqFetch(aiPayload: unknown) {
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = String(input);
     if (url.includes("/rpc/consume_submission_quota")) {
       return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
     }
-    if (url === "https://api.x.ai/v1/responses") {
+    if (url === "https://api.groq.com/openai/v1/chat/completions") {
       return new Response(JSON.stringify(aiPayload), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -41,15 +41,11 @@ function request(path: string, body: unknown) {
   });
 }
 
-describe("Grok trade document review", () => {
-  it("uses Grok for Product Intelligence and only keeps suggestions with source evidence", async () => {
+describe("Groq trade document review", () => {
+  it("uses Groq for Product Intelligence and only keeps suggestions with source evidence", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5001\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
-    const fetchMock = mockGrokFetch({
-      output: [{
-        type: "message",
-        content: [{
-          type: "output_text",
-          text: JSON.stringify({
+    const fetchMock = mockGroqFetch({
+      choices: [{ message: { content: JSON.stringify({
             summary: "The invoice identifies its reference, exporter, goods and quantity. The buyer and invoice value are not stated in the supplied excerpt.",
             suggestions: [
               { label: "Invoice number", value: "INV-5001", evidence: "Invoice Number: INV-5001" },
@@ -57,9 +53,7 @@ describe("Grok trade document review", () => {
             ],
             observations: [],
             questions: ["Who is the importer or consignee for this transaction?"],
-          }),
-        }],
-      }],
+          }) } }],
     });
     const response = await handleProductIntelligenceAI(
       request("/api/demo/product-intelligence", { invoiceText }),
@@ -75,18 +69,14 @@ describe("Grok trade document review", () => {
     expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
     expect(payload.analysis.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-5001");
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.x.ai/v1/responses");
+    expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.groq.com/openai/v1/chat/completions");
   });
 
-  it("uses Grok to review invoice and packing-list context while retaining deterministic comparisons", async () => {
+  it("uses Groq to review invoice and packing-list context while retaining deterministic comparisons", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
     const packingText = "PACKING LIST\nReference Invoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
-    const fetchMock = mockGrokFetch({
-      output: [{
-        type: "message",
-        content: [{
-          type: "output_text",
-          text: JSON.stringify({
+    const fetchMock = mockGroqFetch({
+      choices: [{ message: { content: JSON.stringify({
             summary: "The documents refer to the same invoice but state different quantities. Confirm the final packed quantity before revising either record.",
             observations: [{
               label: "Quantity difference",
@@ -95,9 +85,7 @@ describe("Grok trade document review", () => {
               evidence: "Quantity: 100 PCS",
             }],
             questions: ["Which quantity is supported by the final packing record?"],
-          }),
-        }],
-      }],
+          }) } }],
     });
     const response = await handleShipmentReadinessAnalysis(
       request("/api/demo/shipment-readiness-analysis", {
@@ -122,13 +110,13 @@ describe("Grok trade document review", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("returns deterministic Product Intelligence results when Grok is not configured", async () => {
+  it("returns deterministic Product Intelligence results when Groq is not configured", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const response = await handleProductIntelligenceAI(
       request("/api/demo/product-intelligence", {
         invoiceText: "COMMERCIAL INVOICE\nInvoice Number: INV-5003\nGoods Description: Steel bolts",
       }),
-      { ...env, GROK_API_KEY: "" },
+      { ...env, GROQ_API_KEY: "" },
       fetchMock,
     );
     const payload = await response.json() as { aiReview: { status: string; model: string } };
@@ -138,7 +126,7 @@ describe("Grok trade document review", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("rejects oversized and invalid document payloads before calling Grok", async () => {
+  it("rejects oversized and invalid document payloads before calling Groq", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const tooShort = await handleProductIntelligenceAI(
       request("/api/demo/product-intelligence", { invoiceText: "too short" }),
