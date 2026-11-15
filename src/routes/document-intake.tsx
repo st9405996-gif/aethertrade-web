@@ -53,7 +53,7 @@ function ProductIntelligencePage() {
       return;
     }
     if (!/\.(txt|csv)$/i.test(file.name)) {
-      setError("For this MVP, upload a .txt or .csv text export. PDF/OCR processing is not connected yet.");
+      setError("This demo currently accepts .txt or .csv text exports. Scanned PDF and OCR processing are not available.");
       return;
     }
     setError("");
@@ -92,7 +92,7 @@ function ProductIntelligencePage() {
       setAiReview({
         status: "fallback",
         model: "Deterministic rules only",
-        summary: "Groq AI could not be reached. The extraction and calculations shown are from the local rules-based parser.",
+        summary: "AI-assisted review is unavailable. The structured extraction and calculations shown are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -121,7 +121,7 @@ function ProductIntelligencePage() {
               <div className="rounded-xl bg-primary/10 p-3 text-primary"><FileSearch /></div>
               <div><p className="eyebrow">Invoice text review</p><h2 className="text-xl font-semibold">Add invoice content</h2></div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Paste text copied from a commercial invoice, or upload a .txt/.csv text export. When you run analysis, invoice text is sent securely from our server to Groq API for AI review. The API key stays server-side. Do not submit confidential customer or shipment data.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Add commercial-invoice text or upload a .txt/.csv export. AETHER-TRADE extracts stated fields and checks the supplied information using its validation engine, with AI-assisted contextual review where available. For that review, submitted text is processed by our AI provider, Groq, through a server-side integration. Do not submit confidential customer or shipment data.</p>
             <textarea
               value={sourceText}
               onChange={(event) => { setSourceText(event.target.value); setAnalysis(null); setError(""); }}
@@ -139,10 +139,10 @@ function ProductIntelligencePage() {
               <button type="button" className="text-sm text-primary underline underline-offset-4" onClick={() => { setSourceText(sampleInvoice); setFileName("Illustrative sample"); setAnalysis(null); setAiReview(null); setError(""); }}>Load sample invoice</button>
             </div>
             {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-            <Button className="mt-5 w-full" onClick={runAnalysis} disabled={isAnalyzing}><Sparkles /> {isAnalyzing ? "Groq is reviewing invoice…" : "Analyse with Groq AI"}</Button>
+            <Button className="mt-5 w-full" onClick={runAnalysis} disabled={isAnalyzing}><Sparkles /> {isAnalyzing ? "AETHER-TRADE is analyzing invoice…" : "Analyse with AETHER-TRADE"}</Button>
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              <p>Text-based extraction only. Groq reviews the supplied text for context and ambiguities; calculations remain rules-based. Scanned PDFs, OCR, live HS-code lookup and customs rulings are not connected. Do not enter confidential customer or shipment data in this public demo.</p>
+              <p>AETHER-TRADE combines structured field extraction, deterministic validation and AI-assisted contextual review. Numeric calculations and consistency checks remain controlled by the validation engine. This demo currently accepts text-based inputs only; scanned PDFs, OCR, live HS-code lookup and customs rulings are not available. Do not enter confidential customer or shipment data.</p>
             </div>
           </div>
 
@@ -172,11 +172,11 @@ function ProductIntelligencePage() {
                 {aiReview && (
                   <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI document review</p><h2 className="mt-1 text-xl font-semibold">Groq intelligence review</h2></div>
-                      <span className={`rounded-full px-3 py-1 text-xs ${aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{aiReview.status === "ai" ? "Groq AI active" : "Rules-only fallback"}</span>
+                      <div><p className="eyebrow">AI document review</p><h2 className="mt-1 text-xl font-semibold">AETHER-TRADE contextual review</h2></div>
+                      <span className={`rounded-full px-3 py-1 text-xs ${aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{aiReview.status === "ai" ? "AI review active" : "Rules-only fallback"}</span>
                     </div>
                     <p className="mt-3 text-sm leading-6">{aiReview.summary}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">Model: {aiReview.model}. AI suggestions are evidence-checked against the supplied invoice; deterministic calculations remain authoritative.</p>
+                    <p className="mt-2 text-xs text-muted-foreground">AI suggestions are checked against the supplied invoice evidence; deterministic calculations remain authoritative.</p>
                     {aiReview.suggestions.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">AI field suggestions</p>{aiReview.suggestions.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}: {item.value}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
                     {aiReview.observations.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">AI observations</p>{aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
                     {aiReview.questions.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">Clarification questions</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
