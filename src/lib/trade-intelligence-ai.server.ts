@@ -270,7 +270,7 @@ export async function handleShipmentReadinessAnalysis(
   try {
     body = JSON.parse(await validRequest(request, 110_000));
   } catch (error) {
-    return json({ message: error instanceof Error && error.message === "too-large" ? "Request is too large." : "Invalid JSON request." }, 400);
+    return json({ message: error instanceof Error && error.message === "too-large" ? "Request is too large." : "Invalid JSON request." }, error instanceof Error && error.message === "too-large" ? 413 : 400);
   }
   const parsed = z.object({
     reference: z.string().trim().max(120).default("shipment"),
