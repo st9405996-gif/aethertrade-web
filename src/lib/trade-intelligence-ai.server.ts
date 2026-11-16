@@ -120,8 +120,10 @@ function configuredProviders(env: ServerEnv): ChatProvider[] {
   return providers;
 }
 async function requestAiReview<T>(prompt: string, schema: z.ZodType<T>, env: ServerEnv, remoteIp: string | undefined, fetchImpl: typeof fetch): Promise<{ value: T } | null> {
+  const providers = configuredProviders(env);
+  if (!providers.length) return null;
   if (!(await quotaAllowed(env, remoteIp, fetchImpl))) return null;
-  for (const provider of configuredProviders(env)) {
+  for (const provider of providers) {
     try {
       const response = await fetchImpl(provider.endpoint, {
         method: "POST",
