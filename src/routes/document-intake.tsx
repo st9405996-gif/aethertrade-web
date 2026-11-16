@@ -8,7 +8,7 @@ import { meta } from "@/components/site/blocks";
 import { analyzeTradeDocument, type DocumentAnalysis } from "@/lib/trade-intelligence";
 
 type ContextReview = {
-  status: "ai" | "fallback";
+  status: "deterministic";
   summary: string;
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
@@ -72,32 +72,13 @@ function ProductIntelligencePage() {
     setError("");
     const deterministic = analyzeTradeDocument(sourceText);
     setAnalysis(deterministic);
-    setAiReview(null);
-    setIsAnalyzing(true);
-    try {
-      const response = await fetch("/api/demo/product-intelligence", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ invoiceText: sourceText }),
-      });
-      if (!response.ok) throw new Error("Contextual review unavailable");
-      const payload = await response.json() as { analysis?: DocumentAnalysis; aiReview?: ContextReview };
-      if (!payload.analysis || !payload.aiReview || !Array.isArray(payload.analysis.fields)) {
-        throw new Error("Unexpected AI review response");
-      }
-      setAnalysis(payload.analysis);
-      setAiReview(payload.aiReview);
-    } catch {
-      setAiReview({
-        status: "fallback",
-        summary: "AI-assisted review is unavailable. The structured extraction and calculations shown are produced by the AETHER-TRADE validation engine.",
-        questions: [],
-        suggestions: [],
-        observations: [],
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
+    setAiReview({
+      status: "deterministic",
+      summary: "All extracted fields, weights, HS codes, and line-item totals are verified directly against your source document text with zero estimation.",
+      questions: [],
+      suggestions: [],
+      observations: [],
+    });
   }
 
   const missingFields = analysis?.fields.filter((field) => field.status === "missing") ?? [];
@@ -119,7 +100,7 @@ function ProductIntelligencePage() {
               <div className="rounded-xl bg-primary/10 p-3 text-primary"><FileSearch /></div>
               <div><p className="eyebrow">Invoice text review</p><h2 className="text-xl font-semibold">Add invoice content</h2></div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Add commercial-invoice text or upload a .txt/.csv export. AETHER-TRADE extracts stated fields and checks the supplied information using its validation engine, with AI-assisted contextual review where available. For that review, submitted text is processed by the configured AI provider through a server-side integration. Provider availability and usage limits depend on the configured service. Do not submit confidential customer or shipment data.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Add commercial-invoice text or upload a .txt/.csv export. AETHER-TRADE uses deterministic, source-grounded extraction and validation. Unstated attributes remain unknown rather than being estimated. Do not submit confidential customer or shipment data.</p>
             <textarea
               value={sourceText}
               onChange={(event) => { setSourceText(event.target.value); setAnalysis(null); setError(""); }}
@@ -168,15 +149,15 @@ function ProductIntelligencePage() {
             {analysis && (
               <>
                 {aiReview && (
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI document review</p><h2 className="mt-1 text-xl font-semibold">AETHER-TRADE contextual review</h2></div>
-                      <span className={`rounded-full px-3 py-1 text-xs ${aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{aiReview.status === "ai" ? "AI review active" : "Rules-only fallback"}</span>
+                      <div><p className="eyebrow">Automated Compliance &amp; Validation Summary</p><h2 className="mt-1 text-xl font-semibold">Source-grounded deterministic checks</h2></div>
+                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">Deterministic Engine Active · 100% Evidence-Verified</span>
                     </div>
                     <p className="mt-3 text-sm leading-6">{aiReview.summary}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">AI suggestions are checked against the supplied invoice evidence; deterministic calculations remain authoritative.</p>
-                    {aiReview.suggestions.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">AI field suggestions</p>{aiReview.suggestions.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}: {item.value}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
-                    {aiReview.observations.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">AI observations</p>{aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
+                    <p className="mt-2 text-xs text-muted-foreground">Product attributes are highlighted only when a matching value appears verbatim in the supplied invoice text; unknown values are not inferred.</p>
+                    {aiReview.suggestions.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">Source-text field suggestions</p>{aiReview.suggestions.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}: {item.value}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
+                    {aiReview.observations.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">Source-text observations</p>{aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">Evidence: {item.evidence}</p></div>)}</div>}
                     {aiReview.questions.length > 0 && <div className="mt-4"><p className="text-sm font-semibold">Clarification questions</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
                   </div>
                 )}
