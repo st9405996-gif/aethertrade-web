@@ -56,7 +56,7 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Link to={"/document-intake" as never} className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" activeProps={{ className: "text-foreground bg-accent/60" }}>Product Intelligence</Link>
+          <Link to={"/document-intake" as never} className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" activeProps={{ className: "text-foreground bg-accent/60" }}>Document Intelligence</Link>
           <Link to={"/shipment-follow-up" as never} className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" activeProps={{ className: "text-foreground bg-accent/60" }}>Shipment Readiness</Link>
           {navigationMessage && (
             <span role="status" className="px-3 py-2 text-sm text-muted-foreground">
@@ -67,7 +67,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Button variant="hero" size="sm" asChild className="hidden sm:inline-flex">
             <Link to="/request-demo" search={{ automation: undefined }}>
-              Book an Operations Audit
+              Discuss a Project
               <ArrowRight />
             </Link>
           </Button>
@@ -100,7 +100,7 @@ export function Header() {
                     </Link>
                   </SheetClose>
                 ))}
-                <SheetClose asChild><Link to={"/document-intake" as never} className="rounded-md px-3 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">Product Intelligence</Link></SheetClose>
+                <SheetClose asChild><Link to={"/document-intake" as never} className="rounded-md px-3 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">Document Intelligence</Link></SheetClose>
                 <SheetClose asChild><Link to={"/shipment-follow-up" as never} className="rounded-md px-3 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">Shipment Readiness</Link></SheetClose>
                 {navigationMessage && (
                   <p role="status" className="px-3 py-3 text-sm text-muted-foreground">
