@@ -319,6 +319,8 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   values.set("exporter", exporter.value ? exporter : findLabelValue(lines, ["exporter", "seller", "shipper", "supplier"]));
   values.set("importer", importer.value ? importer : findLabelValue(lines, ["importer", "buyer", "consignee", "customer"]));
 
+  const lineItems = parsedLineItems.length ? parsedLineItems : parseLabelledSingleLineItem(lines, values);
+
   const total = findFirstMatch(lines, [
     /^\s*[-*•]?\s*(?:total\s+invoice\s+value|total\s+invoice\s+amount|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i,
   ]);
@@ -353,8 +355,6 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     values.set("description", { value: lineItems.map((item) => item.description).join("; "), evidence: lineItems.map((item) => item.evidence).join(" | ") });
     values.set("quantity", { value: lineItems.map((item) => item.quantity + " " + item.unit).join("; "), evidence: lineItems.map((item) => item.evidence).join(" | ") });
   }
-
-  const lineItems = parsedLineItems.length ? parsedLineItems : parseLabelledSingleLineItem(lines, values);
 
   const fields: ExtractedField[] = FIELD_DEFINITIONS.map(({ key, label }) => {
     const found = values.get(key) ?? { value: "", evidence: "" };
