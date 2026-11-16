@@ -77,7 +77,7 @@ function makeContextReview(
   };
 }
 
-export async function handleProductIntelligenceAI(request: Request, _env?: unknown): Promise<Response> {
+export async function handleProductIntelligenceAI(request: Request, _env?: unknown, _fetchImpl?: typeof fetch): Promise<Response> {
   const url = new URL(request.url);
   const invalid = requestError(request, url);
   if (invalid) return invalid;
@@ -89,7 +89,7 @@ export async function handleProductIntelligenceAI(request: Request, _env?: unkno
   return json({ analysis, aiReview: makeContextReview(analysis) });
 }
 
-export async function handleShipmentReadinessAnalysis(request: Request, _env?: unknown): Promise<Response> {
+export async function handleShipmentReadinessAnalysis(request: Request, _env?: unknown, _fetchImpl?: typeof fetch): Promise<Response> {
   const url = new URL(request.url);
   const invalid = requestError(request, url);
   if (invalid) return invalid;
