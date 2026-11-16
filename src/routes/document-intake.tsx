@@ -7,9 +7,8 @@ import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { meta } from "@/components/site/blocks";
 import { analyzeTradeDocument, type DocumentAnalysis } from "@/lib/trade-intelligence";
 
-type GroqReview = {
+type ContextReview = {
   status: "ai" | "fallback";
-  model: string;
   summary: string;
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
@@ -41,7 +40,7 @@ export const Route = createFileRoute("/document-intake")({
 function ProductIntelligencePage() {
   const [sourceText, setSourceText] = useState("");
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
-  const [aiReview, setAiReview] = useState<GroqReview | null>(null);
+  const [aiReview, setAiReview] = useState<ContextReview | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
@@ -81,8 +80,8 @@ function ProductIntelligencePage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ invoiceText: sourceText }),
       });
-      if (!response.ok) throw new Error("Groq review unavailable");
-      const payload = await response.json() as { analysis?: DocumentAnalysis; aiReview?: GroqReview };
+      if (!response.ok) throw new Error("Contextual review unavailable");
+      const payload = await response.json() as { analysis?: DocumentAnalysis; aiReview?: ContextReview };
       if (!payload.analysis || !payload.aiReview || !Array.isArray(payload.analysis.fields)) {
         throw new Error("Unexpected AI review response");
       }
@@ -91,7 +90,6 @@ function ProductIntelligencePage() {
     } catch {
       setAiReview({
         status: "fallback",
-        model: "Deterministic rules only",
         summary: "AI-assisted review is unavailable. The structured extraction and calculations shown are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
@@ -121,7 +119,7 @@ function ProductIntelligencePage() {
               <div className="rounded-xl bg-primary/10 p-3 text-primary"><FileSearch /></div>
               <div><p className="eyebrow">Invoice text review</p><h2 className="text-xl font-semibold">Add invoice content</h2></div>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Add commercial-invoice text or upload a .txt/.csv export. AETHER-TRADE extracts stated fields and checks the supplied information using its validation engine, with AI-assisted contextual review where available. For that review, submitted text is processed by our AI provider, Groq, through a server-side integration. Do not submit confidential customer or shipment data.</p>
+            <p className="mt-3 text-sm text-muted-foreground">Add commercial-invoice text or upload a .txt/.csv export. AETHER-TRADE extracts stated fields and checks the supplied information using its validation engine, with AI-assisted contextual review where available. For that review, submitted text is processed by the configured AI provider through a server-side integration. Provider availability and usage limits depend on the configured service. Do not submit confidential customer or shipment data.</p>
             <textarea
               value={sourceText}
               onChange={(event) => { setSourceText(event.target.value); setAnalysis(null); setError(""); }}

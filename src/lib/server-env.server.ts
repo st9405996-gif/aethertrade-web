@@ -5,8 +5,7 @@ const SERVER_BINDING_KEYS = [
   "INQUIRY_FROM_EMAIL",
   "INQUIRY_NOTIFY_TO",
   "INQUIRY_SALES_NOTIFY_TO",
-  "GROQ_API_KEY",
-  "GROQ_MODEL",
+  "CLOUDFLARE_AI_MODEL",
   "OPS_HEALTH_TOKEN",
   "PUBLIC_SITE_HOSTNAME",
   "RESEND_API_KEY",
@@ -19,21 +18,25 @@ const SERVER_BINDING_KEYS = [
   "VITE_TURNSTILE_SITE_KEY",
 ] as const;
 
+export type WorkersAiBinding = {
+  run: (model: string, inputs: Record<string, unknown>) => Promise<unknown>;
+};
+
 /**
  * Read only the server bindings this application needs.
- *
- * Cloudflare Workers populates process.env from Worker bindings when
- * nodejs_compat_populate_process_env is enabled. This avoids importing
- * cloudflare:workers into the Nitro-generated bundle and avoids mutating
- * process.env ourselves between requests.
+ * Cloudflare's AI binding is passed directly from the Worker environment;
+ * string secrets continue to come from process.env.
  */
-export function readServerEnv(): Record<string, string | undefined> {
+export function readServerEnv(workerEnv?: unknown): Record<string, string | undefined> & { AI?: WorkersAiBinding } {
   const runtime = typeof process !== "undefined" && process.env ? process.env : {};
-
   const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, runtime[key]]));
+  const workerBindings = workerEnv && typeof workerEnv === "object"
+    ? workerEnv as { AI?: WorkersAiBinding }
+    : {};
 
   return {
     ...bindings,
+    AI: workerBindings.AI,
     SUPABASE_URL: runtime.VITE_SUPABASE_URL ?? runtime.SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY:
       runtime.VITE_SUPABASE_PUBLISHABLE_KEY ?? runtime.SUPABASE_PUBLISHABLE_KEY,
