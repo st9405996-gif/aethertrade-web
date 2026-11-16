@@ -244,19 +244,26 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     ? lineItems.map((item) => item.description).join("; ")
     : values.get("description")?.value ?? "";
 
-  const attributeRules = [
-    { label: "Material / composition", pattern: /\b(stainless steel|steel|aluminium|aluminum|plastic|rubber|cotton|polyester|wood|ceramic|copper|brass|alloy)\b/i },
-    { label: "Intended use / function", pattern: /\b(used for|designed for|intended for|application\s*:\s*|for use in)\b[^,;.]*/i },
-    { label: "Model / part number", pattern: /\b(model|part\s*(?:no|number)|p\/n|sku)\s*[:#-]?\s*[A-Z0-9-]+/i },
-    { label: "Dimensions / size", pattern: /\b\d+(?:\.\d+)?\s*[x×]\s*\d+(?:\.\d+)?\s*(?:mm|cm|m)?\b|\b\d+(?:\.\d+)?\s*(?:mm|cm|m|inch|inches|")\b/i },
-    { label: "Power / capacity", pattern: /\b\d+(?:\.\d+)?\s*(?:w|kw|v|volt|amps?|mah|litres?|liters?|ml)\b/i },
-  ];
-  const productAttributes = attributeRules.map((rule) => {
-    const match = productDescription.match(rule.pattern);
-    return { label: rule.label, found: Boolean(match), evidence: match?.[0] ?? "" };
-  });
+  // Product attributes are inferred by the server-side AI review, not a hardcoded material vocabulary.
+  const productAttributes: DocumentAnalysis["productAttributes"] = [];
 
   const validations: InternalValidation[] = [];
+  const grossText = values.get("grossWeight")?.value ?? "";
+  const netText = values.get("netWeight")?.value ?? "";
+  const parseWeightKg = (value: string): number | null => {
+    const match = value.match(/^\s*([\d,]+(?:\.\d+)?)\s*(kg|kgs|kilograms?|lb|lbs|pounds?|t|ton|tons|tonnes?)?\s*$/i);
+    if (!match) return null;
+    const amount = Number(match[1].replace(/,/g, ""));
+    if (!Number.isFinite(amount)) return null;
+    const unit = (match[2] ?? "").toLowerCase();
+    if (["lb", "lbs", "pound", "pounds"].includes(unit)) return amount * 0.45359237;
+    if (["t", "ton", "tons", "tonne", "tonnes"].includes(unit)) return amount * 1000;
+    return amount;
+  };
+  if (grossText && netText) {
+    const grossKg = parseWeightKg(grossText), netKg = parseWeightKg(netText);
+    if (grossKg !== null && netKg !== null && (/[a-z]/i.test(grossText) === /[a-z]/i.test(netText))) validations.push({ key: "net-vs-gross-weight", label: "Net weight must not exceed gross weight", status: netKg > grossKg ? "mismatch" : "consistent", expected: "Net weight <= gross weight", actual: "Net " + netText + "; gross " + grossText, evidence: "Net weight: " + netText + "; Gross weight: " + grossText });
+  }
   const subtotalValue = values.get("subtotal")?.value || values.get("total")?.value || "";
   if (lineItems.length && subtotalValue) {
     const calculated = lineItems.reduce((sum, item) => sum + amountToNumber(item.amount), 0);

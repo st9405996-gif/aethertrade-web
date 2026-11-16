@@ -52,7 +52,7 @@ describe("trade intelligence", () => {
     expect(result.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-2048");
     expect(result.fields.find((field) => field.key === "quantity")?.value).toBe("240 units");
     expect(result.productDescription).toContain("stainless steel");
-    expect(result.productAttributes.find((item) => item.label === "Material / composition")?.found).toBe(true);
+    expect(result.productAttributes).toEqual([]);
   });
 
   it("marks absent fields as missing instead of inventing values", () => {
@@ -75,9 +75,7 @@ describe("trade intelligence", () => {
     expect(value("grossWeight")).toBe("9,842.00 kg");
     expect(value("netWeight")).toBe("9,105.50 kg");
     expect(result.lineItems).toHaveLength(5);
-    expect(result.productAttributes.find((item) => item.label === "Dimensions / size")?.found).toBe(true);
-    expect(result.productAttributes.find((item) => item.label === "Intended use / function")?.found).toBe(false);
-    expect(result.productAttributes.find((item) => item.label === "Power / capacity")?.found).toBe(false);
+    expect(result.productAttributes).toEqual([]);
     expect(result.validations[0].status).toBe("consistent");
   });
 
@@ -209,4 +207,9 @@ Total Gross Weight: 340.00 kg`;
     expect(result.body).toContain("Bill of lading");
     expect(result.body).not.toContain("Certificate of origin");
   });
+  it("flags net weight greater than gross weight deterministically", () => {
+    const result = analyzeTradeDocument("COMMERCIAL INVOICE\nGross Weight: 4,500 kg\nNet Weight: 4,650 kg");
+    expect(result.validations.find((item) => item.key === "net-vs-gross-weight")?.status).toBe("mismatch");
+  });
+
 });

@@ -2,7 +2,24 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "aethertrade",
   "compatibility_date": "2026-11-04",
-  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
-  "ai": { "binding": "AI" },
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env"
+  ],
+  "ai": {
+    "binding": "AI"
+  },
   "previews": {},
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.1
+    }
+  }
 }
