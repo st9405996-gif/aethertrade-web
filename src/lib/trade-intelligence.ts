@@ -271,7 +271,7 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   };
   if (grossText && netText) {
     const grossKg = parseWeightKg(grossText), netKg = parseWeightKg(netText);
-    if (grossKg !== null && netKg !== null) validations.push({ key: "net-vs-gross-weight", label: "Net weight must not exceed gross weight", status: netKg > grossKg ? "mismatch" : "consistent", expected: "Net weight <= gross weight", actual: "Net " + netText + "; gross " + grossText, evidence: "Net weight: " + netText + "; Gross weight: " + grossText });
+    if (grossKg !== null && netKg !== null && (/[a-z]/i.test(grossText) === /[a-z]/i.test(netText))) validations.push({ key: "net-vs-gross-weight", label: "Net weight must not exceed gross weight", status: netKg > grossKg ? "mismatch" : "consistent", expected: "Net weight <= gross weight", actual: "Net " + netText + "; gross " + grossText, evidence: "Net weight: " + netText + "; Gross weight: " + grossText });
   }
   const subtotalValue = values.get("subtotal")?.value || values.get("total")?.value || "";
   if (lineItems.length && subtotalValue) {
