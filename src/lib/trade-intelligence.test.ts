@@ -52,7 +52,7 @@ describe("trade intelligence", () => {
     expect(result.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-2048");
     expect(result.fields.find((field) => field.key === "quantity")?.value).toBe("240 units");
     expect(result.productDescription).toContain("stainless steel");
-    expect(result.productAttributes).toEqual([]);
+    expect(result.productAttributes.filter((item) => item.found).map((item) => item.evidence)).toEqual(["stainless steel"]);
   });
 
   it("marks absent fields as missing instead of inventing values", () => {
@@ -75,7 +75,7 @@ describe("trade intelligence", () => {
     expect(value("grossWeight")).toBe("9,842.00 kg");
     expect(value("netWeight")).toBe("9,105.50 kg");
     expect(result.lineItems).toHaveLength(5);
-    expect(result.productAttributes).toEqual([]);
+    expect(result.productAttributes.filter((item) => item.found).map((item) => item.evidence)).toEqual(["Cotton", "500 GSM"]);
     expect(result.validations[0].status).toBe("consistent");
   });
 
