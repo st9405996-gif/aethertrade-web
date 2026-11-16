@@ -117,7 +117,7 @@ describe("trade document contextual review", () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.includes("/rpc/consume_submission_quota")) return new Response("true", { status: 200 });
-      expect(url).toContain("/accounts/test-account/ai/run/@cf/openai/gpt-oss-20b");
+      expect(url).toContain("/accounts/test-account/ai/run/%40cf/openai/gpt-oss-20b");
       expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-api-token");
       return new Response(JSON.stringify({ success: true, result: { response: "Model response follows\n" + JSON.stringify({
         summary: "The invoice describes electronic control modules and contains an invoice number. Confirm missing shipment details.",
