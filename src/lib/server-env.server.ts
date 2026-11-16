@@ -44,8 +44,8 @@ export function readServerEnv(workerEnv?: unknown): Record<string, string | unde
   return {
     ...bindings,
     AI: workerBindings.AI ?? processAi,
-    SUPABASE_URL: runtime.VITE_SUPABASE_URL ?? runtime.SUPABASE_URL,
+    SUPABASE_URL: (typeof runtime.VITE_SUPABASE_URL === "string" ? runtime.VITE_SUPABASE_URL : undefined) ?? (typeof runtime.SUPABASE_URL === "string" ? runtime.SUPABASE_URL : undefined),
     SUPABASE_PUBLISHABLE_KEY:
-      runtime.VITE_SUPABASE_PUBLISHABLE_KEY ?? runtime.SUPABASE_PUBLISHABLE_KEY,
+      (typeof runtime.VITE_SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.VITE_SUPABASE_PUBLISHABLE_KEY : undefined) ?? (typeof runtime.SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.SUPABASE_PUBLISHABLE_KEY : undefined),
   };
 }
