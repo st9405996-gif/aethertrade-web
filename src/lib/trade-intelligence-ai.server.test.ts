@@ -101,7 +101,7 @@ describe("trade document contextual review", () => {
 
   it("parses fenced JSON with leading prose from the Cloudflare AI binding", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-FENCE-1\nGoods Description: stainless steel fasteners";
-    const ai = { run: vi.fn(async () => ({ response: "Here is the requested result:\n\x60\x60\x60json\n" + JSON.stringify({
+    const ai = { run: vi.fn(async () => ({ response: "Model note {not-json} before the result:\n\x60\x60\x60json\n" + JSON.stringify({
       summary: "The invoice identifies stainless steel fasteners and an invoice reference. Confirm any details absent from the supplied text.",
       suggestions: [{ label: "Invoice number", value: "INV-FENCE-1", evidence: "Invoice Number: INV-FENCE-1" }],
       observations: [], questions: ["Can you confirm the declared country of origin for these goods?"],
