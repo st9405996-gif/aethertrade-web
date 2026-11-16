@@ -103,9 +103,11 @@ function findPartyValue(lines: string[], aliases: readonly string[]) {
     if (inline && !/^company name$/i.test(inline)) return { value: inline, evidence: line };
     for (let nextIndex = index + 1; nextIndex < Math.min(index + 6, lines.length); nextIndex += 1) {
       const candidate = lines[nextIndex].replace(/^\s*(?:\d+[.)]|[-*•])\s*/, "").trim();
+      // Ignore visual dividers between party headers and the actual company details.
+      if (/^[-_=*\s]+$/.test(candidate)) continue;
       if (/^(?:buyer|seller|shipper|exporter|importer|consignee|notify party|shipment|line items|packing|bank details)\b/i.test(candidate)) break;
-      const company = candidate.match(/^(?:company\s+name|legal\s+name)\s*:\s*(.+)$/i);
-      if (company?.[1]) return { value: clean(company[1]), evidence: line + " → " + candidate };
+      const namedValue = candidate.match(/^(?:name|company\s+name|legal\s+name)\s*:\s*(.+)$/i);
+      if (namedValue?.[1]) return { value: clean(namedValue[1]), evidence: line + " → " + candidate };
       if (candidate && !candidate.includes(":")) return { value: clean(candidate), evidence: line + " → " + candidate };
     }
   }
