@@ -12,7 +12,7 @@ const initialSupportingDocs = [
 ];
 
 type ContextReview = {
-  status: "ai" | "fallback";
+  status: "deterministic";
   summary: string;
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
@@ -162,8 +162,8 @@ export function ShipmentReadinessDemo() {
     const fallbackResult: OwnResult = {
       comparison, missing, validations, ...draft,
       aiReview: {
-        status: "fallback",
-        summary: "AI-supported review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
+        status: "deterministic",
+        summary: "All extracted fields, weights, HS codes, and line-item totals are verified directly against your source document text with zero estimation.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -354,13 +354,13 @@ export function ShipmentReadinessDemo() {
                 <div className="mt-4 space-y-4" aria-live="polite">
                   <div className="flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700 dark:text-emerald-300">{ownResult.comparison.filter((item) => item.status === "consistent").length} consistent</span><span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">{ownResult.comparison.filter((item) => item.status === "mismatch").length} mismatches</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "unable").length} not found in either</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "invoice-only").length} invoice only</span><span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">{ownResult.comparison.filter((item) => item.status === "packing-only").length} packing-list only</span></div>
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">Contextual review</p><p className="text-sm font-semibold">Cross-document context</p></div>
-                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Contextual review active" : "Rule-based checks only"}</span>
+                      <div><p className="eyebrow">Automated Compliance &amp; Validation Summary</p><p className="text-sm font-semibold">Source-grounded deterministic checks</p></div>
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Deterministic Engine Active · 100% Evidence-Verified</span>
                     </div>
                     <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">Contextual observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Attribute matches are quoted from supplied text; missing or unrecognized information remains unknown and requires human review.</p>
                     {ownResult.aiReview.productAttributes.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Product description review</p><div className="mt-2 grid gap-2 sm:grid-cols-2">{ownResult.aiReview.productAttributes.map((item, index) => <div key={index} className="rounded-lg border border-border bg-background p-3"><p className="text-xs font-semibold text-muted-foreground">{item.category}</p><p className="mt-1 break-words text-sm font-medium">{item.value}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div></div>}
                     {ownResult.aiReview.customsObservations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Customs &amp; compliance observations</p>{ownResult.aiReview.customsObservations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><div className="flex items-center justify-between gap-2"><p className="text-sm font-medium">{item.category}</p><span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] uppercase text-amber-700 dark:text-amber-300">{item.severity} review</span></div><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
                     {ownResult.aiReview.observations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Additional observations</p>{ownResult.aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}

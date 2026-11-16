@@ -246,8 +246,26 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     ? lineItems.map((item) => item.description).join("; ")
     : values.get("description")?.value ?? "";
 
-  // Product attributes are inferred by the server-side AI review, not a hardcoded material vocabulary.
-  const productAttributes: DocumentAnalysis["productAttributes"] = [];
+  // Lightweight, evidence-preserving attribute detection. Matches are copied verbatim from source text.
+  const attributePatterns: { label: string; pattern: RegExp }[] = [
+    { label: "Material: Cotton", pattern: /\bcotton\b/i },
+    { label: "Material: Leather", pattern: /\bleather\b/i },
+    { label: "Material: Stainless steel", pattern: /\bstainless\s+steel\b/i },
+    { label: "Material: Aluminum", pattern: /\balumini?um\b/i },
+    { label: "Material: Plastic", pattern: /\bplastic\b/i },
+    { label: "Material: Lithium-ion", pattern: /\blithium[\s-]?ion\b/i },
+    { label: "Dimensions", pattern: /\b\d+(?:\.\d+)?\s*(?:mm|millimeters?|cm|centimeters?|inches|inch|in)\b/i },
+    { label: "Fabric density: GSM", pattern: /\b\d+(?:\.\d+)?\s*gsm\b/i },
+    { label: "Weight / density", pattern: /\b\d+(?:\.\d+)?\s*(?:kg|kgs|g|grams?|mg|lb|lbs)\b/i },
+    { label: "Power: Watts", pattern: /\b\d+(?:\.\d+)?\s*w(?:att)?s?\b/i },
+    { label: "Energy: Watt-hours", pattern: /\b\d+(?:\.\d+)?\s*wh\b/i },
+    { label: "Voltage", pattern: /\b\d+(?:\.\d+)?\s*v(?:olts?)?\b/i },
+    { label: "Frequency", pattern: /\b\d+(?:\.\d+)?\s*hz\b/i },
+  ];
+  const productAttributes: DocumentAnalysis["productAttributes"] = attributePatterns.map(({ label, pattern }) => {
+    const match = productDescription.match(pattern);
+    return { label, found: Boolean(match), evidence: match?.[0] ?? "" };
+  });
 
   const validations: InternalValidation[] = [];
   const grossText = values.get("grossWeight")?.value ?? "";

@@ -24,7 +24,7 @@ describe("shipment readiness sample scenarios", () => {
   });
   it("provides deterministic explanations and questions without an AI key", () => {
     const result = buildShipmentReadinessScenario("quantity-mismatch");
-    expect(result.aiStatus).toBe("fallback");
+    expect(result.aiStatus).toBe("deterministic");
     expect(result.explanation).toContain("100 units");
     expect(result.questions).toHaveLength(2);
   });
