@@ -6,6 +6,8 @@ const SERVER_BINDING_KEYS = [
   "INQUIRY_NOTIFY_TO",
   "INQUIRY_SALES_NOTIFY_TO",
   "CLOUDFLARE_AI_MODEL",
+  "CLOUDFLARE_ACCOUNT_ID",
+  "CLOUDFLARE_API_TOKEN",
   "OPS_HEALTH_TOKEN",
   "PUBLIC_SITE_HOSTNAME",
   "RESEND_API_KEY",
@@ -28,15 +30,20 @@ export type WorkersAiBinding = {
  * string secrets continue to come from process.env.
  */
 export function readServerEnv(workerEnv?: unknown): Record<string, string | undefined> & { AI?: WorkersAiBinding } {
-  const runtime = typeof process !== "undefined" && process.env ? process.env : {};
-  const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, runtime[key]]));
+  const runtime = typeof process !== "undefined" && process.env
+    ? process.env as Record<string, unknown>
+    : {};
+  const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, typeof runtime[key] === "string" ? runtime[key] as string : undefined]));
   const workerBindings = workerEnv && typeof workerEnv === "object"
     ? workerEnv as { AI?: WorkersAiBinding }
     : {};
+  const processAi = runtime.AI && typeof runtime.AI === "object"
+    ? runtime.AI as WorkersAiBinding
+    : undefined;
 
   return {
     ...bindings,
-    AI: workerBindings.AI,
+    AI: workerBindings.AI ?? processAi,
     SUPABASE_URL: runtime.VITE_SUPABASE_URL ?? runtime.SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY:
       runtime.VITE_SUPABASE_PUBLISHABLE_KEY ?? runtime.SUPABASE_PUBLISHABLE_KEY,
