@@ -18,15 +18,15 @@ describe("deterministic document validation endpoints", () => {
     const payload = await response.json() as { analysis: { productAttributes: { label: string; found: boolean; evidence: string }[] }; aiReview: { status: string; summary: string } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("deterministic");
-    expect(payload.aiReview.summary).toContain("zero estimation");
+    expect(payload.aiReview.summary).toContain("No AI-generated interpretation");
     expect(payload.analysis.productAttributes.filter((item) => item.found).map((item) => item.evidence)).toEqual(["Cotton", "30 cm", "180 GSM"]);
     expect(ai.run).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("uses Workers AI for shipment context while keeping numeric comparison and follow-up deterministic", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-5002\\nGoods Description: Cotton shirts\\nQuantity: 100 PCS";
-    const packingText = "PACKING LIST\\nInvoice Number: INV-5002\\nGoods Description: Cotton shirts\\nQuantity: 98 PCS";
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
+    const packingText = "PACKING LIST\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
     const ai = { run: vi.fn(async () => ({ response: JSON.stringify({
       summary: "The invoice and packing list refer to the same goods but state different quantities. Confirm the final packed quantity before proceeding.",
       observations: [{ label: "Quantity difference", detail: "The invoice lists 100 pieces while the packing list lists 98 pieces.", document: "both", evidence: "Quantity: 100 PCS" }],
@@ -60,7 +60,7 @@ describe("deterministic document validation endpoints", () => {
   });
 
   it("keeps invoice-only Product Intelligence deterministic even when Workers AI is configured", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-5003\\nGoods Description: Cotton shirts, 180 GSM, 30 cm";
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5003\nGoods Description: Cotton shirts, 180 GSM, 30 cm";
     const ai = { run: vi.fn() };
     const fetchMock = vi.fn<typeof fetch>();
     const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { AI: ai }, fetchMock);
