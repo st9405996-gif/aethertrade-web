@@ -121,7 +121,7 @@ function ProductIntelligencePage() {
             <Button className="mt-5 w-full" onClick={runAnalysis} disabled={isAnalyzing}><Sparkles /> {isAnalyzing ? "AETHER-TRADE is analyzing invoice…" : "Analyse with AETHER-TRADE"}</Button>
             <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              <p>AETHER-TRADE combines structured field extraction, deterministic validation and AI-assisted contextual review. Numeric calculations and consistency checks remain controlled by the validation engine. This demo currently accepts text-based inputs only; scanned PDFs, OCR, live HS-code lookup and customs rulings are not available. Do not enter confidential customer or shipment data.</p>
+              <p>AETHER-TRADE uses structured field extraction and deterministic, source-grounded validation. Numeric calculations and consistency checks are controlled by the validation engine. This demo currently accepts text-based inputs only; scanned PDFs, OCR, live HS-code lookup and customs rulings are not available. Do not enter confidential customer or shipment data.</p>
             </div>
           </div>
 
