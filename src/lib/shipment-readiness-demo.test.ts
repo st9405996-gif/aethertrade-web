@@ -22,9 +22,9 @@ describe("shipment readiness sample scenarios", () => {
       { document: "Packing List", value: "118 cartons" },
     ] });
   });
-  it("provides deterministic explanations and questions without an AI key", () => {
+  it("provides a deterministic fallback explanation and questions when AI is unavailable", () => {
     const result = buildShipmentReadinessScenario("quantity-mismatch");
-    expect(result.aiStatus).toBe("deterministic");
+    expect(result.aiStatus).toBe("fallback");
     expect(result.explanation).toContain("100 units");
     expect(result.questions).toHaveLength(2);
   });
