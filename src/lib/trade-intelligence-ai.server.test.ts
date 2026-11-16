@@ -159,7 +159,8 @@ describe("trade document contextual review", () => {
     }), { ...env, AI: ai }, quotaFetch());
     const payload = await response.json() as { aiReview: { status: string; summary: string } };
     expect(payload.aiReview.status).toBe("fallback");
-    expect(payload.aiReview.summary).toContain("JSON parse error");
+    expect(payload.aiReview.summary).toContain("temporarily unavailable");
+    expect(payload.aiReview.summary).not.toContain("JSON parse error");
   });
 
   it("rejects oversized and invalid document payloads before calling AI", async () => {
