@@ -42,6 +42,39 @@ function request(path: string, body: unknown) {
 }
 
 describe("trade document contextual review", () => {
+  it("uses Cloudflare Workers AI before external providers when the Worker AI binding is present", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-CF-1\\nExporter: Example Export Ltd.\\nGoods Description: Cotton shirts\\nQuantity: 20 PCS";
+    const ai = {
+      run: vi.fn(async (model: string, input: Record<string, unknown>) => {
+        expect(model).toBe("@cf/meta/llama-3.1-8b-instruct");
+        expect(input).toHaveProperty("messages");
+        return { response: JSON.stringify({
+          summary: "The invoice contains a reference, exporter, product description and quantity. Confirm any details not shown in the supplied text.",
+          suggestions: [{ label: "Invoice number", value: "INV-CF-1", evidence: "Invoice Number: INV-CF-1" }],
+          observations: [],
+          questions: ["Who is the importer or consignee for this transaction?"],
+        }) };
+      }),
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).includes("/rpc/consume_submission_quota")) {
+        return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
+      }
+      throw new Error("External provider should not be called when Cloudflare AI succeeds.");
+    });
+    const response = await handleProductIntelligenceAI(
+      request("/api/demo/product-intelligence", { invoiceText }),
+      { ...env, AI: ai },
+      fetchMock,
+    );
+    const payload = await response.json() as { aiReview: { status: string; suggestions: { label: string }[] } };
+    expect(response.status).toBe(200);
+    expect(payload.aiReview.status).toBe("ai");
+    expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
+    expect(ai.run).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("uses the primary AI provider for Product Intelligence and only keeps suggestions with source evidence", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5001\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
     const fetchMock = mockGroqFetch({
