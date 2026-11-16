@@ -210,7 +210,7 @@ function normalizeCsvInvoiceText(text: string): string {
   const headers = parseCsvRecord(rows[0]).map(normalizeLabel);
   const records = rows.slice(1).map(parseCsvRecord).filter((row) => row.some((cell) => cell.trim()));
   const hasInvoiceHeader = headers.some((header) =>
-    /^(?:invoice number|invoice no|supplier|seller|exporter|buyer|importer|goods description|description|quantity|unit price|total amount)$/.test(header),
+    /^(?:invoice number|invoice no|supplier|seller|exporter|buyer|importer|goods description|description|product|quantity|unit price|line item total|total amount)$/.test(header),
   );
   if (!hasInvoiceHeader || !records.length) return text;
 
@@ -238,7 +238,7 @@ function normalizeCsvInvoiceText(text: string): string {
   add("Country of Origin", value(first, "country of origin", "origin"));
   add("Material", value(first, "material", "composition"));
   add("Weight", value(first, "weight kg", "weight"));
-  const descriptionIndex = column("description", "goods description", "product description", "item description");
+  const descriptionIndex = column("description", "goods description", "product description", "product", "product name", "item description");
   const quantityIndex = column("quantity", "qty");
   const unitIndex = column("unit", "unit of measure", "uom");
   const priceIndex = column("unit price", "price per unit");
@@ -264,7 +264,7 @@ function normalizeCsvInvoiceText(text: string): string {
       add("Invoice Total", first[amountIndex] ?? "");
     }
   } else {
-    add("Goods Description", value(first, "description", "goods description", "product description"));
+    add("Goods Description", value(first, "description", "goods description", "product description", "product", "product name", "item description"));
     add("Quantity", [value(first, "quantity", "qty"), value(first, "unit", "unit of measure", "uom")].filter(Boolean).join(" "));
   }
   return output.join("\n");
