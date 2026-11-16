@@ -60,6 +60,20 @@ describe("trade document contextual review", () => {
     expect(payload.aiReview.observations).toHaveLength(1);
     expect(ai.run).toHaveBeenCalledTimes(1);
   });
+  it("uses extracted booking, invoice and purchase-order references in the follow-up draft", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\\nBooking Reference: REF-2081\\nInvoice Number: INV-2026-11-0457\\nGoods Description: Cotton shirts\\nQuantity: 100 PCS";
+    const packingText = "PACKING LIST\\nInvoice Reference: INV-2026-11-0457\\nPurchase Order No.: PO-7781\\nGoods Description: Cotton shirts\\nQuantity: 98 PCS";
+    const response = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
+      reference: "SHIPMENT-2048", invoiceText, packingText, supportingDocs: [],
+    }), env, quotaFetch());
+    const payload = await response.json() as { subject: string; body: string; comparison: { key: string; status: string }[] };
+    expect(response.status).toBe(200);
+    expect(payload.subject).toBe("Clarification required for Shipment REF-2081 / Invoice INV-2026-11-0457 / PO PO-7781");
+    expect(payload.body).toContain("Shipment REF-2081 / Invoice INV-2026-11-0457 / PO PO-7781");
+    expect(payload.subject).not.toContain("SHIPMENT-2048");
+    expect(payload.comparison.find((row) => row.key === "invoiceNumber")?.status).toBe("consistent");
+  });
+
   it("returns deterministic output when Cloudflare Workers AI is not bound", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", {
