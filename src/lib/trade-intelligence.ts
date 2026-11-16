@@ -387,8 +387,10 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     { label: "Voltage", pattern: /\b\d+(?:\.\d+)?\s*v(?:olts?)?\b/i },
     { label: "Frequency", pattern: /\b\d+(?:\.\d+)?\s*hz\b/i },
   ];
+  const materialText = findLabelValue(lines, ["material", "composition"]).value;
+  const attributeSource = [productDescription, materialText].filter(Boolean).join("\n");
   const productAttributes: DocumentAnalysis["productAttributes"] = attributePatterns.map(({ label, pattern }) => {
-    const match = text.match(pattern);
+    const match = attributeSource.match(pattern);
     return { label, found: Boolean(match), evidence: match?.[0] ?? "" };
   });
 
