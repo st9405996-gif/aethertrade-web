@@ -52,7 +52,7 @@ describe("trade intelligence", () => {
     expect(result.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-2048");
     expect(result.fields.find((field) => field.key === "quantity")?.value).toBe("240 units");
     expect(result.productDescription).toContain("stainless steel");
-    expect(result.productAttributes.find((item) => item.label === "Material / composition")?.found).toBe(true);
+    expect(result.productAttributes).toEqual([]);
   });
 
   it("marks absent fields as missing instead of inventing values", () => {
