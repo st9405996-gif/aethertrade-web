@@ -3,5 +3,6 @@
   "name": "aethertrade",
   "compatibility_date": "2026-11-04",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
+  "ai": { "binding": "AI" },
   "previews": {},
 }
