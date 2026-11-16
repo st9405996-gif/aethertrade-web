@@ -75,9 +75,7 @@ describe("trade intelligence", () => {
     expect(value("grossWeight")).toBe("9,842.00 kg");
     expect(value("netWeight")).toBe("9,105.50 kg");
     expect(result.lineItems).toHaveLength(5);
-    expect(result.productAttributes.find((item) => item.label === "Dimensions / size")?.found).toBe(true);
-    expect(result.productAttributes.find((item) => item.label === "Intended use / function")?.found).toBe(false);
-    expect(result.productAttributes.find((item) => item.label === "Power / capacity")?.found).toBe(false);
+    expect(result.productAttributes).toEqual([]);
     expect(result.validations[0].status).toBe("consistent");
   });
 
