@@ -92,30 +92,41 @@ function extractCandidateText(payload: unknown): string {
 }
 
 function extractJsonObject(candidate: string): string {
-  const unfenced = candidate.replace(/^\s*\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60\s*$/i, "").trim();
-  const start = unfenced.indexOf("{");
-  if (start < 0) throw new Error("JSON parse error: no JSON object found in model response");
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-  for (let index = start; index < unfenced.length; index += 1) {
-    const char = unfenced[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char === "\\") escaped = true;
-      else if (char === '"') inString = false;
-      continue;
-    }
-    if (char === '"') inString = true;
-    else if (char === "{") depth += 1;
-    else if (char === "}") {
-      depth -= 1;
-      if (depth === 0) return unfenced.slice(start, index + 1);
+  const unfenced = candidate
+    .replace(/^\s*\x60\x60\x60(?:json)?\s*/i, "")
+    .replace(/\s*\x60\x60\x60\s*$/i, "")
+    .trim();
+  for (let start = unfenced.indexOf("{"); start >= 0; start = unfenced.indexOf("{", start + 1)) {
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < unfenced.length; index += 1) {
+      const char = unfenced[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') inString = true;
+      else if (char === "{") depth += 1;
+      else if (char === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          const objectText = unfenced.slice(start, index + 1);
+          try {
+            const parsed: unknown = JSON.parse(objectText);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return objectText;
+          } catch {
+            // Continue to the next opening brace; model prose may contain brace-like text.
+          }
+          break;
+        }
+      }
     }
   }
-  throw new Error("JSON parse error: incomplete JSON object in model response");
+  throw new Error("JSON parse error: no valid JSON object found in model response");
 }
-
 async function quotaAllowed(
   env: ServerEnv,
   remoteIp: string | undefined,
