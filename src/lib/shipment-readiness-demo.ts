@@ -13,7 +13,7 @@ export type ShipmentReadinessDemoResult = {
   scenarioId: ShipmentReadinessScenarioId; title: string; summary: string;
   documents: { name: string; content: string; received: boolean }[];
   findings: ShipmentReadinessFinding[]; riskNote: string; explanation: string;
-  questions: string[]; aiStatus: "deterministic";
+  questions: string[]; aiStatus: "ai" | "fallback";
 };
 const lines = (...values: string[]) => values.join("\n");
 const samples: Record<ShipmentReadinessScenarioId, Omit<ShipmentReadinessDemoResult, "scenarioId" | "aiStatus">> = {
@@ -76,5 +76,5 @@ export function buildShipmentReadinessScenario(scenarioId: ShipmentReadinessScen
       detail: invoice.name + " and " + packing.name + " contain different " + row.label.toLowerCase() + " values.",
     }];
   }
-  return { scenarioId, ...sample, findings, aiStatus: "deterministic" };
+  return { scenarioId, ...sample, findings, aiStatus: "fallback" };
 }
