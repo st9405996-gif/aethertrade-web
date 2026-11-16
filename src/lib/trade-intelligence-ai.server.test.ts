@@ -86,7 +86,7 @@ describe("trade document contextual review", () => {
     const payload = await response.json() as { aiReview: { status: string; summary: string; model?: string } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("fallback");
-    expect(payload.aiReview.summary).toContain("Contextual AI review is temporarily unavailable");
+    expect(payload.aiReview.summary).toContain("Missing AI binding");
     expect(payload.aiReview).not.toHaveProperty("model");
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -98,6 +98,51 @@ describe("trade document contextual review", () => {
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("fallback");
   });
+
+  it("parses fenced JSON with leading prose from the Cloudflare AI binding", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-FENCE-1\nGoods Description: stainless steel fasteners";
+    const ai = { run: vi.fn(async () => ({ response: "Model note {not-json} before the result:\n\x60\x60\x60json\n" + JSON.stringify({
+      summary: "The invoice identifies stainless steel fasteners and an invoice reference. Confirm any details absent from the supplied text.",
+      suggestions: [{ label: "Invoice number", value: "INV-FENCE-1", evidence: "Invoice Number: INV-FENCE-1" }],
+      observations: [], questions: ["Can you confirm the declared country of origin for these goods?"],
+    }) + "\n\x60\x60\x60" })) };
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { ...env, AI: ai }, quotaFetch());
+    const payload = await response.json() as { aiReview: { status: string; suggestions: { value: string }[] } };
+    expect(payload.aiReview.status).toBe("ai");
+    expect(payload.aiReview.suggestions[0]?.value).toBe("INV-FENCE-1");
+  });
+
+  it("uses Cloudflare AI REST credentials when the Workers AI binding is unavailable", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-REST-1\nGoods Description: electronic control modules";
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.includes("/rpc/consume_submission_quota")) return new Response("true", { status: 200 });
+      expect(url).toContain("/accounts/test-account/ai/run/%40cf/openai/gpt-oss-20b");
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-api-token");
+      return new Response(JSON.stringify({ success: true, result: { response: "Model response follows\n" + JSON.stringify({
+        summary: "The invoice describes electronic control modules and contains an invoice number. Confirm missing shipment details.",
+        suggestions: [{ label: "Invoice number", value: "INV-REST-1", evidence: "Invoice Number: INV-REST-1" }],
+        observations: [], questions: ["Can you confirm the origin country stated on the commercial invoice?"],
+      }) } }), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), {
+      ...env, CLOUDFLARE_ACCOUNT_ID: "test-account", CLOUDFLARE_API_TOKEN: "test-api-token",
+    }, fetchMock);
+    const payload = await response.json() as { aiReview: { status: string; suggestions: { value: string }[] } };
+    expect(payload.aiReview.status).toBe("ai");
+    expect(payload.aiReview.suggestions[0]?.value).toBe("INV-REST-1");
+  });
+
+  it("exposes JSON parse diagnostics in the deterministic fallback notice", async () => {
+    const ai = { run: vi.fn(async () => ({ response: "This is not JSON." })) };
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", {
+      invoiceText: "COMMERCIAL INVOICE\nInvoice Number: INV-JSON-1\nGoods Description: Steel bolts",
+    }), { ...env, AI: ai }, quotaFetch());
+    const payload = await response.json() as { aiReview: { status: string; summary: string } };
+    expect(payload.aiReview.status).toBe("fallback");
+    expect(payload.aiReview.summary).toContain("JSON parse error");
+  });
+
   it("rejects oversized and invalid document payloads before calling AI", async () => {
     const ai = { run: vi.fn() };
     const fetchMock = quotaFetch();
