@@ -209,4 +209,9 @@ Total Gross Weight: 340.00 kg`;
     expect(result.body).toContain("Bill of lading");
     expect(result.body).not.toContain("Certificate of origin");
   });
+  it("flags net weight greater than gross weight deterministically", () => {
+    const result = analyzeTradeDocument("COMMERCIAL INVOICE\nGross Weight: 4,500 kg\nNet Weight: 4,650 kg");
+    expect(result.validations.find((item) => item.key === "net-vs-gross-weight")?.status).toBe("mismatch");
+  });
+
 });
