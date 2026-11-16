@@ -27,7 +27,7 @@ export const Route = createFileRoute("/platform")({
         "Custom software and workflow automation for trade operations, including document intelligence, case workspaces and optional integrations.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/platform", title: "Trade Document Intelligence & Workflow Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade case workspace and document intelligence capabilities, plus custom workflow modules scoped around existing systems." },
+      { fallbackPath: "/platform", title: "Trade Operations Software & Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade operations workspace and document intelligence concept, alongside custom workflow automation and integrations scoped to each project." },
     ),
   component: PlatformPage,
 });
@@ -52,9 +52,9 @@ function PlatformPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "The platform",
-          title: "Automation Engineering for Connected Trade Operations.",
+          title: "Software and Automation for Connected Trade Operations.",
           description:
-            "We design and build software applications, document intelligence tools and controlled workflows for trade operations. Solutions can run as standalone applications, with integrations to existing systems scoped when needed.",
+            "AETHER-TRADE combines trade-focused software concepts with custom AI agents, workflow automation and system integrations. Product modules are clearly labelled by availability; project-specific capabilities are scoped and validated before delivery.",
         })}
       >
         <Button variant="outline" asChild>
@@ -65,7 +65,7 @@ function PlatformPage() {
       <section className="container-page section-pad">
         <SectionHeader
           eyebrow="Modules"
-          title="What we can engineer with your team"
+          title="Trade technology we can scope with your team"
           description="Every engagement is scoped around your systems, operational constraints and measurable outcomes."
         />
         <div className="mt-12">

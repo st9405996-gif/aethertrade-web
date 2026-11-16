@@ -11,9 +11,8 @@ const initialSupportingDocs = [
   { name: "Certificate of origin", received: false },
 ];
 
-type GroqReview = {
+type ContextReview = {
   status: "ai" | "fallback";
-  model: string;
   summary: string;
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
@@ -21,7 +20,7 @@ type GroqReview = {
 };
 
 type OwnResult = {
-  aiReview: GroqReview;
+  aiReview: ContextReview;
   comparison: ComparisonRow[];
   missing: string[];
   subject: string;
@@ -162,7 +161,7 @@ export function ShipmentReadinessDemo() {
       aiReview: {
         status: "fallback",
         model: "Deterministic rules only",
-        summary: "AI-assisted review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
+        summary: "AI-supported review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -177,7 +176,7 @@ export function ShipmentReadinessDemo() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ reference, invoiceText, packingText, supportingDocs }),
       });
-      if (!response.ok) throw new Error("AI shipment review unavailable");
+      if (!response.ok) throw new Error("Contextual review unavailable");
       const payload = await response.json() as OwnResult;
       if (!Array.isArray(payload.comparison) || !Array.isArray(payload.validations) ||
           !Array.isArray(payload.missing) || !payload.aiReview || typeof payload.subject !== "string" ||
@@ -277,7 +276,7 @@ export function ShipmentReadinessDemo() {
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">{finding.evidence.map((item) => <div key={item.document} className="rounded-md bg-background p-2 text-xs"><span className="text-muted-foreground">{item.document}</span><p className="mt-1 font-medium">{item.value}</p></div>)}</div>
                     </article>
                   ))}
-                  <div className="mt-3 rounded-lg bg-muted/40 p-3"><p className="text-sm font-semibold">{result.aiStatus === "ai" ? "AI explanation" : "Rule-based explanation"}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{result.explanation}</p><p className="mt-3 text-sm font-semibold">Clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{result.questions.map((question) => <li key={question}>{question}</li>)}</ul><p className="mt-3 text-xs text-muted-foreground">Potential operational impact: {result.riskNote}</p></div>
+                  <div className="mt-3 rounded-lg bg-muted/40 p-3"><p className="text-sm font-semibold">{result.aiStatus === "ai" ? "Contextual explanation" : "Rule-based explanation"}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{result.explanation}</p><p className="mt-3 text-sm font-semibold">Clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{result.questions.map((question) => <li key={question}>{question}</li>)}</ul><p className="mt-3 text-xs text-muted-foreground">Potential operational impact: {result.riskNote}</p></div>
                 </div>
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                   <div className="flex items-center gap-2"><Mail className="size-4 text-primary" /><h3 className="font-semibold">Follow-up email draft</h3></div>
@@ -328,7 +327,7 @@ export function ShipmentReadinessDemo() {
               </div>
               {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
               <Button className="mt-4 w-full" onClick={analyzeOwnShipment} disabled={analyzing}><Sparkles /> {analyzing ? "AETHER-TRADE is analyzing shipment…" : "Analyze shipment with AETHER-TRADE"}</Button>
-              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />AETHER-TRADE compares invoice and packing-list fields, applies deterministic validation rules and adds AI-assisted contextual review. For AI review, submitted document text is processed by our AI provider, Groq, through a server-side integration. This demo accepts .txt/.csv text exports only; scanned PDFs and OCR are not available. Do not submit confidential shipment data.</p>
+              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />AETHER-TRADE compares invoice and packing-list fields, applies deterministic validation rules and adds optional contextual review. Submitted document text is processed by an external AI provider through a server-side integration when configured; provider details are not exposed in the public interface. This demo accepts .txt/.csv text exports only; scanned PDFs and OCR are not available. Do not submit confidential shipment data.</p>
               <div className="mt-5 hidden space-y-4 md:block">
                 <div className="rounded-xl border border-border p-4">
                   <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
@@ -353,13 +352,13 @@ export function ShipmentReadinessDemo() {
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
                   <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI shipment review</p><p className="text-sm font-semibold">AETHER-TRADE cross-document review</p></div>
-                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "AI review active" : "Rules-only fallback"}</span>
+                      <div><p className="eyebrow">Contextual review</p><p className="text-sm font-semibold">Cross-document context</p></div>
+                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Contextual review active" : "Rule-based checks only"}</span>
                     </div>
                     <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">AI-assisted observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Contextual observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
                     {ownResult.aiReview.observations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Additional observations</p>{ownResult.aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
-                    {ownResult.aiReview.questions.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">AI clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{ownResult.aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
+                    {ownResult.aiReview.questions.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{ownResult.aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
                   </div>
                   <div className="rounded-lg border border-border p-3">
                     <p className="text-sm font-semibold">Internal document calculations</p>

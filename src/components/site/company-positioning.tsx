@@ -5,23 +5,22 @@ export function CompanyPositioning() {
         <div>
           <p className="eyebrow">Who we are</p>
           <h2 id="company-positioning-title" className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-            We build custom software for real business operations.
+            We build technology for import-export and logistics operations.
           </h2>
         </div>
         <div className="space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">
           <p>
-            AETHER-TRADE is a software development and technology company. We design and build
-            custom software applications, AI-powered tools and workflow automation solutions
-            around each client's operational requirements.
+            AETHER-TRADE is a trade-technology and automation company. We design and build
+            custom software, AI agents and connected workflows for importers, exporters,
+            freight forwarders, customs brokers and logistics businesses.
           </p>
           <p>
-            Our solutions can be delivered as standalone applications. Where a client needs
-            them to work with existing ERP, TMS, CRM or other business tools, integrations can
-            be scoped as a separate part of the project.
+            Our work can cover document intelligence, supplier and shipment coordination,
+            repetitive operational processes, reporting and back-office automation. ERP, TMS,
+            CRM and other system integrations are scoped separately around approved access.
           </p>
           <p className="font-medium text-foreground">
-            We build software and automation solutions; we are not simply an AI layer added
-            on top of another company's software.
+            We work across trade operations and the technology that connects them — not just document checking.
           </p>
         </div>
       </div>

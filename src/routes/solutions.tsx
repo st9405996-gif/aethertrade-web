@@ -34,7 +34,7 @@ export const Route = createFileRoute("/solutions")({
         "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/solutions", title: "Solutions for Freight Forwarders & Trade Teams | AETHER-TRADE", description: "Workflow automation and document intelligence for freight forwarders, customs brokers, importers, exporters, logistics operators and trading companies." },
+      { fallbackPath: "/solutions", title: "Solutions for Importers, Exporters & Logistics Businesses | AETHER-TRADE", description: "Trade operations technology, custom AI agents and workflow automation for importers, exporters, freight forwarders, customs brokers and trading companies." },
     ),
   component: SolutionsPage,
 });
@@ -73,9 +73,9 @@ function SolutionsPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Solutions",
-          title: "Built Around How Your Business Trades.",
+          title: "Automation for the Way Your Trade Business Operates.",
           description:
-            "Different roles in global trade face different operational problems. Here is where we focus for each.",
+            "We tailor software and automation around the actual work handled by importers, exporters, customs brokers, freight forwarders and logistics operators.",
         })}
       >
         <Button variant="outline" asChild>

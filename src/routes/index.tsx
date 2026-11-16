@@ -41,25 +41,25 @@ export const Route = createFileRoute("/")({
       (() => ({
         meta: [
           {
-            title: "AETHER-TRADE | Custom Software & AI Automation for Global Trade",
+            title: "AETHER-TRADE | Import-Export & Logistics Automation",
           },
           {
             name: "description",
             content:
-              "AETHER-TRADE is a software development company building custom software, AI-powered applications and workflow automation for global trade operations.",
+              "AETHER-TRADE designs and builds trade-focused software, AI agents, workflow automation and system integrations for import-export, freight and logistics operations.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
             property: "og:description",
             content:
-              "Custom software. AI-powered applications. Workflow automation for global trade.",
+              "Import-export technology. AI agents. Connected operational workflows.",
           },
           { property: "og:type", content: "website" },
           { name: "twitter:card", content: "summary_large_image" },
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/", title: "AETHER-TRADE | Freight Document Intelligence & Workflow Automation", description: "AI-powered document intelligence and workflow automation for freight forwarders. Organize shipment documents, identify possible discrepancies and keep people in control." },
+      { fallbackPath: "/", title: "AETHER-TRADE | Import-Export, Logistics & AI Automation", description: "Trade operations technology, custom AI agents, workflow automation and system integrations for importers, exporters, freight forwarders and logistics businesses." },
     ),
   component: HomePage,
 });
@@ -96,22 +96,22 @@ const APPROACH = [
   {
     icon: "FolderTree",
     title: "Trade Operations",
-    body: "Centralized Case Architecture — We structure your documents, communications, and data into a single operational workspace.",
+    body: "Trade operations workspaces — Design a shared case view for approved documents, communications, shipment data and team hand-offs.",
   },
   {
     icon: "ScanSearch",
     title: "Document Intelligence",
-    body: "Automated Data Ingestion — Custom trained models to extract fields from commercial invoices, packing lists, and BLs.",
+    body: "Document intelligence — Extract and structure supported information from commercial invoices, packing lists and transport documents; advanced formats and model training are scoped separately.",
   },
   {
     icon: "Workflow",
     title: "Workflow Automation",
-    body: "Controlled Rule Engines — Tailor-made automation logic built around your team’s existing approval hierarchy.",
+    body: "Workflow automation — Connect repeatable steps, notifications, routing and approval checkpoints around your agreed operating rules.",
   },
   {
     icon: "LayoutDashboard",
     title: "Operational Visibility",
-    body: "Live Performance Dashboards — Real-time tracking of workload distribution and recurring shipment exceptions.",
+    body: "Operational visibility — Build reporting views for case progress, workload and recurring exceptions using approved data sources.",
   },
 ];
 
@@ -151,8 +151,8 @@ const AUDIENCES = [
 const TRUST = [
   {
     icon: "ClipboardCheck",
-    title: "Paid Operations Audit",
-    body: "Every engagement starts with a paid Operations Audit to understand the workflow and define the scope.",
+    title: "Operations Assessment",
+    body: "We review how work moves through your operation, identify bottlenecks and agree which workflow is worth improving first.",
   },
   {
     icon: "Workflow",
@@ -224,9 +224,9 @@ function HomePage() {
 function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
   const hero = cmsHero(cmsPage, {
     eyebrow: "Global trade technology & automation company",
-    title: "AI-Powered Document & Workflow Automation for Freight Forwarders.",
+    title: "Import-Export & Logistics Automation, Built Around Your Operations.",
     description:
-      "We help freight forwarders and trade operations teams organize shipment documents, identify discrepancies and coordinate routine work through structured, human-reviewed workflows.",
+      "AETHER-TRADE designs and builds trade-focused software, custom AI agents, workflow automations and system integrations for importers, exporters, freight forwarders and logistics operators.",
   });
   return (
     <section className="relative isolate overflow-hidden">
@@ -249,7 +249,7 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
             {hero.title}
           </h1>
           <p className="mt-5 text-lg font-medium text-primary">
-            Document intelligence and workflow automation for freight forwarders and trade operations teams.
+            Trade operations software · Custom AI agents · Workflow automation · System integrations.
           </p>
           <p className="mt-3 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
             {hero.description}
@@ -257,14 +257,14 @@ function Hero({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="xl" asChild>
               <Link to="/request-demo" search={{ automation: undefined }}>
-                Request a Workflow Demo <ArrowRight />
+                Discuss an Automation Project <ArrowRight />
               </Link>
             </Button>
             <Button variant="outline-hero" size="xl" asChild>
-              <Link to="/automations">Explore Available Automations</Link>
+              <Link to="/automations">Explore Trade Automation Services</Link>
             </Button>
           </div>
-          <p className="mt-8 font-mono text-xs text-muted-foreground">Connect. Automate. Grow.</p>
+          <p className="mt-8 font-mono text-xs text-muted-foreground">Built around the way global trade works.</p>
         </div>
       </div>
     </section>
@@ -280,8 +280,8 @@ function Challenges({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       <div className="container-page">
         <SectionHeader
           eyebrow="The everyday reality"
-          title="Trade operations run on documents — and documents don't run themselves."
-          description="Before any automation, teams face the same five frictions on every shipment."
+          title="Global trade runs on documents, systems and teams — we help connect the work between them."
+          description="We map the operational friction first, then design a practical workflow around it."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-3">
           {items.map((c, i) => (
@@ -334,7 +334,7 @@ function Approach({ cmsPage }: { cmsPage: PublishedCmsPage | null }) {
       <div className="container-page">
         <SectionHeader
           eyebrow="The AETHER-TRADE approach"
-          title="Four capabilities, one connected workflow."
+          title="Four connected capabilities for import-export and logistics operations."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((a, i) => (
