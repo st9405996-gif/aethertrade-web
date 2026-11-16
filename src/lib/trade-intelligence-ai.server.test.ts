@@ -41,8 +41,8 @@ function request(path: string, body: unknown) {
   });
 }
 
-describe("Groq trade document review", () => {
-  it("uses Groq for Product Intelligence and only keeps suggestions with source evidence", async () => {
+describe("trade document contextual review", () => {
+  it("uses the primary AI provider for Product Intelligence and only keeps suggestions with source evidence", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5001\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
     const fetchMock = mockGroqFetch({
       choices: [{ message: { content: JSON.stringify({
@@ -72,7 +72,7 @@ describe("Groq trade document review", () => {
     expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.groq.com/openai/v1/chat/completions");
   });
 
-  it("uses Groq to review invoice and packing-list context while retaining deterministic comparisons", async () => {
+  it("uses the primary AI provider to review invoice and packing-list context while retaining deterministic comparisons", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
     const packingText = "PACKING LIST\nReference Invoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
     const fetchMock = mockGroqFetch({
@@ -110,7 +110,44 @@ describe("Groq trade document review", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("returns deterministic Product Intelligence results when Groq is not configured", async () => {
+  it("fails over to the secondary provider when the primary provider is rate limited", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-5004\\nExporter: Example Export Ltd.\\nGoods Description: Cotton shirts\\nQuantity: 20 PCS";
+    const secondaryPayload = {
+      choices: [{ message: { content: JSON.stringify({
+        summary: "The invoice contains a reference, exporter, product description and quantity. Confirm any fields not present in the supplied text.",
+        suggestions: [{ label: "Invoice number", value: "INV-5004", evidence: "Invoice Number: INV-5004" }],
+        observations: [],
+        questions: ["Who is the importer or consignee for this transaction?"],
+      }) } }],
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/rpc/consume_submission_quota")) {
+        return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
+      }
+      if (url === "https://api.groq.com/openai/v1/chat/completions") {
+        return new Response(JSON.stringify({ error: { message: "rate limit" } }), { status: 429 });
+      }
+      if (url === "https://openrouter.ai/api/v1/chat/completions") {
+        return new Response(JSON.stringify(secondaryPayload), { status: 200, headers: { "content-type": "application/json" } });
+      }
+      throw new Error("Unexpected network request: " + url);
+    });
+    const response = await handleProductIntelligenceAI(
+      request("/api/demo/product-intelligence", { invoiceText }),
+      { ...env, OPENROUTER_API_KEY: "test-secondary-key", OPENROUTER_MODEL: "provider/test-model" },
+      fetchMock,
+    );
+    const payload = await response.json() as { aiReview: { status: string; suggestions: { label: string }[]; model?: string } };
+    expect(response.status).toBe(200);
+    expect(payload.aiReview.status).toBe("ai");
+    expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
+    expect(payload.aiReview).not.toHaveProperty("model");
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain("https://openrouter.ai/api/v1/chat/completions");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("returns deterministic Product Intelligence results when no AI provider is configured", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const response = await handleProductIntelligenceAI(
       request("/api/demo/product-intelligence", {
@@ -119,14 +156,15 @@ describe("Groq trade document review", () => {
       { ...env, GROQ_API_KEY: "" },
       fetchMock,
     );
-    const payload = await response.json() as { aiReview: { status: string; model: string } };
+    const payload = await response.json() as { aiReview: { status: string; summary: string; model?: string } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("fallback");
-    expect(payload.aiReview.model).toBe("Deterministic rules only");
+    expect(payload.aiReview.summary).toContain("Contextual AI review is temporarily unavailable");
+    expect(payload.aiReview).not.toHaveProperty("model");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("rejects oversized and invalid document payloads before calling Groq", async () => {
+  it("rejects oversized and invalid document payloads before calling an AI provider", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const tooShort = await handleProductIntelligenceAI(
       request("/api/demo/product-intelligence", { invoiceText: "too short" }),
