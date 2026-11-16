@@ -49,7 +49,7 @@ export const Route = createFileRoute("/services")({
         "Operations assessments, workflow automation builds, custom AI agents, systems integration and pilot support for trade businesses.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/services", title: "Custom Freight Automation Services | AETHER-TRADE", description: "Operations assessments, document workflow automation, custom AI agents, systems integration and pilot support for trade operations." },
+      { fallbackPath: "/services", title: "Import-Export & Logistics Automation Services | AETHER-TRADE", description: "Import-export and logistics automation services: operations assessments, custom AI agents, workflow builds, system integrations and controlled pilots." },
     ),
   component: ServicesPage,
 });
@@ -77,9 +77,9 @@ function ServicesPage() {
       <PageHero
         {...cmsHero(cmsPage, {
           eyebrow: "Services",
-          title: "Custom Projects and Consulting for Freight Automation.",
+          title: "Import-Export & Logistics Automation Services.",
           description:
-            "We assess your operation, then design and build a custom software or automation solution for an agreed workflow. It can be delivered as a standalone application; integrations with existing systems are optional and separately scoped.",
+            "We assess how work moves through your import-export or logistics operation, then scope and build software, AI agents, workflow automation and integrations around a defined business process. Each engagement has agreed deliverables, access controls and human review points.",
         })}
       >
         <Button variant="outline" asChild>
@@ -88,7 +88,7 @@ function ServicesPage() {
       </PageHero>
       <CompanyPositioning />
       <section className="container-page section-pad">
-        <SectionHeader eyebrow="What we offer" title="Services and typical deliverables" description="Each engagement is scoped around one workflow, the systems involved and the review controls your team needs." />
+        <SectionHeader eyebrow="What we offer" title="Automation services and typical deliverables" description="Each engagement is scoped around one workflow, the systems involved and the review controls your team needs." />
         <div className="mt-12">
           {cards.length ? (
             <CardGrid items={cards} />
@@ -104,7 +104,7 @@ function ServicesPage() {
       <CmsPageSections page={cmsPage} />
       <CtaBand
         {...cmsCta(cmsPage, {
-          title: "Start with a focused operations assessment.",
+          title: "Start with the workflow that creates the most friction.",
           description: "A clear picture of where automation will — and won't — help.",
         })}
       />
