@@ -35,6 +35,20 @@ function ShipmentReadinessPage() {
         </Button>
       </PageHero>
       <ShipmentReadinessDemo />
+      <section className="container-page section-pad">
+        <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+            <p className="eyebrow">Public interactive demo</p>
+            <h2 className="mt-2 text-xl font-semibold">What you can test today</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">Explore fictional shipment scenarios or submit invoice and packing-list text exports. The demo compares supported fields, runs available deterministic checks, highlights exceptions and prepares a follow-up draft for human review.</p>
+          </div>
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
+            <p className="eyebrow">Operational pilot</p>
+            <h2 className="mt-2 text-xl font-semibold">Configured around your shipment process</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">A private pilot can be scoped around your document formats, team checklist, exception-handling steps and approval process. Live email, shipment-system integrations, automated case tracking and other connections are subject to separate implementation, access and validation; they are not included in this public demo.</p>
+          </div>
+        </div>
+      </section>
       <CtaBand title="Test Shipment Readiness against your operation." description="Request a private walkthrough to discuss your checklist, document formats and approval process." primaryLabel="Request a private demo" automation="shipment-readiness" />
     </>
   );
