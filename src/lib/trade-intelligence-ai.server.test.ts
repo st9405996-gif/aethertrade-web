@@ -49,8 +49,6 @@ describe("trade document contextual review", () => {
       questions: ["Which quantity is supported by the final packing record?"],
       productAttributes: [{ category: "Material / composition", value: "Cotton", document: "invoice", evidence: "Goods Description: Cotton shirts" }],
       customsObservations: [{ category: "Country of origin missing", severity: "medium", detail: "No country-of-origin declaration was found in the supplied documents.", document: "both", evidence: "No country-of-origin declaration was found in the supplied documents.", evidenceType: "absence" }],
-      productAttributes: [{ category: "Material / composition", value: "Cotton", document: "invoice", evidence: "Goods Description: Cotton shirts" }],
-      customsObservations: [{ category: "Country of origin missing", severity: "medium", detail: "No country-of-origin declaration was found in the supplied documents.", document: "both", evidence: "No country-of-origin declaration was found in the supplied documents.", evidenceType: "absence" }],
     }) })) };
     const fetchMock = quotaFetch();
     const response = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
