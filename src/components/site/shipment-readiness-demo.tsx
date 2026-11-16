@@ -17,6 +17,8 @@ type ContextReview = {
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
   observations: { label: string; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
+  productAttributes: { category: "Material / composition" | "Intended use / function" | "Model / part number" | "Dimensions / size / GSM / capacity"; value: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
+  customsObservations: { category: "HS code / description mismatch" | "Country of origin missing" | "Weight anomaly" | "Other compliance context"; severity: "low" | "medium" | "high"; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string; evidenceType: "quote" | "absence" }[];
 };
 
 type OwnResult = {
@@ -165,6 +167,8 @@ export function ShipmentReadinessDemo() {
         questions: [],
         suggestions: [],
         observations: [],
+        productAttributes: [],
+        customsObservations: [],
       },
     };
     setError("");
@@ -357,6 +361,8 @@ export function ShipmentReadinessDemo() {
                     </div>
                     <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
                     <p className="mt-2 text-xs text-muted-foreground">Contextual observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
+                    {ownResult.aiReview.productAttributes.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Product description review</p><div className="mt-2 grid gap-2 sm:grid-cols-2">{ownResult.aiReview.productAttributes.map((item, index) => <div key={index} className="rounded-lg border border-border bg-background p-3"><p className="text-xs font-semibold text-muted-foreground">{item.category}</p><p className="mt-1 break-words text-sm font-medium">{item.value}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div></div>}
+                    {ownResult.aiReview.customsObservations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Customs &amp; compliance observations</p>{ownResult.aiReview.customsObservations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><div className="flex items-center justify-between gap-2"><p className="text-sm font-medium">{item.category}</p><span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] uppercase text-amber-700 dark:text-amber-300">{item.severity} review</span></div><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
                     {ownResult.aiReview.observations.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Additional observations</p>{ownResult.aiReview.observations.map((item, index) => <div key={index} className="mt-2 rounded-lg border border-border bg-background p-3"><p className="text-sm font-medium">{item.label}</p><p className="mt-1 text-sm">{item.detail}</p><p className="mt-1 text-xs text-muted-foreground">{item.document} evidence: {item.evidence}</p></div>)}</div>}
                     {ownResult.aiReview.questions.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Clarification questions</p><ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">{ownResult.aiReview.questions.map((question, index) => <li key={index}>{question}</li>)}</ul></div>}
                   </div>
