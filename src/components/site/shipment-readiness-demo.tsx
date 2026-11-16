@@ -299,7 +299,7 @@ export function ShipmentReadinessDemo() {
             )}
           </div>
         ) : (
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="mt-4 grid gap-4 md:grid-cols-[1.05fr_0.95fr]">
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
               <div><p className="eyebrow">Your shipment</p><h3 className="text-lg font-semibold">Add invoice and packing-list text</h3></div>
               <label className="mt-4 grid gap-2 text-sm font-medium">Shipment reference
@@ -329,6 +329,20 @@ export function ShipmentReadinessDemo() {
               {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
               <Button className="mt-4 w-full" onClick={analyzeOwnShipment} disabled={analyzing}><Sparkles /> {analyzing ? "AETHER-TRADE is analyzing shipment…" : "Analyze shipment with AETHER-TRADE"}</Button>
               <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />AETHER-TRADE compares invoice and packing-list fields, applies deterministic validation rules and adds AI-assisted contextual review. For AI review, submitted document text is processed by our AI provider, Groq, through a server-side integration. This demo accepts .txt/.csv text exports only; scanned PDFs and OCR are not available. Do not submit confidential shipment data.</p>
+              <div className="mt-5 hidden space-y-4 md:block">
+                <div className="rounded-xl border border-border p-4">
+                  <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
+                    <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
+                      <option value="">Select monthly volume</option>
+                      <option value="1–10">1–10 shipments</option>
+                      <option value="11–50">11–50 shipments</option>
+                      <option value="51–100">51–100 shipments</option>
+                      <option value="101+">101+ shipments</option>
+                    </select>
+                  </label>
+                </div>
+                <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
+              </div>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
               <p className="eyebrow">Review and approval</p><h3 className="text-lg font-semibold">Shipment result</h3>
@@ -363,18 +377,18 @@ export function ShipmentReadinessDemo() {
                     <p className="mt-2 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0" />Human approval required. This page prepares a draft; it does not send email.</p>
                   </div>
                 </div>
-                <div className="mt-4 rounded-xl border border-border p-4">
-                  <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
-                    <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
-                      <option value="">Select monthly volume</option>
-                      <option value="1–10">1–10 shipments</option>
-                      <option value="11–50">11–50 shipments</option>
-                      <option value="51–100">51–100 shipments</option>
-                      <option value="101+">101+ shipments</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-4 md:hidden">
+                  <div className="rounded-xl border border-border p-4">
+                    <label className="grid max-w-sm gap-2 text-sm font-medium">Monthly shipment volume
+                      <select className="h-10 rounded-md border border-input bg-background px-3 font-normal" value={monthlyVolume} onChange={(event) => setMonthlyVolume(event.target.value)}>
+                        <option value="">Select monthly volume</option>
+                        <option value="1–10">1–10 shipments</option>
+                        <option value="11–50">11–50 shipments</option>
+                        <option value="51–100">51–100 shipments</option>
+                        <option value="101+">101+ shipments</option>
+                      </select>
+                    </label>
+                  </div>
                   <ProductDemoNextStep automation="shipment-readiness" shipmentVolume={monthlyVolume || undefined} requireShipmentVolume />
                 </div>
                 </>
