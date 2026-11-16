@@ -61,8 +61,8 @@ describe("trade document contextual review", () => {
     expect(ai.run).toHaveBeenCalledTimes(1);
   });
   it("uses extracted booking, invoice and purchase-order references in the follow-up draft", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nBooking Reference: REF-2081\\nInvoice Number: INV-2026-11-0457\\nGoods Description: Cotton shirts\\nQuantity: 100 PCS";
-    const packingText = "PACKING LIST\\nInvoice Reference: INV-2026-11-0457\\nPurchase Order No.: PO-7781\\nGoods Description: Cotton shirts\\nQuantity: 98 PCS";
+    const invoiceText = "COMMERCIAL INVOICE\nBooking Reference: REF-2081\nInvoice Number: INV-2026-11-0457\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
+    const packingText = "PACKING LIST\nInvoice Reference: INV-2026-11-0457\nPurchase Order No.: PO-7781\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
     const response = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
       reference: "SHIPMENT-2048", invoiceText, packingText, supportingDocs: [],
     }), env, quotaFetch());
