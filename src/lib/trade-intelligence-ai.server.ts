@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { WorkersAiBinding } from "./server-env.server";
 import { hmacSha256Hex } from "./crypto-utils";
 import { consumeSubmissionQuota } from "./submission-quota.server";
-import { analyzeTradeDocument, compareTradeDocuments, type ComparisonRow, type DocumentAnalysis, type InternalValidation } from "./trade-intelligence";
+import { analyzeTradeDocument, buildShipmentReferenceLabel, compareTradeDocuments, type ComparisonRow, type DocumentAnalysis, type InternalValidation } from "./trade-intelligence";
 
 type ServerEnv = Record<string, string | undefined> & { AI?: WorkersAiBinding };
 type AiStatus = "ai" | "fallback";
@@ -273,12 +273,12 @@ export async function handleShipmentReadinessAnalysis(
     ...mismatches.map((item) => item.label + " differs between the invoice (\"" + item.invoiceValue + "\") and packing list (\"" + item.packingValue + "\"). Please confirm the correct value and provide a revised document if needed."),
     ...calculationMismatches.map(({ document, check }) => document + ": " + check.label + " does not match (calculated " + check.expected + "; stated " + check.actual + "). Please verify the source figures."),
   ];
-  const safeReference = reference || "shipment";
+  const shipmentReferenceLabel = buildShipmentReferenceLabel(invoiceText, packingText, reference);
   const subject = requests.length
-    ? "Clarification required for shipment " + safeReference
-    : "Shipment " + safeReference + " — no follow-up flagged";
+    ? "Clarification required for " + shipmentReferenceLabel
+    : shipmentReferenceLabel + " — no follow-up flagged";
   const draftBody = requests.length
-    ? "Hello,\n\nWe are reviewing the document set for shipment " + safeReference + ". Could you please help clarify the following item(s)?\n\n" + requests.map((item) => "- " + item).join("\n") + "\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team"
+    ? "Hello,\n\nWe are reviewing the document set for " + shipmentReferenceLabel + ". Could you please help clarify the following item(s)?\n\n" + requests.map((item) => "- " + item).join("\n") + "\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team"
     : "The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. " + (unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : "") + "Please complete the normal human review before proceeding.";
 
   const fallback = fallbackReview("Contextual AI review is temporarily unavailable. Document matching, calculations and the follow-up draft below are from deterministic rules.");
