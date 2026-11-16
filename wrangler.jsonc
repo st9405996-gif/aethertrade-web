@@ -6,6 +6,7 @@
     "nodejs_compat",
     "nodejs_compat_populate_process_env"
   ],
+  // Exposes Cloudflare Workers AI to the server runtime as env.AI.
   "ai": {
     "binding": "AI"
   },

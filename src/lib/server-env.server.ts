@@ -20,8 +20,12 @@ const SERVER_BINDING_KEYS = [
   "VITE_TURNSTILE_SITE_KEY",
 ] as const;
 
+export interface Env {
+  AI: WorkersAiBinding;
+}
+
 export type WorkersAiBinding = {
-  run: (model: string, inputs: Record<string, unknown>) => Promise<unknown>;
+  run: (model: string, inputs: Record<string, unknown>, options?: { signal?: AbortSignal }) => Promise<unknown>;
 };
 
 /**
