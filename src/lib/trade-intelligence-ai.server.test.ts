@@ -100,12 +100,12 @@ describe("trade document contextual review", () => {
   });
 
   it("parses fenced JSON with leading prose from the Cloudflare AI binding", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-FENCE-1\\nGoods Description: stainless steel fasteners";
-    const ai = { run: vi.fn(async () => ({ response: "Here is the requested result:\\n\x60\x60\x60json\\n" + JSON.stringify({
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-FENCE-1\nGoods Description: stainless steel fasteners";
+    const ai = { run: vi.fn(async () => ({ response: "Here is the requested result:\n\x60\x60\x60json\n" + JSON.stringify({
       summary: "The invoice identifies stainless steel fasteners and an invoice reference. Confirm any details absent from the supplied text.",
       suggestions: [{ label: "Invoice number", value: "INV-FENCE-1", evidence: "Invoice Number: INV-FENCE-1" }],
       observations: [], questions: ["Can you confirm the declared country of origin for these goods?"],
-    }) + "\\n\x60\x60\x60" })) };
+    }) + "\n\x60\x60\x60" })) };
     const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { ...env, AI: ai }, quotaFetch());
     const payload = await response.json() as { aiReview: { status: string; suggestions: { value: string }[] } };
     expect(payload.aiReview.status).toBe("ai");
@@ -113,13 +113,13 @@ describe("trade document contextual review", () => {
   });
 
   it("uses Cloudflare AI REST credentials when the Workers AI binding is unavailable", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-REST-1\\nGoods Description: electronic control modules";
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-REST-1\nGoods Description: electronic control modules";
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url.includes("/rpc/consume_submission_quota")) return new Response("true", { status: 200 });
       expect(url).toContain("/accounts/test-account/ai/run/@cf/openai/gpt-oss-20b");
       expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-api-token");
-      return new Response(JSON.stringify({ success: true, result: { response: "Model response follows\\n" + JSON.stringify({
+      return new Response(JSON.stringify({ success: true, result: { response: "Model response follows\n" + JSON.stringify({
         summary: "The invoice describes electronic control modules and contains an invoice number. Confirm missing shipment details.",
         suggestions: [{ label: "Invoice number", value: "INV-REST-1", evidence: "Invoice Number: INV-REST-1" }],
         observations: [], questions: ["Can you confirm the origin country stated on the commercial invoice?"],
@@ -136,7 +136,7 @@ describe("trade document contextual review", () => {
   it("exposes JSON parse diagnostics in the deterministic fallback notice", async () => {
     const ai = { run: vi.fn(async () => ({ response: "This is not JSON." })) };
     const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", {
-      invoiceText: "COMMERCIAL INVOICE\\nInvoice Number: INV-JSON-1\\nGoods Description: Steel bolts",
+      invoiceText: "COMMERCIAL INVOICE\nInvoice Number: INV-JSON-1\nGoods Description: Steel bolts",
     }), { ...env, AI: ai }, quotaFetch());
     const payload = await response.json() as { aiReview: { status: string; summary: string } };
     expect(payload.aiReview.status).toBe("fallback");
