@@ -138,7 +138,7 @@ async function requestAiReview<T>(
     let payload: unknown;
     try { payload = await Promise.race([env.AI.run(model, { messages, temperature: 0.1, max_tokens: 1_800 }), timeout]); }
     finally { if (timeoutHandle) clearTimeout(timeoutHandle); }
-    const raw = extractCandidateText(payload).replace(/^\\x60\\x60\\x60(?:json)?\\s*/i, "").replace(/\\s*\\x60\\x60\\x60$/, "");
+    const raw = extractCandidateText(payload).replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, "");
     let parsed: unknown;
     try { parsed = JSON.parse(raw); } catch (error) { console.error(JSON.stringify({ message: "trade-context-review: Cloudflare AI returned invalid JSON", model, error: error instanceof Error ? error.message : String(error), outputPreview: raw.slice(0, 500) })); return null; }
     const validated = schema.safeParse(parsed);
@@ -182,7 +182,7 @@ function makeShipmentReview(
     suggestions: [],
     observations: result.observations.filter((item) => evidenceExists(sourceFor(item.document), item.evidence)),
     productAttributes: result.productAttributes.filter((item) => evidenceExists(sourceFor(item.document), item.evidence)),
-    customsObservations: result.customsObservations.filter((item) => item.evidenceType === "quote" ? evidenceExists(sourceFor(item.document), item.evidence) : item.category === "Country of origin missing" && !/\\b(?:country of origin|origin country|made in)\\b/i.test(invoiceText + "\\n" + packingText)),
+    customsObservations: result.customsObservations.filter((item) => item.evidenceType === "quote" ? evidenceExists(sourceFor(item.document), item.evidence) : item.category === "Country of origin missing" && !/\b(?:country of origin|origin country|made in)\b/i.test(invoiceText + "\n" + packingText)),
   };
 }
 
@@ -299,7 +299,7 @@ export async function handleShipmentReadinessAnalysis(
   const fallback = fallbackReview("Contextual AI review is temporarily unavailable. Document matching, calculations and the follow-up draft below are from deterministic rules.");
   try {
     const generated = await requestAiReview(
-      "Review this shipment's commercial invoice and packing list together. Return strict JSON with summary, observations, productAttributes, customsObservations, and one to three clarification questions. Dynamically infer product attributes for any product category or industry without relying on a fixed material keyword list. Extract only supported material/composition, intended use/function, model/part number, and dimensions/size/GSM/capacity. Every attribute needs exact verbatim evidence and a document source. Flag possible HS-code-versus-description inconsistencies, missing country of origin, and weight anomalies as review prompts, never definitive legal conclusions. Use evidenceType='quote' for exact source evidence, or evidenceType='absence' only for missing country of origin. Do not invent HS classifications, permits, legal requirements, country rules, or clearance outcomes. Deterministic numeric checks are authoritative; do not override them.\\n\\nINVOICE TEXT:\\n" + invoiceText + "\\n\\nPACKING LIST TEXT:\\n" + packingText + "\\n\\nDETERMINISTIC EXTRACTION, LINE ITEMS, HS CODES, WEIGHTS, COMPARISON AND CHECKS:\\n" + JSON.stringify({ invoice: { fields: invoiceAnalysis.fields, productDescription: invoiceAnalysis.productDescription, lineItems: invoiceAnalysis.lineItems, validations: invoiceAnalysis.validations }, packingList: { fields: packingAnalysis.fields, productDescription: packingAnalysis.productDescription, lineItems: packingAnalysis.lineItems, validations: packingAnalysis.validations }, comparison, validations, missingSupportingDocuments: missing }),
+      "Review this shipment's commercial invoice and packing list together. Return strict JSON with summary, observations, productAttributes, customsObservations, and one to three clarification questions. Dynamically infer product attributes for any product category or industry without relying on a fixed material keyword list. Extract only supported material/composition, intended use/function, model/part number, and dimensions/size/GSM/capacity. Every attribute needs exact verbatim evidence and a document source. Flag possible HS-code-versus-description inconsistencies, missing country of origin, and weight anomalies as review prompts, never definitive legal conclusions. Use evidenceType='quote' for exact source evidence, or evidenceType='absence' only for missing country of origin. Do not invent HS classifications, permits, legal requirements, country rules, or clearance outcomes. Deterministic numeric checks are authoritative; do not override them.\n\nINVOICE TEXT:\n" + invoiceText + "\n\nPACKING LIST TEXT:\n" + packingText + "\n\nDETERMINISTIC EXTRACTION, LINE ITEMS, HS CODES, WEIGHTS, COMPARISON AND CHECKS:\n" + JSON.stringify({ invoice: { fields: invoiceAnalysis.fields, productDescription: invoiceAnalysis.productDescription, lineItems: invoiceAnalysis.lineItems, validations: invoiceAnalysis.validations }, packingList: { fields: packingAnalysis.fields, productDescription: packingAnalysis.productDescription, lineItems: packingAnalysis.lineItems, validations: packingAnalysis.validations }, comparison, validations, missingSupportingDocuments: missing }),
       shipmentReviewSchema,
       env,
       request.headers.get("cf-connecting-ip") ?? undefined,
