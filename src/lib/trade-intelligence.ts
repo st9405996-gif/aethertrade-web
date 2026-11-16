@@ -260,7 +260,7 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   const grossText = values.get("grossWeight")?.value ?? "";
   const netText = values.get("netWeight")?.value ?? "";
   const parseWeightKg = (value: string): number | null => {
-    const match = value.match(/^\\s*([\\d,]+(?:\\.\\d+)?)\\s*(kg|kgs|kilograms?|lb|lbs|pounds?|t|ton|tons|tonnes?)?\\s*$/i);
+    const match = value.match(/^\s*([\d,]+(?:\\.\d+)?)\s*(kg|kgs|kilograms?|lb|lbs|pounds?|t|ton|tons|tonnes?)?\s*$/i);
     if (!match) return null;
     const amount = Number(match[1].replace(/,/g, ""));
     if (!Number.isFinite(amount)) return null;
