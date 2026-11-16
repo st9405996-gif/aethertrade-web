@@ -3,7 +3,7 @@ import { CheckCircle2, CircleAlert, FileText, Loader2, Mail, ShieldCheck, Sparkl
 import { Button } from "@/components/ui/button";
 import { ProductDemoNextStep } from "@/components/site/product-demo-next-step";
 import { buildShipmentReadinessScenario, SHIPMENT_READINESS_SCENARIOS, type ShipmentReadinessDemoResult, type ShipmentReadinessScenarioId } from "@/lib/shipment-readiness-demo";
-import { analyzeTradeDocument, compareTradeDocuments, type ComparisonRow, type InternalValidation } from "@/lib/trade-intelligence";
+import { analyzeTradeDocument, buildShipmentReferenceLabel, compareTradeDocuments, type ComparisonRow, type InternalValidation } from "@/lib/trade-intelligence";
 
 const stages = ["Reading document text", "Comparing shipment details", "Preparing follow-up draft"];
 const initialSupportingDocs = [
@@ -57,8 +57,8 @@ function renderEvidenceLine(line: string, values: string[]) {
 }
 
 function makeFindingDraft(reference: string, findings: string[]) {
-  const subject = `Clarification required for shipment ${reference}`;
-  const body = `Hello,\n\nWe are reviewing the document set for shipment ${reference}. Could you please help clarify the following item(s)?\n\n${findings.map((item) => `- ${item}`).join("\n")}\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team`;
+  const subject = `Clarification required for ${reference}`;
+  const body = `Hello,\n\nWe are reviewing the document set for ${reference}. Could you please help clarify the following item(s)?\n\n${findings.map((item) => `- ${item}`).join("\n")}\n\nPlease confirm the correct details and share any revised or outstanding documents, where applicable.\n\nThank you,\nLogistics coordination team`;
   return { subject, body };
 }
 
@@ -69,7 +69,7 @@ export function ShipmentReadinessDemo() {
   const [analyzing, setAnalyzing] = useState(false);
   const [stage, setStage] = useState(0);
   const [monthlyVolume, setMonthlyVolume] = useState("");
-  const [reference, setReference] = useState("SHIPMENT-2048");
+  const [reference, setReference] = useState("");
   const [invoiceText, setInvoiceText] = useState("");
   const [packingText, setPackingText] = useState("");
   const [invoiceFile, setInvoiceFile] = useState("");
@@ -153,9 +153,10 @@ export function ShipmentReadinessDemo() {
       ...mismatches.map((item) => `${item.label} differs between the invoice ("${item.invoiceValue}") and packing list ("${item.packingValue}"). Please confirm the correct value and provide a revised document if needed.`),
       ...calculationMismatches.map(({ document, check }) => `${document}: ${check.label} does not match (calculated ${check.expected}; stated ${check.actual}). Please verify the source figures.`),
     ];
+    const shipmentReferenceLabel = buildShipmentReferenceLabel(invoiceText, packingText, reference);
     const draft = requests.length
-      ? makeFindingDraft(reference.trim() || "shipment", requests)
-      : { subject: `Shipment ${reference.trim() || "review"} — no follow-up flagged`, body: `The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. ${unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : ""}Please complete the normal human review before proceeding.` };
+      ? makeFindingDraft(shipmentReferenceLabel, requests)
+      : { subject: `${shipmentReferenceLabel} — no follow-up flagged`, body: `The supplied invoice and packing-list text show no detected mismatch in the fields checked, and no supporting documents are marked missing in this sample checklist. ${unable.length ? "Some fields could not be compared because they were not present in both texts; please review those fields manually. " : ""}Please complete the normal human review before proceeding.` };
     const fallbackResult: OwnResult = {
       comparison, missing, validations, ...draft,
       aiReview: {
