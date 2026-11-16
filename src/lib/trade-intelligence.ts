@@ -426,6 +426,22 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     validations.push({ key: "line-item-subtotal", label: "Line items vs subtotal", status: "unable", expected: "", actual: subtotalValue, evidence: "A complete set of line-item amounts and a stated subtotal were not both available." });
   }
 
+  for (const item of lineItems) {
+    const quantity = Number(item.quantity.replace(/,/g, ""));
+    const unitPrice = amountToNumber(item.unitPrice);
+    const statedAmount = amountToNumber(item.amount);
+    if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice) || !Number.isFinite(statedAmount)) continue;
+    const calculated = quantity * unitPrice;
+    validations.push({
+      key: "line-item-extension-" + item.lineNumber,
+      label: "Item " + item.lineNumber + ": quantity × unit price vs line total",
+      status: Math.abs(calculated - statedAmount) < 0.011 ? "consistent" : "mismatch",
+      expected: calculated.toFixed(2),
+      actual: statedAmount.toFixed(2),
+      evidence: item.evidence,
+    });
+  }
+
   const cartonRows = lines.flatMap((line) => {
     const match = line.match(/^\s*(?:(?:item|line|product)\s*)?#?\d+\b.*?\b([\d,]+)\s*(?:cartons?|boxes?|packages?)\b/i);
     return match ? [Number(match[1].replace(/,/g, ""))] : [];
