@@ -171,8 +171,8 @@ Total Gross Weight: 340.00 kg`;
   it("treats Invoice Number, Invoice No. and Invoice Reference as the same field", () => {
     for (const packingLabel of ["Invoice No.", "Invoice Reference"]) {
       const result = compareTradeDocuments(
-        "COMMERCIAL INVOICE\\nInvoice Number: INV-ALIAS-1\\nGoods Description: Sample goods",
-        "PACKING LIST\\n" + packingLabel + ": INV-ALIAS-1\\nGoods Description: Sample goods",
+        "COMMERCIAL INVOICE\nInvoice Number: INV-ALIAS-1\nGoods Description: Sample goods",
+        "PACKING LIST\n" + packingLabel + ": INV-ALIAS-1\nGoods Description: Sample goods",
       );
       expect(result.find((row) => row.key === "invoiceNumber")?.status).toBe("consistent");
     }
@@ -181,8 +181,8 @@ Total Gross Weight: 340.00 kg`;
   it("normalizes package-count unit suffixes without changing displayed raw values", () => {
     for (const unit of ["Cartons", "Ctns", "Packages", "Pkgs", "Boxes"]) {
       const result = compareTradeDocuments(
-        "COMMERCIAL INVOICE\\nPackages: 612",
-        "PACKING LIST\\nTotal Cartons: 612 " + unit,
+        "COMMERCIAL INVOICE\nPackages: 612",
+        "PACKING LIST\nTotal Cartons: 612 " + unit,
       );
       expect(result.find((row) => row.key === "packages")).toMatchObject({
         invoiceValue: "612",
@@ -194,12 +194,12 @@ Total Gross Weight: 340.00 kg`;
 
   it("builds a follow-up reference from document identifiers before using a fallback", () => {
     const label = buildShipmentReferenceLabel(
-      "COMMERCIAL INVOICE\\nBooking Reference: REF-2081\\nInvoice Reference: INV-2026-11-0457",
-      "PACKING LIST\\nPurchase Order No.: PO-7781",
+      "COMMERCIAL INVOICE\nBooking Reference: REF-2081\nInvoice Reference: INV-2026-11-0457",
+      "PACKING LIST\nPurchase Order No.: PO-7781",
       "MANUAL-1",
     );
     expect(label).toBe("Shipment REF-2081 / Invoice INV-2026-11-0457 / PO PO-7781");
-    expect(buildShipmentReferenceLabel("COMMERCIAL INVOICE\\nGoods: sample", "PACKING LIST\\nGoods: sample", "MANUAL-1"))
+    expect(buildShipmentReferenceLabel("COMMERCIAL INVOICE\nGoods: sample", "PACKING LIST\nGoods: sample", "MANUAL-1"))
       .toBe("Shipment MANUAL-1");
   });
 
