@@ -7,7 +7,6 @@ type ServerEnv = Record<string, string | undefined>;
 type AiStatus = "ai" | "fallback";
 type ContextReview = {
   status: AiStatus;
-  model: string;
   summary: string;
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
@@ -62,7 +61,6 @@ function json(body: unknown, status = 200): Response {
 function fallbackReview(summary: string): ContextReview {
   return {
     status: "fallback",
-    model: "Deterministic rules only",
     summary,
     questions: [],
     suggestions: [],
@@ -121,7 +119,7 @@ function configuredProviders(env: ServerEnv): ChatProvider[] {
   if (secondaryKey && secondaryModel && /^[a-z0-9._:/-]{3,160}$/i.test(secondaryModel)) providers.push({ name: "secondary", endpoint: "https://openrouter.ai/api/v1/chat/completions", apiKey: secondaryKey, model: secondaryModel, extraHeaders: { "HTTP-Referer": "https://aethertrade.cloud", "X-Title": "AETHER-TRADE" } });
   return providers;
 }
-async function requestAiReview<T>(prompt: string, schema: z.ZodType<T>, env: ServerEnv, remoteIp: string | undefined, fetchImpl: typeof fetch): Promise<{ value: T; model: string } | null> {
+async function requestAiReview<T>(prompt: string, schema: z.ZodType<T>, env: ServerEnv, remoteIp: string | undefined, fetchImpl: typeof fetch): Promise<{ value: T } | null> {
   if (!(await quotaAllowed(env, remoteIp, fetchImpl))) return null;
   for (const provider of configuredProviders(env)) {
     try {
@@ -146,7 +144,7 @@ async function requestAiReview<T>(prompt: string, schema: z.ZodType<T>, env: Ser
       let parsed: unknown;
       try { parsed = JSON.parse(raw); } catch { continue; }
       const validated = schema.safeParse(parsed);
-      if (validated.success) return { value: validated.data, model: provider.model };
+      if (validated.success) return { value: validated.data };
       console.warn("trade-context-review: provider response failed schema validation", { provider: provider.name });
     } catch (error) {
       console.warn("trade-context-review: provider request failed; trying next configured provider", { provider: provider.name, error: error instanceof Error ? error.name : "unknown" });
@@ -161,11 +159,9 @@ function evidenceExists(source: string, evidence: string): boolean {
 function makeReview(
   result: z.infer<typeof productReviewSchema>,
   source: string,
-  model: string,
 ): ContextReview {
   return {
     status: "ai",
-    model,
     summary: result.summary,
     questions: result.questions,
     suggestions: result.suggestions.filter((item) => evidenceExists(source, item.evidence)),
@@ -177,13 +173,11 @@ function makeShipmentReview(
   result: z.infer<typeof shipmentReviewSchema>,
   invoiceText: string,
   packingText: string,
-  model: string,
 ): ContextReview {
   const sourceFor = (document: "invoice" | "packing-list" | "both") =>
     document === "invoice" ? invoiceText : document === "packing-list" ? packingText : invoiceText + "\n" + packingText;
   return {
     status: "ai",
-    model,
     summary: result.summary,
     questions: result.questions,
     suggestions: [],
@@ -243,7 +237,7 @@ export async function handleProductIntelligenceAI(
       request.headers.get("cf-connecting-ip") ?? undefined,
       fetchImpl,
     );
-    const aiReview = generated ? makeReview(generated.value, invoiceText, generated.model) : fallback;
+    const aiReview = generated ? makeReview(generated.value, invoiceText) : fallback;
     return json({ analysis, aiReview });
   } catch (error) {
     console.warn("trade-context-review: product-intelligence review unavailable", error instanceof Error ? error.name : "unknown");
@@ -316,7 +310,7 @@ export async function handleShipmentReadinessAnalysis(
       fetchImpl,
     );
     const aiReview = generated
-      ? makeShipmentReview(generated.value, invoiceText, packingText, generated.model)
+      ? makeShipmentReview(generated.value, invoiceText, packingText)
       : fallback;
     return json({ comparison, validations, missing, subject, body: draftBody, aiReview });
   } catch (error) {
