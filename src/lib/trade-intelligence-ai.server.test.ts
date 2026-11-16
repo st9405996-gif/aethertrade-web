@@ -1,194 +1,70 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  handleProductIntelligenceAI,
-  handleShipmentReadinessAnalysis,
-} from "./trade-intelligence-ai.server";
+import { handleProductIntelligenceAI, handleShipmentReadinessAnalysis } from "./trade-intelligence-ai.server";
 
 const env = {
-  GROQ_API_KEY: "test-groq-key",
-  GROQ_MODEL: "openai/gpt-oss-20b",
   SUPABASE_URL: "https://example.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-role",
   ABUSE_HASH_SECRET: "test-abuse-secret-that-is-at-least-thirty-two-characters",
 };
-
-function mockGroqFetch(aiPayload: unknown) {
-  const fetchMock = vi.fn<typeof fetch>(async (input) => {
-    const url = String(input);
-    if (url.includes("/rpc/consume_submission_quota")) {
-      return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
-    }
-    if (url === "https://api.groq.com/openai/v1/chat/completions") {
-      return new Response(JSON.stringify(aiPayload), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    }
-    throw new Error("Unexpected network request: " + url);
-  });
-  return fetchMock;
-}
-
 function request(path: string, body: unknown) {
   return new Request("https://aethertrade.test" + path, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      origin: "https://aethertrade.test",
-      "cf-connecting-ip": "203.0.113.10",
-    },
+    headers: { "content-type": "application/json", origin: "https://aethertrade.test", "cf-connecting-ip": "203.0.113.10" },
     body: JSON.stringify(body),
   });
 }
-
+function quotaFetch() {
+  return vi.fn<typeof fetch>(async (input) => {
+    if (String(input).includes("/rpc/consume_submission_quota")) return new Response("true", { status: 200 });
+    throw new Error("No external AI provider is configured.");
+  });
+}
 describe("trade document contextual review", () => {
-  it("uses Cloudflare Workers AI before external providers when the Worker AI binding is present", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-CF-1\\nExporter: Example Export Ltd.\\nGoods Description: Cotton shirts\\nQuantity: 20 PCS";
-    const ai = {
-      run: vi.fn(async (model: string, input: Record<string, unknown>) => {
-        expect(model).toBe("@cf/meta/llama-3.1-8b-instruct");
-        expect(input).toHaveProperty("messages");
-        return { response: JSON.stringify({
-          summary: "The invoice contains a reference, exporter, product description and quantity. Confirm any details not shown in the supplied text.",
-          suggestions: [{ label: "Invoice number", value: "INV-CF-1", evidence: "Invoice Number: INV-CF-1" }],
-          observations: [],
-          questions: ["Who is the importer or consignee for this transaction?"],
-        }) };
-      }),
-    };
-    const fetchMock = vi.fn<typeof fetch>(async (input) => {
-      if (String(input).includes("/rpc/consume_submission_quota")) {
-        return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
-      }
-      throw new Error("External provider should not be called when Cloudflare AI succeeds.");
-    });
-    const response = await handleProductIntelligenceAI(
-      request("/api/demo/product-intelligence", { invoiceText }),
-      { ...env, AI: ai },
-      fetchMock,
-    );
+  it("uses Cloudflare Workers AI for Product Intelligence", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-CF-1\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
+    const ai = { run: vi.fn(async (model: string, input: Record<string, unknown>) => {
+      expect(model).toBe("@cf/openai/gpt-oss-20b");
+      expect(input).toHaveProperty("messages");
+      return { response: JSON.stringify({
+        summary: "The invoice contains a reference, exporter, product description and quantity. Confirm details not shown in the supplied text.",
+        suggestions: [{ label: "Invoice number", value: "INV-CF-1", evidence: "Invoice Number: INV-CF-1" }],
+        observations: [], questions: ["Who is the importer or consignee for this transaction?"],
+      }) };
+    }) };
+    const fetchMock = quotaFetch();
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { ...env, AI: ai }, fetchMock);
     const payload = await response.json() as { aiReview: { status: string; suggestions: { label: string }[] } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("ai");
-    expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
+    expect(payload.aiReview.suggestions.map(x => x.label)).toEqual(["Invoice number"]);
     expect(ai.run).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
-
-  it("uses the primary AI provider for Product Intelligence and only keeps suggestions with source evidence", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5001\nExporter: Example Export Ltd.\nGoods Description: Cotton shirts\nQuantity: 20 PCS";
-    const fetchMock = mockGroqFetch({
-      choices: [{ message: { content: JSON.stringify({
-            summary: "The invoice identifies its reference, exporter, goods and quantity. The buyer and invoice value are not stated in the supplied excerpt.",
-            suggestions: [
-              { label: "Invoice number", value: "INV-5001", evidence: "Invoice Number: INV-5001" },
-              { label: "Invented field", value: "ABC", evidence: "This line does not exist" },
-            ],
-            observations: [],
-            questions: ["Who is the importer or consignee for this transaction?"],
-          }) } }],
-    });
-    const response = await handleProductIntelligenceAI(
-      request("/api/demo/product-intelligence", { invoiceText }),
-      env,
-      fetchMock,
-    );
-    const payload = await response.json() as {
-      analysis: { fields: { key: string; value: string }[] };
-      aiReview: { status: string; suggestions: { label: string }[] };
-    };
-    expect(response.status).toBe(200);
-    expect(payload.aiReview.status).toBe("ai");
-    expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
-    expect(payload.analysis.fields.find((field) => field.key === "invoiceNumber")?.value).toBe("INV-5001");
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[2]?.[0]).toBe("https://api.groq.com/openai/v1/chat/completions");
-  });
-
-  it("uses the primary AI provider to review invoice and packing-list context while retaining deterministic comparisons", async () => {
+  it("uses Cloudflare Workers AI for cross-document review while retaining deterministic comparisons", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 100 PCS";
     const packingText = "PACKING LIST\nReference Invoice Number: INV-5002\nGoods Description: Cotton shirts\nQuantity: 98 PCS";
-    const fetchMock = mockGroqFetch({
-      choices: [{ message: { content: JSON.stringify({
-            summary: "The documents refer to the same invoice but state different quantities. Confirm the final packed quantity before revising either record.",
-            observations: [{
-              label: "Quantity difference",
-              detail: "The invoice quantity is higher than the packing-list quantity.",
-              document: "both",
-              evidence: "Quantity: 100 PCS",
-            }],
-            questions: ["Which quantity is supported by the final packing record?"],
-          }) } }],
-    });
-    const response = await handleShipmentReadinessAnalysis(
-      request("/api/demo/shipment-readiness-analysis", {
-        reference: "SHIP-5002",
-        invoiceText,
-        packingText,
-        supportingDocs: [{ name: "Bill of lading", received: false }],
-      }),
-      env,
-      fetchMock,
-    );
-    const payload = await response.json() as {
-      comparison: { key: string; status: string }[];
-      missing: string[];
-      aiReview: { status: string; observations: { label: string }[] };
-    };
+    const ai = { run: vi.fn(async () => ({ response: JSON.stringify({
+      summary: "The documents refer to the same invoice but state different quantities. Confirm the final packed quantity.",
+      observations: [{ label: "Quantity difference", detail: "The invoice quantity is higher than the packing-list quantity.", document: "both", evidence: "Quantity: 100 PCS" }],
+      questions: ["Which quantity is supported by the final packing record?"],
+    }) })) };
+    const fetchMock = quotaFetch();
+    const response = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
+      reference: "SHIP-5002", invoiceText, packingText, supportingDocs: [{ name: "Bill of lading", received: false }],
+    }), { ...env, AI: ai }, fetchMock);
+    const payload = await response.json() as { comparison: { key: string; status: string }[]; missing: string[]; aiReview: { status: string; observations: { label: string }[] } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("ai");
-    expect(payload.comparison.find((row) => row.key === "quantity")?.status).toBe("mismatch");
+    expect(payload.comparison.find(x => x.key === "quantity")?.status).toBe("mismatch");
     expect(payload.missing).toEqual(["Bill of lading"]);
     expect(payload.aiReview.observations).toHaveLength(1);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(ai.run).toHaveBeenCalledTimes(1);
   });
-
-  it("fails over to the secondary provider when the primary provider is rate limited", async () => {
-    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-5004\\nExporter: Example Export Ltd.\\nGoods Description: Cotton shirts\\nQuantity: 20 PCS";
-    const secondaryPayload = {
-      choices: [{ message: { content: JSON.stringify({
-        summary: "The invoice contains a reference, exporter, product description and quantity. Confirm any fields not present in the supplied text.",
-        suggestions: [{ label: "Invoice number", value: "INV-5004", evidence: "Invoice Number: INV-5004" }],
-        observations: [],
-        questions: ["Who is the importer or consignee for this transaction?"],
-      }) } }],
-    };
-    const fetchMock = vi.fn<typeof fetch>(async (input) => {
-      const url = String(input);
-      if (url.includes("/rpc/consume_submission_quota")) {
-        return new Response("true", { status: 200, headers: { "content-type": "application/json" } });
-      }
-      if (url === "https://api.groq.com/openai/v1/chat/completions") {
-        return new Response(JSON.stringify({ error: { message: "rate limit" } }), { status: 429 });
-      }
-      if (url === "https://openrouter.ai/api/v1/chat/completions") {
-        return new Response(JSON.stringify(secondaryPayload), { status: 200, headers: { "content-type": "application/json" } });
-      }
-      throw new Error("Unexpected network request: " + url);
-    });
-    const response = await handleProductIntelligenceAI(
-      request("/api/demo/product-intelligence", { invoiceText }),
-      { ...env, OPENROUTER_API_KEY: "test-secondary-key", OPENROUTER_MODEL: "provider/test-model" },
-      fetchMock,
-    );
-    const payload = await response.json() as { aiReview: { status: string; suggestions: { label: string }[]; model?: string } };
-    expect(response.status).toBe(200);
-    expect(payload.aiReview.status).toBe("ai");
-    expect(payload.aiReview.suggestions.map((item) => item.label)).toEqual(["Invoice number"]);
-    expect(payload.aiReview).not.toHaveProperty("model");
-    expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain("https://openrouter.ai/api/v1/chat/completions");
-    expect(fetchMock).toHaveBeenCalledTimes(4);
-  });
-
-  it("returns deterministic Product Intelligence results when no AI provider is configured", async () => {
+  it("returns deterministic output when Cloudflare Workers AI is not bound", async () => {
     const fetchMock = vi.fn<typeof fetch>();
-    const response = await handleProductIntelligenceAI(
-      request("/api/demo/product-intelligence", {
-        invoiceText: "COMMERCIAL INVOICE\nInvoice Number: INV-5003\nGoods Description: Steel bolts",
-      }),
-      { ...env, GROQ_API_KEY: "" },
-      fetchMock,
-    );
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", {
+      invoiceText: "COMMERCIAL INVOICE\nInvoice Number: INV-5003\nGoods Description: Steel bolts",
+    }), env, fetchMock);
     const payload = await response.json() as { aiReview: { status: string; summary: string; model?: string } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("fallback");
@@ -196,24 +72,23 @@ describe("trade document contextual review", () => {
     expect(payload.aiReview).not.toHaveProperty("model");
     expect(fetchMock).not.toHaveBeenCalled();
   });
-
-  it("rejects oversized and invalid document payloads before calling an AI provider", async () => {
-    const fetchMock = vi.fn<typeof fetch>();
-    const tooShort = await handleProductIntelligenceAI(
-      request("/api/demo/product-intelligence", { invoiceText: "too short" }),
-      env,
-      fetchMock,
-    );
+  it("returns deterministic output when Cloudflare AI errors or returns invalid JSON", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-5004\nGoods Description: Steel bolts";
+    const ai = { run: vi.fn(async () => { throw new Error("Cloudflare AI quota exhausted"); }) };
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { ...env, AI: ai }, quotaFetch());
+    const payload = await response.json() as { aiReview: { status: string } };
+    expect(response.status).toBe(200);
+    expect(payload.aiReview.status).toBe("fallback");
+  });
+  it("rejects oversized and invalid document payloads before calling AI", async () => {
+    const ai = { run: vi.fn() };
+    const fetchMock = quotaFetch();
+    const tooShort = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText: "too short" }), { ...env, AI: ai }, fetchMock);
     expect(tooShort.status).toBe(400);
-    const oversized = await handleShipmentReadinessAnalysis(
-      request("/api/demo/shipment-readiness-analysis", {
-        invoiceText: "x".repeat(60_000),
-        packingText: "y".repeat(60_000),
-      }),
-      env,
-      fetchMock,
-    );
+    const oversized = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
+      invoiceText: "x".repeat(60_000), packingText: "y".repeat(60_000),
+    }), { ...env, AI: ai }, fetchMock);
     expect(oversized.status).toBe(413);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ai.run).not.toHaveBeenCalled();
   });
 });
