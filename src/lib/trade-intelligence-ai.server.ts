@@ -320,7 +320,7 @@ export async function handleProductIntelligenceAI(
   const analysis: DocumentAnalysis = analyzeTradeDocument(parsed.data.invoiceText);
   const productAttributes: ContextReview["productAttributes"] = analysis.productAttributes
     .filter((item) => item.found && item.evidence)
-    .map((item) => ({
+    .map((item): ContextReview["productAttributes"][number] => ({
       category: /dimension|gsm|weight|density|power|energy|voltage|frequency/i.test(item.label)
         ? "Dimensions / size / GSM / capacity"
         : "Material / composition",
