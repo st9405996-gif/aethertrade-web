@@ -231,7 +231,7 @@ Total Gross Weight: 340.00 kg`;
       "COMMERCIAL INVOICE",
       "Goods Description: Electronic Accessories",
       "Material: Plastic and Metal",
-    ].join("\\n"));
+    ].join("\n"));
     expect(result.productAttributes.find((item) => item.label === "Material: Plastic")).toMatchObject({
       found: true,
       evidence: "Plastic",
@@ -246,7 +246,7 @@ Total Gross Weight: 340.00 kg`;
       "Unit Price: USD 4.50",
       "Line Item Total: USD 2,250.00",
       "Subtotal: USD 2,250.00",
-    ].join("\\n"));
+    ].join("\n"));
     expect(result.lineItems).toHaveLength(1);
     expect(result.lineItems[0]).toMatchObject({ quantity: "500", unit: "PCS", unitPrice: "USD 4.50", amount: "2,250.00" });
     expect(result.validations.find((item) => item.key === "line-item-subtotal")).toMatchObject({
@@ -262,7 +262,7 @@ Total Gross Weight: 340.00 kg`;
       "Unit Price: USD 4.50",
       "Line Item Total: USD 2,200.00",
       "Subtotal: USD 2,200.00",
-    ].join("\\n"));
+    ].join("\n"));
     expect(incorrect.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("mismatch");
   });
 
@@ -274,7 +274,7 @@ Total Gross Weight: 340.00 kg`;
       "Gross Weight: Not specified",
       "Booking Reference: Not provided",
       "HS Code: Not provided",
-    ].join("\\n"));
+    ].join("\n"));
     for (const key of ["quantity", "grossWeight", "bookingReference", "hsCode"]) {
       expect(result.fields.find((field) => field.key === key)?.status).toBe("missing");
     }
@@ -285,7 +285,7 @@ Total Gross Weight: 340.00 kg`;
     const csv = [
       "invoice_number,supplier,buyer,invoice_date,currency,description,material,quantity,unit,unit_price,total_amount,weight_kg,country_of_origin",
       "INV-1001,Alpha Textiles Ltd,Demo Imports LLC,2026-11-10,USD,Cotton T-Shirts,100% Cotton,500,PCS,4.50,2250.00,180,PK",
-    ].join("\\n");
+    ].join("\n");
     const result = analyzeTradeDocument(csv);
     const value = (key: string) => result.fields.find((field) => field.key === key)?.value;
     expect(value("invoiceNumber")).toBe("INV-1001");
