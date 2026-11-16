@@ -254,6 +254,16 @@ Total Gross Weight: 340.00 kg`;
       expected: "2250.00",
       actual: "2,250.00",
     });
+    expect(result.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("consistent");
+    const incorrect = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "Goods Description: Cotton T-Shirts",
+      "Quantity: 500 PCS",
+      "Unit Price: USD 4.50",
+      "Line Item Total: USD 2,200.00",
+      "Subtotal: USD 2,200.00",
+    ].join("\\n"));
+    expect(incorrect.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("mismatch");
   });
 
   it("keeps explicit not-provided values as missing rather than found", () => {
