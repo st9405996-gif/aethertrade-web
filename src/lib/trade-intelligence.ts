@@ -219,8 +219,8 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   if (net.value) values.set("netWeight", net);
 
   const packages = findFirstMatch(lines, [
-    /^\\s*[-*•]?\\s*total\\s+(?:number\\s+of\\s+)?(?:packages|cartons|boxes|ctns|pkgs)\\s*[:-]?\\s*([\\d,]+\\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
-    /^\\s*[-*•]?\\s*(?:number\\s+of\\s+)?(?:packages|cartons|boxes|ctns|pkgs)\\s*[:-]?\\s*([\\d,]+\\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
+    /^\s*[-*•]?\s*total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes|ctns|pkgs)\s*[:-]?\s*([\d,]+\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
+    /^\s*[-*•]?\s*(?:number\s+of\s+)?(?:packages|cartons|boxes|ctns|pkgs)\s*[:-]?\s*([\d,]+\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
   ]);
   if (packages.value) values.set("packages", packages);
 
@@ -338,7 +338,7 @@ export function buildShipmentReferenceLabel(invoiceText: string, packingText: st
 
 function normalizeComparisonValue(value: string, key: string): string {
   const withoutPackageUnit = key === "packages"
-    ? value.trim().replace(/\\s+(?:cartons?|ctns?|packages?|pkgs?|boxes)\\s*$/i, "")
+    ? value.trim().replace(/\s+(?:cartons?|ctns?|packages?|pkgs?|boxes)\s*$/i, "")
     : value;
   return withoutPackageUnit.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
