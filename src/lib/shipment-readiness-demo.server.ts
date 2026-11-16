@@ -10,8 +10,6 @@ const generatedCopySchema = z.object({
   explanation: z.string().trim().min(30).max(700),
   questions: z.array(z.string().trim().min(10).max(220)).min(1).max(2),
 });
-const DEFAULT_MODEL = "openai/gpt-oss-20b";
-const GROQ_TIMEOUT_MS = 7_000;
 const PER_IP_LIMIT = 8;
 const PER_IP_WINDOW_SECONDS = 60 * 60;
 const GLOBAL_LIMIT = 50;
@@ -54,39 +52,13 @@ function extractCandidateText(payload: unknown): string {
   const content = (message as { content?: unknown }).content;
   return typeof content === "string" ? content.trim() : "";
 }
-type DemoProvider = {
-  name: "cloudflare" | "groq" | "openrouter";
-  model: string;
-  binding?: WorkersAiBinding;
-  endpoint?: string;
-  apiKey?: string;
-  headers?: Record<string, string>;
-};
-function configuredProviders(env: ServerEnv): DemoProvider[] {
-  const providers: DemoProvider[] = [];
-  const cloudflareModel = (env["CLOUDFLARE_AI_MODEL"] ?? "@cf/meta/llama-3.1-8b-instruct").trim();
-  if (env.AI?.run && /^@cf\/[a-z0-9._/-]{3,120}$/i.test(cloudflareModel)) {
-    providers.push({ name: "cloudflare", model: cloudflareModel, binding: env.AI });
-  }
-  const groqKey = env["GROQ_API_KEY"]?.trim();
-  const groqModel = (env["GROQ_MODEL"] ?? DEFAULT_MODEL).trim();
-  if (groqKey && /^[a-z0-9._/-]{3,100}$/i.test(groqModel)) {
-    providers.push({ name: "groq", model: groqModel, endpoint: "https://api.groq.com/openai/v1/chat/completions", apiKey: groqKey });
-  }
-  const openRouterKey = env["OPENROUTER_API_KEY"]?.trim();
-  const openRouterModel = env["OPENROUTER_MODEL"]?.trim();
-  if (openRouterKey && openRouterModel && /^[a-z0-9._:/-]{3,160}$/i.test(openRouterModel)) {
-    providers.push({
-      name: "openrouter", model: openRouterModel,
-      endpoint: "https://openrouter.ai/api/v1/chat/completions", apiKey: openRouterKey,
-      headers: { "HTTP-Referer": "https://aethertrade.cloud", "X-Title": "AETHER-TRADE" },
-    });
-  }
-  return providers;
-}
+const DEFAULT_CLOUDFLARE_MODEL = "@cf/openai/gpt-oss-20b";
 async function generateExplanation(
-  result: ShipmentReadinessDemoResult, env: ServerEnv, fetchImpl: typeof fetch,
+  result: ShipmentReadinessDemoResult, env: ServerEnv,
 ): Promise<Pick<ShipmentReadinessDemoResult, "explanation" | "questions"> | null> {
+  if (!env.AI?.run) return null;
+  const model = (env["CLOUDFLARE_AI_MODEL"] ?? DEFAULT_CLOUDFLARE_MODEL).trim();
+  if (!/^@cf\/[a-z0-9._/-]{3,120}$/i.test(model)) return null;
   const messages = [
     { role: "system", content:
       "You explain a precomputed shipment-document finding to a trade operations professional. " +
@@ -99,52 +71,19 @@ async function generateExplanation(
       scenario: result.title, findings: result.findings, riskNote: result.riskNote,
     }) },
   ];
-  for (const provider of configuredProviders(env)) {
-    try {
-      let payload: unknown;
-      if (provider.name === "cloudflare" && provider.binding) {
-        payload = await provider.binding.run(provider.model, {
-          messages, temperature: 0.2, max_tokens: 320,
-        });
-      } else {
-        const response = await fetchImpl(provider.endpoint!, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: "Bearer " + provider.apiKey,
-            ...provider.headers,
-          },
-          body: JSON.stringify({
-            model: provider.model,
-            temperature: 0.2,
-            max_completion_tokens: 320,
-            response_format: { type: "json_object" },
-            messages,
-          }),
-          signal: AbortSignal.timeout(GROQ_TIMEOUT_MS),
-        });
-        if (!response.ok) {
-          console.warn("shipment-readiness-demo: AI provider unavailable; trying next provider", {
-            provider: provider.name, status: response.status,
-          });
-          continue;
-        }
-        payload = await response.json().catch(() => undefined);
-      }
-      const rawText = extractCandidateText(payload)
-        .replace(/^\x60\x60\x60(?:json)?\s*/i, "")
-        .replace(/\s*\x60\x60\x60$/, "");
-      let parsed: unknown;
-      try { parsed = JSON.parse(rawText); } catch { continue; }
-      const validated = generatedCopySchema.safeParse(parsed);
-      if (validated.success) return validated.data;
-    } catch (error) {
-      console.warn("shipment-readiness-demo: AI provider request failed; trying next provider", {
-        provider: provider.name, error: error instanceof Error ? error.name : "unknown",
-      });
-    }
+  try {
+    const payload = await env.AI.run(model, { messages, temperature: 0.2, max_tokens: 320 });
+    const rawText = extractCandidateText(payload)
+      .replace(/^\x60\x60\x60(?:json)?\s*/i, "")
+      .replace(/\s*\x60\x60\x60$/, "");
+    let parsed: unknown;
+    try { parsed = JSON.parse(rawText); } catch { return null; }
+    const validated = generatedCopySchema.safeParse(parsed);
+    return validated.success ? validated.data : null;
+  } catch (error) {
+    console.warn("shipment-readiness-demo: Cloudflare Workers AI unavailable", error instanceof Error ? error.name : "unknown");
+    return null;
   }
-  return null;
 }
 export async function handleShipmentReadinessDemo(
   request: Request, env: ServerEnv, fetchImpl: typeof fetch = fetch,
@@ -167,11 +106,11 @@ export async function handleShipmentReadinessDemo(
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return json({ message: "Choose one of the available demo scenarios." }, 400);
   const result = buildShipmentReadinessScenario(parsed.data.scenarioId as ShipmentReadinessScenarioId);
-  if (!configuredProviders(env).length) return json(fallback(result));
+  if (!env.AI?.run) return json(fallback(result));
   try {
     const allowed = await hasAiQuota(env, request.headers.get("cf-connecting-ip") ?? undefined, fetchImpl);
     if (!allowed) return json(fallback(result));
-    const generated = await generateExplanation(result, env, fetchImpl);
+    const generated = await generateExplanation(result, env);
     return generated ? json({ ...result, ...generated, aiStatus: "ai" }) : json(fallback(result));
   } catch (error) {
     console.warn("shipment-readiness-demo: optional AI explanation unavailable", error instanceof Error ? error.name : "unknown");
