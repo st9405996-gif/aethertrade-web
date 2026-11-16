@@ -12,7 +12,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-export async function handleShipmentReadinessDemo(request: Request): Promise<Response> {
+export async function handleShipmentReadinessDemo(request: Request, _env?: unknown, _fetchImpl?: typeof fetch): Promise<Response> {
   const url = new URL(request.url);
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST", "cache-control": "no-store" } });
   const origin = request.headers.get("origin");
