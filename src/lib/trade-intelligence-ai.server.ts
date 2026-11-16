@@ -12,6 +12,8 @@ type ContextReview = {
   questions: string[];
   suggestions: { label: string; value: string; evidence: string }[];
   observations: { label: string; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
+  productAttributes: { category: "Material / composition" | "Intended use / function" | "Model / part number" | "Dimensions / size / GSM / capacity"; value: string; document: "invoice" | "packing-list" | "both"; evidence: string }[];
+  customsObservations: { category: "HS code / description mismatch" | "Country of origin missing" | "Weight anomaly" | "Other compliance context"; severity: "low" | "medium" | "high"; detail: string; document: "invoice" | "packing-list" | "both"; evidence: string; evidenceType: "quote" | "absence" }[];
 };
 const TIMEOUT_MS = 9_000;
 const MAX_DOCUMENT_CHARS = 45_000;
@@ -45,6 +47,8 @@ const shipmentReviewSchema = z.object({
     evidence: z.string().trim().min(3).max(500),
   }).strict()).max(8),
   questions: z.array(z.string().trim().min(8).max(220)).min(1).max(3),
+  productAttributes: z.array(z.object({ category: z.enum(["Material / composition", "Intended use / function", "Model / part number", "Dimensions / size / GSM / capacity"]), value: z.string().trim().min(1).max(240), document: z.enum(["invoice", "packing-list", "both"]), evidence: z.string().trim().min(3).max(500) }).strict()).max(16).default([]),
+  customsObservations: z.array(z.object({ category: z.enum(["HS code / description mismatch", "Country of origin missing", "Weight anomaly", "Other compliance context"]), severity: z.enum(["low", "medium", "high"]), detail: z.string().trim().min(5).max(300), document: z.enum(["invoice", "packing-list", "both"]), evidence: z.string().trim().min(3).max(500), evidenceType: z.enum(["quote", "absence"]).default("quote") }).strict()).max(10).default([]),
 }).strict();
 
 function json(body: unknown, status = 200): Response {
@@ -65,6 +69,8 @@ function fallbackReview(summary: string): ContextReview {
     questions: [],
     suggestions: [],
     observations: [],
+    productAttributes: [],
+    customsObservations: [],
   };
 }
 
@@ -127,14 +133,19 @@ async function requestAiReview<T>(
     { role: "user", content: prompt },
   ];
   try {
-    const payload = await env.AI.run(model, { messages, temperature: 0.1, max_tokens: 1_400 });
-    const raw = extractCandidateText(payload);
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => { timeoutHandle = setTimeout(() => reject(new Error("Cloudflare Workers AI request timed out after " + TIMEOUT_MS + "ms")), TIMEOUT_MS); });
+    let payload: unknown;
+    try { payload = await Promise.race([env.AI.run(model, { messages, temperature: 0.1, max_tokens: 1_800 }), timeout]); }
+    finally { if (timeoutHandle) clearTimeout(timeoutHandle); }
+    const raw = extractCandidateText(payload).replace(/^\\x60\\x60\\x60(?:json)?\\s*/i, "").replace(/\\s*\\x60\\x60\\x60$/, "");
     let parsed: unknown;
-    try { parsed = JSON.parse(raw); } catch { return null; }
+    try { parsed = JSON.parse(raw); } catch (error) { console.error(JSON.stringify({ message: "trade-context-review: Cloudflare AI returned invalid JSON", model, error: error instanceof Error ? error.message : String(error), outputPreview: raw.slice(0, 500) })); return null; }
     const validated = schema.safeParse(parsed);
-    return validated.success ? { value: validated.data } : null;
+    if (!validated.success) { console.error(JSON.stringify({ message: "trade-context-review: Cloudflare AI JSON failed schema validation", model, issues: validated.error.issues })); return null; }
+    return { value: validated.data };
   } catch (error) {
-    console.warn("trade-context-review: Cloudflare Workers AI unavailable", error instanceof Error ? error.name : "unknown");
+    console.error(JSON.stringify({ message: "trade-context-review: Cloudflare Workers AI request failed", model, errorName: error instanceof Error ? error.name : "unknown", error: error instanceof Error ? error.message : String(error) }));
     return null;
   }
 }
@@ -152,6 +163,8 @@ function makeReview(
     questions: result.questions,
     suggestions: result.suggestions.filter((item) => evidenceExists(source, item.evidence)),
     observations: result.observations.filter((item) => evidenceExists(source, item.evidence)),
+    productAttributes: [],
+    customsObservations: [],
   };
 }
 
@@ -168,6 +181,8 @@ function makeShipmentReview(
     questions: result.questions,
     suggestions: [],
     observations: result.observations.filter((item) => evidenceExists(sourceFor(item.document), item.evidence)),
+    productAttributes: result.productAttributes.filter((item) => evidenceExists(sourceFor(item.document), item.evidence)),
+    customsObservations: result.customsObservations.filter((item) => item.evidenceType === "quote" ? evidenceExists(sourceFor(item.document), item.evidence) : item.category === "Country of origin missing" && !/\\b(?:country of origin|origin country|made in)\\b/i.test(invoiceText + "\\n" + packingText)),
   };
 }
 
@@ -284,12 +299,7 @@ export async function handleShipmentReadinessAnalysis(
   const fallback = fallbackReview("Contextual AI review is temporarily unavailable. Document matching, calculations and the follow-up draft below are from deterministic rules.");
   try {
     const generated = await requestAiReview(
-      "Review this shipment's commercial invoice and packing list together. Return JSON with: summary, observations (each with label, detail, document='invoice'|'packing-list'|'both', and an exact evidence excerpt), and one to three clarification questions. Look for semantic product-description differences, ambiguous units, missing cross-document details, and context that a literal field comparison may miss. Do not duplicate already-known findings unless adding useful context. Never decide which document is correct. Do not infer legal or customs requirements.\n\nINVOICE TEXT:\n" +
-        invoiceText +
-        "\n\nPACKING LIST TEXT:\n" +
-        packingText +
-        "\n\nDETERMINISTIC COMPARISON AND CHECKS (source of truth for numeric outcomes):\n" +
-        JSON.stringify({ comparison, validations, missingSupportingDocuments: missing }),
+      "Review this shipment's commercial invoice and packing list together. Return strict JSON with summary, observations, productAttributes, customsObservations, and one to three clarification questions. Dynamically infer product attributes for any product category or industry without relying on a fixed material keyword list. Extract only supported material/composition, intended use/function, model/part number, and dimensions/size/GSM/capacity. Every attribute needs exact verbatim evidence and a document source. Flag possible HS-code-versus-description inconsistencies, missing country of origin, and weight anomalies as review prompts, never definitive legal conclusions. Use evidenceType='quote' for exact source evidence, or evidenceType='absence' only for missing country of origin. Do not invent HS classifications, permits, legal requirements, country rules, or clearance outcomes. Deterministic numeric checks are authoritative; do not override them.\\n\\nINVOICE TEXT:\\n" + invoiceText + "\\n\\nPACKING LIST TEXT:\\n" + packingText + "\\n\\nDETERMINISTIC EXTRACTION, LINE ITEMS, HS CODES, WEIGHTS, COMPARISON AND CHECKS:\\n" + JSON.stringify({ invoice: { fields: invoiceAnalysis.fields, productDescription: invoiceAnalysis.productDescription, lineItems: invoiceAnalysis.lineItems, validations: invoiceAnalysis.validations }, packingList: { fields: packingAnalysis.fields, productDescription: packingAnalysis.productDescription, lineItems: packingAnalysis.lineItems, validations: packingAnalysis.validations }, comparison, validations, missingSupportingDocuments: missing }),
       shipmentReviewSchema,
       env,
       request.headers.get("cf-connecting-ip") ?? undefined,
