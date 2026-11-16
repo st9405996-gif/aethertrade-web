@@ -74,7 +74,7 @@ function ProductIntelligencePage() {
     setAnalysis(deterministic);
     setAiReview({
       status: "deterministic",
-      summary: "All extracted fields, weights, HS codes, and line-item totals are verified directly against your source document text with zero estimation.",
+      summary: "Extracted values and deterministic calculations are grounded in the supplied text. Values marked as not provided or not specified remain missing and require human review.",
       questions: [],
       suggestions: [],
       observations: [],
@@ -139,7 +139,7 @@ function ProductIntelligencePage() {
                     <div key={field.key} className="grid gap-1 border-b border-border/70 px-4 py-3 last:border-0 sm:grid-cols-[0.8fr_1.2fr_auto] sm:items-start sm:gap-3">
                       <span className="text-sm text-muted-foreground">{field.label}</span>
                       <span className="break-words text-sm font-medium">{field.value || "Not found in supplied text"}</span>
-                      <span className={`w-fit rounded-full px-2 py-1 text-[10px] ${field.value ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{field.value ? "Found" : "Missing"}</span>
+                      <span className={`w-fit rounded-full px-2 py-1 text-[10px] ${field.status === "found" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{field.status === "found" ? "Found" : "Missing"}</span>
                       {field.evidence && <span className="sm:col-start-2 text-xs text-muted-foreground">Evidence: {field.evidence}</span>}
                     </div>
                   ))}
@@ -152,7 +152,7 @@ function ProductIntelligencePage() {
                   <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div><p className="eyebrow">Automated Compliance &amp; Validation Summary</p><h2 className="mt-1 text-xl font-semibold">Source-grounded deterministic checks</h2></div>
-                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">Deterministic Engine Active · 100% Evidence-Verified</span>
+                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">Deterministic extraction active</span>
                     </div>
                     <p className="mt-3 text-sm leading-6">{aiReview.summary}</p>
                     <p className="mt-2 text-xs text-muted-foreground">Product attributes are highlighted only when a matching value appears verbatim in the supplied invoice text; unknown values are not inferred.</p>
