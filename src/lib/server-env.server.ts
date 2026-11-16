@@ -33,10 +33,15 @@ export function readServerEnv(workerEnv?: unknown): Record<string, string | unde
   const runtime = typeof process !== "undefined" && process.env
     ? process.env as Record<string, unknown>
     : {};
-  const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [key, typeof runtime[key] === "string" ? runtime[key] as string : undefined]));
   const workerBindings = workerEnv && typeof workerEnv === "object"
-    ? workerEnv as { AI?: WorkersAiBinding }
+    ? workerEnv as Record<string, unknown> & { AI?: WorkersAiBinding }
     : {};
+  const bindings = Object.fromEntries(SERVER_BINDING_KEYS.map((key) => [
+    key,
+    typeof runtime[key] === "string" ? runtime[key] as string
+      : typeof workerBindings[key] === "string" ? workerBindings[key] as string
+      : undefined,
+  ]));
   const processAi = runtime.AI && typeof runtime.AI === "object"
     ? runtime.AI as WorkersAiBinding
     : undefined;
@@ -44,8 +49,8 @@ export function readServerEnv(workerEnv?: unknown): Record<string, string | unde
   return {
     ...bindings,
     AI: workerBindings.AI ?? processAi,
-    SUPABASE_URL: (typeof runtime.VITE_SUPABASE_URL === "string" ? runtime.VITE_SUPABASE_URL : undefined) ?? (typeof runtime.SUPABASE_URL === "string" ? runtime.SUPABASE_URL : undefined),
+    SUPABASE_URL: (typeof runtime.VITE_SUPABASE_URL === "string" ? runtime.VITE_SUPABASE_URL : undefined) ?? (typeof runtime.SUPABASE_URL === "string" ? runtime.SUPABASE_URL : undefined) ?? (typeof workerBindings.VITE_SUPABASE_URL === "string" ? workerBindings.VITE_SUPABASE_URL : undefined) ?? (typeof workerBindings.SUPABASE_URL === "string" ? workerBindings.SUPABASE_URL : undefined),
     SUPABASE_PUBLISHABLE_KEY:
-      (typeof runtime.VITE_SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.VITE_SUPABASE_PUBLISHABLE_KEY : undefined) ?? (typeof runtime.SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.SUPABASE_PUBLISHABLE_KEY : undefined),
+      (typeof runtime.VITE_SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.VITE_SUPABASE_PUBLISHABLE_KEY : undefined) ?? (typeof runtime.SUPABASE_PUBLISHABLE_KEY === "string" ? runtime.SUPABASE_PUBLISHABLE_KEY : undefined) ?? (typeof workerBindings.VITE_SUPABASE_PUBLISHABLE_KEY === "string" ? workerBindings.VITE_SUPABASE_PUBLISHABLE_KEY : undefined) ?? (typeof workerBindings.SUPABASE_PUBLISHABLE_KEY === "string" ? workerBindings.SUPABASE_PUBLISHABLE_KEY : undefined),
   };
 }
