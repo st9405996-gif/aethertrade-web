@@ -169,8 +169,7 @@ async function requestAiReview<T>(
   const timeoutMs = TIMEOUT_MS;
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   try {
-    const operation = async (): Promise<{ payload: unknown; provider: "binding" | "rest" }> => {
-      if (hasBinding) return { payload: await env.AI!.run(model, { messages, temperature: 0.1, max_tokens: 1_800 }), provider: "binding" };
+    const callRest = async (): Promise<{ payload: unknown; provider: "rest" }> => {
       const response = await fetchImpl("https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(accountId) + "/ai/run/" + model.split("/").map(encodeURIComponent).join("/"), {
         method: "POST",
         headers: { authorization: "Bearer " + apiToken, "content-type": "application/json" },
@@ -179,6 +178,16 @@ async function requestAiReview<T>(
       if (response.status === 401 || response.status === 403) throw new Error("Invalid API token or insufficient Cloudflare AI permissions (HTTP " + response.status + ")");
       if (!response.ok) throw new Error("Cloudflare AI REST API error (HTTP " + response.status + "): " + (await response.text()).slice(0, 240));
       return { payload: await response.json(), provider: "rest" };
+    };
+    const operation = async (): Promise<{ payload: unknown; provider: "binding" | "rest" }> => {
+      if (hasBinding) {
+        try { return { payload: await env.AI!.run(model, { messages, temperature: 0.1, max_tokens: 1_800 }), provider: "binding" }; }
+        catch (bindingError) {
+          if (!hasRestCredentials) throw bindingError;
+          console.warn(JSON.stringify({ message: "trade-context-review: AI binding failed; trying REST fallback", error: bindingError instanceof Error ? bindingError.message : String(bindingError) }));
+        }
+      }
+      return callRest();
     };
     const timeout = new Promise<never>((_, reject) => { timeoutHandle = setTimeout(() => reject(new Error("Cloudflare AI request timed out after " + timeoutMs + "ms")), timeoutMs); });
     const { payload, provider } = await Promise.race([operation(), timeout]);
