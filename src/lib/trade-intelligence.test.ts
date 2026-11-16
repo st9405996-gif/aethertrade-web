@@ -226,4 +226,78 @@ Total Gross Weight: 340.00 kg`;
     expect(result.fields.find((field) => field.key === "exporter")?.value).toBe("Northstar Apparel Export Ltd.");
   });
 
+  it("detects material stated outside the goods-description line", () => {
+    const result = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "Goods Description: Electronic Accessories",
+      "Material: Plastic and Metal",
+    ].join("\n"));
+    expect(result.productAttributes.find((item) => item.label === "Material: Plastic")).toMatchObject({
+      found: true,
+      evidence: "Plastic",
+    });
+  });
+
+  it("builds a labelled single-item row and validates quantity times unit price against subtotal", () => {
+    const result = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "Goods Description: Cotton T-Shirts",
+      "Quantity: 500 PCS",
+      "Unit Price: USD 4.50",
+      "Line Item Total: USD 2,250.00",
+      "Subtotal: USD 2,250.00",
+    ].join("\n"));
+    expect(result.lineItems).toHaveLength(1);
+    expect(result.lineItems[0]).toMatchObject({ quantity: "500", unit: "PCS", unitPrice: "USD 4.50", amount: "2,250.00" });
+    expect(result.validations.find((item) => item.key === "line-item-subtotal")).toMatchObject({
+      status: "consistent",
+      expected: "2250.00",
+      actual: "2250.00",
+    });
+    expect(result.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("consistent");
+    const incorrect = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "Goods Description: Cotton T-Shirts",
+      "Quantity: 500 PCS",
+      "Unit Price: USD 4.50",
+      "Line Item Total: USD 2,200.00",
+      "Subtotal: USD 2,200.00",
+    ].join("\n"));
+    expect(incorrect.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("mismatch");
+  });
+
+  it("keeps explicit not-provided values as missing rather than found", () => {
+    const result = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "Invoice Number: INV-MISSING-1",
+      "Quantity: Not specified",
+      "Gross Weight: Not specified",
+      "Booking Reference: Not provided",
+      "HS Code: Not provided",
+    ].join("\n"));
+    for (const key of ["quantity", "grossWeight", "bookingReference", "hsCode"]) {
+      expect(result.fields.find((field) => field.key === key)?.status).toBe("missing");
+    }
+    expect(result.fields.find((field) => field.key === "invoiceNumber")?.status).toBe("found");
+  });
+
+  it("normalizes a one-row invoice CSV before deterministic extraction", () => {
+    const csv = [
+      "invoice_number,supplier,buyer,invoice_date,currency,description,material,quantity,unit,unit_price,total_amount,weight_kg,country_of_origin",
+      "INV-1001,Alpha Textiles Ltd,Demo Imports LLC,2026-11-10,USD,Cotton T-Shirts,100% Cotton,500,PCS,4.50,2250.00,180,PK",
+    ].join("\n");
+    const result = analyzeTradeDocument(csv);
+    const value = (key: string) => result.fields.find((field) => field.key === key)?.value;
+    expect(value("invoiceNumber")).toBe("INV-1001");
+    expect(value("exporter")).toBe("Alpha Textiles Ltd");
+    expect(value("importer")).toBe("Demo Imports LLC");
+    expect(value("invoiceDate")).toBe("2026-11-10");
+    expect(value("description")).toContain("Cotton T-Shirts");
+    expect(value("quantity")).toBe("500 PCS");
+    expect(value("currency")).toBe("USD");
+    expect(value("total")).toBe("2250.00");
+    expect(result.productAttributes.find((item) => item.label === "Material: Cotton")?.found).toBe(true);
+    expect(result.validations.find((item) => item.key === "line-item-subtotal")?.status).toBe("consistent");
+  });
+
 });

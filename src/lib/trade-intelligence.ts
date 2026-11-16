@@ -184,13 +184,130 @@ function amountToNumber(value: string) {
   return match ? Number(match[0]) : Number.NaN;
 }
 
+function parseCsvRecord(line: string): string[] {
+  const cells: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === '"') {
+      if (quoted && line[index + 1] === '"') {
+        cell += '"';
+        index += 1;
+      } else quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      cells.push(cell.trim());
+      cell = "";
+    } else cell += char;
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
+function normalizeCsvInvoiceText(text: string): string {
+  const rows = text.replace(/^\uFEFF/, "").replace(/\r/g, "").split("\n").filter((line) => line.trim());
+  if (rows.length < 2 || !rows[0].includes(",")) return text;
+  const headers = parseCsvRecord(rows[0]).map(normalizeLabel);
+  const records = rows.slice(1).map(parseCsvRecord).filter((row) => row.some((cell) => cell.trim()));
+  const hasInvoiceHeader = headers.some((header) =>
+    /^(?:invoice number|invoice no|supplier|seller|exporter|buyer|importer|goods description|description|quantity|unit price|total amount)$/.test(header),
+  );
+  if (!hasInvoiceHeader || !records.length) return text;
+
+  const column = (...names: string[]) => headers.findIndex((header) => names.includes(header));
+  const value = (row: string[], ...names: string[]) => {
+    const index = column(...names);
+    return index >= 0 ? (row[index] ?? "").trim() : "";
+  };
+  const output: string[] = ["COMMERCIAL INVOICE"];
+  const first = records[0];
+  const add = (label: string, content: string) => { if (content) output.push(label + ": " + content); };
+  add("Invoice Number", value(first, "invoice number", "invoice no"));
+  add("Booking Reference", value(first, "booking reference", "booking ref"));
+  add("Purchase Order Number", value(first, "purchase order number", "purchase order no", "po number", "po no"));
+  add("Invoice Date", value(first, "invoice date", "date"));
+  add("Exporter / Seller", value(first, "supplier", "seller", "exporter", "shipper"));
+  add("Importer / Buyer", value(first, "buyer", "importer", "consignee", "customer"));
+  add("Currency", value(first, "currency"));
+  add("Subtotal", value(first, "subtotal", "sub total"));
+  add("Invoice Total", value(first, "invoice total", "grand total", "total amount", "total"));
+  add("HS Code", value(first, "hs code", "commodity code"));
+  add("Packages", value(first, "packages", "cartons", "number of packages"));
+  add("Gross Weight", value(first, "gross weight", "gross weight kg"));
+  add("Net Weight", value(first, "net weight", "net weight kg"));
+  add("Country of Origin", value(first, "country of origin", "origin"));
+  add("Material", value(first, "material", "composition"));
+  add("Weight", value(first, "weight kg", "weight"));
+  const descriptionIndex = column("description", "goods description", "product description", "item description");
+  const quantityIndex = column("quantity", "qty");
+  const unitIndex = column("unit", "unit of measure", "uom");
+  const priceIndex = column("unit price", "price per unit");
+  const amountIndex = column("line item total", "total amount", "amount");
+  const hsIndex = column("hs code", "commodity code");
+  if (descriptionIndex >= 0 && quantityIndex >= 0 && priceIndex >= 0 && amountIndex >= 0) {
+    output.push("ITEM DETAILS");
+    records.forEach((row, index) => {
+      const description = row[descriptionIndex] ?? "";
+      const quantity = row[quantityIndex] ?? "";
+      const unit = unitIndex >= 0 ? row[unitIndex] ?? "" : "";
+      const price = row[priceIndex] ?? "";
+      const amount = row[amountIndex] ?? "";
+      const hs = hsIndex >= 0 ? (row[hsIndex] ?? "") + " " : "";
+      if (description && quantity && price && amount) {
+        output.push([String(index + 1), hs + description, quantity, unit, price.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, ""), amount.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "")].filter(Boolean).join(" "));
+      } else {
+        add("Goods Description", description);
+        add("Quantity", [quantity, unit].filter(Boolean).join(" "));
+      }
+    });
+    if (records.length === 1 && amountIndex >= 0 && !value(first, "invoice total", "grand total", "total amount", "total")) {
+      add("Invoice Total", first[amountIndex] ?? "");
+    }
+  } else {
+    add("Goods Description", value(first, "description", "goods description", "product description"));
+    add("Quantity", [value(first, "quantity", "qty"), value(first, "unit", "unit of measure", "uom")].filter(Boolean).join(" "));
+  }
+  return output.join("\n");
+}
+
+function isUnstatedValue(value: string): boolean {
+  return /^(?:not\s+(?:provided|specified|available|stated|applicable|found)|not\s+known|unknown|n\/?a|none|null|[-–—])$/i.test(value.trim());
+}
+
+function parseLabelledSingleLineItem(
+  lines: string[],
+  values: Map<string, { value: string; evidence: string }>,
+): TradeLineItem[] {
+  const description = values.get("description")?.value ?? "";
+  const quantityText = values.get("quantity")?.value ?? "";
+  const unitPrice = findLabelValue(lines, ["unit price", "price per unit"]);
+  const lineTotal = findLabelValue(lines, ["line item total", "line total", "extended amount"]);
+  const quantity = parseQuantity(quantityText);
+  if (!description || !quantity.quantity || !unitPrice.value || !lineTotal.value ||
+      [description, quantityText, unitPrice.value, lineTotal.value].some(isUnstatedValue)) return [];
+  const currency = extractCurrency(lines.join("\n"));
+  const cleanAmount = (value: string) => value.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "").replace(/[$€£]/g, "").trim();
+  const evidence = [values.get("description")?.evidence, values.get("quantity")?.evidence, unitPrice.evidence, lineTotal.evidence].filter(Boolean).join(" | ");
+  return [{
+    lineNumber: "1",
+    hsCode: values.get("hsCode")?.value ?? "",
+    description,
+    quantity: quantity.quantity,
+    unit: quantity.unit,
+    unitPrice: (currency ? currency + " " : "") + cleanAmount(unitPrice.value),
+    amount: cleanAmount(lineTotal.value),
+    evidence,
+  }];
+}
+
 function extractCurrency(text: string) {
   return text.match(/\b(USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b/i)?.[1]?.toUpperCase() ?? "";
 }
 
 export function analyzeTradeDocument(text: string): DocumentAnalysis {
-  const lines = normalizedLines(text);
-  const lineItems = parseLineItems(lines);
+  const normalizedText = normalizeCsvInvoiceText(text);
+  const lines = normalizedLines(normalizedText);
+  const parsedLineItems = parseLineItems(lines);
   const values = new Map<string, { value: string; evidence: string }>();
 
   for (const definition of FIELD_DEFINITIONS) {
@@ -201,6 +318,8 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   const importer = findPartyValue(lines, ["consignee / buyer", "buyer / consignee", "importer / buyer", "importer", "buyer", "consignee", "customer"]);
   values.set("exporter", exporter.value ? exporter : findLabelValue(lines, ["exporter", "seller", "shipper", "supplier"]));
   values.set("importer", importer.value ? importer : findLabelValue(lines, ["importer", "buyer", "consignee", "customer"]));
+
+  const lineItems = parsedLineItems.length ? parsedLineItems : parseLabelledSingleLineItem(lines, values);
 
   const total = findFirstMatch(lines, [
     /^\s*[-*•]?\s*(?:total\s+invoice\s+value|total\s+invoice\s+amount|invoice\s+total|grand\s+total|total\s+amount|amount\s+due)\s*[:-]?\s*(?:(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\s*)?[$€£]?([\d,]+(?:\.\d{1,2})?)\b/i,
@@ -239,7 +358,13 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
 
   const fields: ExtractedField[] = FIELD_DEFINITIONS.map(({ key, label }) => {
     const found = values.get(key) ?? { value: "", evidence: "" };
-    return { key, label, value: found.value, evidence: found.evidence, status: found.value ? "found" : "missing" };
+    return {
+      key,
+      label,
+      value: found.value,
+      evidence: found.evidence,
+      status: found.value && !isUnstatedValue(found.value) ? "found" : "missing",
+    };
   });
 
   const productDescription = lineItems.length
@@ -262,8 +387,10 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     { label: "Voltage", pattern: /\b\d+(?:\.\d+)?\s*v(?:olts?)?\b/i },
     { label: "Frequency", pattern: /\b\d+(?:\.\d+)?\s*hz\b/i },
   ];
+  const materialText = findLabelValue(lines, ["material", "composition"]).value;
+  const attributeSource = [productDescription, materialText].filter(Boolean).join("\n");
   const productAttributes: DocumentAnalysis["productAttributes"] = attributePatterns.map(({ label, pattern }) => {
-    const match = productDescription.match(pattern);
+    const match = attributeSource.match(pattern);
     return { label, found: Boolean(match), evidence: match?.[0] ?? "" };
   });
 
@@ -299,6 +426,22 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
     });
   } else {
     validations.push({ key: "line-item-subtotal", label: "Line items vs subtotal", status: "unable", expected: "", actual: subtotalValue, evidence: "A complete set of line-item amounts and a stated subtotal were not both available." });
+  }
+
+  for (const item of lineItems) {
+    const quantity = Number(item.quantity.replace(/,/g, ""));
+    const unitPrice = amountToNumber(item.unitPrice);
+    const statedAmount = amountToNumber(item.amount);
+    if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice) || !Number.isFinite(statedAmount)) continue;
+    const calculated = quantity * unitPrice;
+    validations.push({
+      key: "line-item-extension-" + item.lineNumber,
+      label: "Item " + item.lineNumber + ": quantity × unit price vs line total",
+      status: Math.abs(calculated - statedAmount) < 0.011 ? "consistent" : "mismatch",
+      expected: calculated.toFixed(2),
+      actual: statedAmount.toFixed(2),
+      evidence: item.evidence,
+    });
   }
 
   const cartonRows = lines.flatMap((line) => {
