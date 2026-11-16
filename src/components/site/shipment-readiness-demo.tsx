@@ -161,7 +161,7 @@ export function ShipmentReadinessDemo() {
       aiReview: {
         status: "fallback",
         model: "Deterministic rules only",
-        summary: "AI-assisted review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
+        summary: "AI-supported review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
         observations: [],
@@ -352,8 +352,8 @@ export function ShipmentReadinessDemo() {
                   <div className="overflow-hidden rounded-lg border border-border">{ownResult.comparison.map((row) => <div key={row.key} className="grid gap-1 border-b border-border/70 p-3 last:border-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{row.label}</span><span className={`rounded-full px-2 py-1 text-[10px] ${row.status === "consistent" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : row.status === "mismatch" ? "bg-amber-500/10 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>{row.status === "invoice-only" ? "Present in invoice only" : row.status === "packing-only" ? "Present in packing list only" : row.status === "unable" ? "Not found in either" : row.status}</span></div><p className="break-words text-xs text-muted-foreground">Invoice: {row.invoiceValue || "Not found"} · Packing list: {row.packingValue || "Not found"}</p></div>)}</div>
                   <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="eyebrow">AI shipment review</p><p className="text-sm font-semibold">Cross-document context</p></div>
-                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Context review active" : "Rule-based checks only"}</span>
+                      <div><p className="eyebrow">Contextual review</p><p className="text-sm font-semibold">Cross-document context</p></div>
+                      <span className={`rounded-full px-2 py-1 text-[10px] ${ownResult.aiReview.status === "ai" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>{ownResult.aiReview.status === "ai" ? "Contextual review active" : "Rule-based checks only"}</span>
                     </div>
                     <p className="mt-2 text-sm leading-6">{ownResult.aiReview.summary}</p>
                     <p className="mt-2 text-xs text-muted-foreground">Contextual observations supplement the deterministic field comparisons; the validation engine remains the source of truth for numeric outcomes.</p>
