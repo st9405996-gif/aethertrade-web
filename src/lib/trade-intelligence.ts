@@ -35,7 +35,9 @@ export type DocumentAnalysis = {
 };
 
 const FIELD_DEFINITIONS = [
-  { key: "invoiceNumber", label: "Invoice number", aliases: ["invoice no", "invoice number", "commercial invoice no", "commercial invoice number", "reference commercial invoice no", "reference invoice no", "reference invoice number", "invoice #"] },
+  { key: "invoiceNumber", label: "Invoice number", aliases: ["invoice no", "invoice number", "invoice reference", "commercial invoice no", "commercial invoice number", "reference commercial invoice no", "reference invoice no", "reference invoice number", "invoice #"] },
+  { key: "bookingReference", label: "Booking reference", aliases: ["booking reference", "booking ref", "booking number", "booking no", "booking #"] },
+  { key: "purchaseOrderNumber", label: "Purchase order number", aliases: ["purchase order number", "purchase order no", "purchase order #", "po number", "po no", "po #"] },
   { key: "invoiceDate", label: "Invoice date", aliases: ["invoice date", "date of issue", "issue date"] },
   { key: "exporter", label: "Exporter / seller", aliases: ["exporter", "seller", "shipper", "supplier"] },
   { key: "importer", label: "Importer / buyer", aliases: ["importer", "buyer", "consignee", "customer"] },
@@ -45,7 +47,7 @@ const FIELD_DEFINITIONS = [
   { key: "subtotal", label: "Subtotal", aliases: ["subtotal", "sub total", "goods subtotal"] },
   { key: "total", label: "Invoice total", aliases: ["total invoice value", "invoice total", "grand total", "total amount", "amount due", "total"] },
   { key: "hsCode", label: "HS code (as stated)", aliases: ["hs code", "hs codes", "harmonized code", "commodity code"] },
-  { key: "packages", label: "Packages", aliases: ["total packages", "total cartons", "total boxes", "number of packages", "no of packages", "packages", "cartons"] },
+  { key: "packages", label: "Packages", aliases: ["total packages", "total cartons", "total boxes", "number of packages", "no of packages", "packages", "cartons", "ctns", "pkgs", "boxes"] },
   { key: "grossWeight", label: "Gross weight", aliases: ["total gross weight", "gross weight", "gross wt"] },
   { key: "netWeight", label: "Net weight", aliases: ["total net weight", "net weight", "net wt"] },
 ] as const;
@@ -217,8 +219,8 @@ export function analyzeTradeDocument(text: string): DocumentAnalysis {
   if (net.value) values.set("netWeight", net);
 
   const packages = findFirstMatch(lines, [
-    /^\s*[-*•]?\s*total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
-    /^\s*[-*•]?\s*(?:number\s+of\s+)?(?:packages|cartons|boxes)\s*[:-]?\s*([\d,]+\s*(?:cartons?|boxes?|pallets?|packages?)?)/i,
+    /^\s*[-*•]?\s*total\s+(?:number\s+of\s+)?(?:packages|cartons|boxes|ctns|pkgs)\s*[:-]?\s*([\d,]+\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
+    /^\s*[-*•]?\s*(?:number\s+of\s+)?(?:packages|cartons|boxes|ctns|pkgs)\s*[:-]?\s*([\d,]+\s*(?:cartons?|ctns?|boxes?|pallets?|packages?|pkgs?)?)/i,
   ]);
   if (packages.value) values.set("packages", packages);
 
@@ -317,18 +319,41 @@ export type ComparisonRow = {
   status: "consistent" | "mismatch" | "unable" | "invoice-only" | "packing-only";
 };
 
+export function buildShipmentReferenceLabel(invoiceText: string, packingText: string, fallbackReference = ""): string {
+  const invoice = analyzeTradeDocument(invoiceText);
+  const packing = analyzeTradeDocument(packingText);
+  const value = (key: string) =>
+    invoice.fields.find((field) => field.key === key)?.value ||
+    packing.fields.find((field) => field.key === key)?.value || "";
+  const booking = value("bookingReference");
+  const invoiceNumber = value("invoiceNumber");
+  const purchaseOrder = value("purchaseOrderNumber");
+  const parts: string[] = [];
+  if (booking) parts.push("Shipment " + booking);
+  if (invoiceNumber) parts.push("Invoice " + invoiceNumber);
+  if (purchaseOrder) parts.push("PO " + purchaseOrder);
+  if (parts.length) return parts.join(" / ");
+  return "Shipment " + (fallbackReference.trim() || "shipment");
+}
+
+function normalizeComparisonValue(value: string, key: string): string {
+  const withoutPackageUnit = key === "packages"
+    ? value.trim().replace(/\s+(?:cartons?|ctns?|packages?|pkgs?|boxes)\s*$/i, "")
+    : value;
+  return withoutPackageUnit.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export function compareTradeDocuments(invoiceText: string, packingText: string): ComparisonRow[] {
   const invoice = analyzeTradeDocument(invoiceText);
   const packing = analyzeTradeDocument(packingText);
-  const keys = ["invoiceNumber", "exporter", "importer", "description", "quantity", "hsCode", "packages", "grossWeight", "netWeight"] as const;
+  const keys = ["bookingReference", "invoiceNumber", "purchaseOrderNumber", "exporter", "importer", "description", "quantity", "hsCode", "packages", "grossWeight", "netWeight"] as const;
   return keys.map((key) => {
     const left = invoice.fields.find((field) => field.key === key)?.value ?? "";
     const right = packing.fields.find((field) => field.key === key)?.value ?? "";
-    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
     const status = !left && !right ? "unable"
       : left && !right ? "invoice-only"
       : !left && right ? "packing-only"
-      : normalize(left) === normalize(right) ? "consistent" : "mismatch";
+      : normalizeComparisonValue(left, key) === normalizeComparisonValue(right, key) ? "consistent" : "mismatch";
     return {
       key,
       label: invoice.fields.find((field) => field.key === key)?.label ?? key,
