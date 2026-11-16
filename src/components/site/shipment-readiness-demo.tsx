@@ -160,7 +160,6 @@ export function ShipmentReadinessDemo() {
       comparison, missing, validations, ...draft,
       aiReview: {
         status: "fallback",
-        model: "Deterministic rules only",
         summary: "AI-supported review is unavailable. Document matching, calculations and the follow-up draft are produced by the AETHER-TRADE validation engine.",
         questions: [],
         suggestions: [],
