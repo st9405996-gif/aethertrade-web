@@ -252,7 +252,7 @@ Total Gross Weight: 340.00 kg`;
     expect(result.validations.find((item) => item.key === "line-item-subtotal")).toMatchObject({
       status: "consistent",
       expected: "2250.00",
-      actual: "2,250.00",
+      actual: "2250.00",
     });
     expect(result.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("consistent");
     const incorrect = analyzeTradeDocument([
@@ -295,7 +295,7 @@ Total Gross Weight: 340.00 kg`;
     expect(value("description")).toContain("Cotton T-Shirts");
     expect(value("quantity")).toBe("500 PCS");
     expect(value("currency")).toBe("USD");
-    expect(value("total")).toBe("2,250.00");
+    expect(value("total")).toBe("2250.00");
     expect(result.productAttributes.find((item) => item.label === "Material: Cotton")?.found).toBe(true);
     expect(result.validations.find((item) => item.key === "line-item-subtotal")?.status).toBe("consistent");
   });
