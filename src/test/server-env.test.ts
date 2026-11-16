@@ -7,6 +7,8 @@ const original = {
   legacyUrl: process.env.SUPABASE_URL,
   legacyKey: process.env.SUPABASE_PUBLISHABLE_KEY,
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID,
+  cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN,
 };
 
 afterEach(() => {
@@ -16,6 +18,8 @@ afterEach(() => {
     ["SUPABASE_URL", original.legacyUrl],
     ["SUPABASE_PUBLISHABLE_KEY", original.legacyKey],
     ["SUPABASE_SERVICE_ROLE_KEY", original.serviceRoleKey],
+    ["CLOUDFLARE_ACCOUNT_ID", original.cloudflareAccountId],
+    ["CLOUDFLARE_API_TOKEN", original.cloudflareApiToken],
   ] as const) {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
@@ -44,6 +48,20 @@ describe("server Supabase environment aliases", () => {
     expect(readServerEnv()).toMatchObject({
       SUPABASE_URL: "https://vite-project.supabase.co",
       SUPABASE_PUBLISHABLE_KEY: "vite-publishable-key",
+    });
+  });
+
+
+  it("reads Cloudflare AI binding and REST secrets from the Pages context env", () => {
+    const ai = { run: async () => ({ response: "{}" }) };
+    expect(readServerEnv({
+      AI: ai,
+      CLOUDFLARE_ACCOUNT_ID: "pages-account-id",
+      CLOUDFLARE_API_TOKEN: "pages-api-token",
+    })).toMatchObject({
+      AI: ai,
+      CLOUDFLARE_ACCOUNT_ID: "pages-account-id",
+      CLOUDFLARE_API_TOKEN: "pages-api-token",
     });
   });
 
