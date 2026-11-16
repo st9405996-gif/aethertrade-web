@@ -17,6 +17,33 @@ function request(body: unknown, origin = "https://aethertrade.cloud") {
   });
 }
 describe("shipment readiness demo endpoint", () => {
+  it("uses Cloudflare Workers AI before Groq and OpenRouter when the binding is available", async () => {
+    const generated = {
+      explanation: "The sample invoice and packing list show different quantities and need review.",
+      questions: ["Which quantity is supported by the final packing record?"],
+    };
+    const ai = {
+      run: vi.fn(async (model: string, input: Record<string, unknown>) => {
+        expect(model).toBe("@cf/meta/llama-3.1-8b-instruct");
+        expect(input).toHaveProperty("messages");
+        return { response: JSON.stringify(generated) };
+      }),
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/rpc/consume_submission_quota")) return new Response("true");
+      throw new Error("External AI provider should not be called after Cloudflare AI succeeds.");
+    }) as unknown as typeof fetch;
+    const response = await handleShipmentReadinessDemo(
+      request({ scenarioId: "quantity-mismatch" }),
+      { ...env, AI: ai },
+      fetchMock,
+    );
+    const payload = await response.json();
+    expect(response.status).toBe(200);
+    expect(payload.aiStatus).toBe("ai");
+    expect(payload.explanation).toBe(generated.explanation);
+    expect(ai.run).toHaveBeenCalledTimes(1);
+  });
   it("returns deterministic findings when the optional Groq key is absent", async () => {
     const fetchMock = vi.fn() as unknown as typeof fetch;
     const response = await handleShipmentReadinessDemo(request({ scenarioId: "quantity-mismatch" }), { ...env, GROQ_API_KEY: undefined }, fetchMock);
