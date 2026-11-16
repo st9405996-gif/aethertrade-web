@@ -47,17 +47,21 @@ describe("trade document contextual review", () => {
       summary: "The documents refer to the same invoice but state different quantities. Confirm the final packed quantity.",
       observations: [{ label: "Quantity difference", detail: "The invoice quantity is higher than the packing-list quantity.", document: "both", evidence: "Quantity: 100 PCS" }],
       questions: ["Which quantity is supported by the final packing record?"],
+      productAttributes: [{ category: "Material / composition", value: "Cotton", document: "invoice", evidence: "Goods Description: Cotton shirts" }],
+      customsObservations: [{ category: "Country of origin missing", severity: "medium", detail: "No country-of-origin declaration was found in the supplied documents.", document: "both", evidence: "No country-of-origin declaration was found in the supplied documents.", evidenceType: "absence" }],
     }) })) };
     const fetchMock = quotaFetch();
     const response = await handleShipmentReadinessAnalysis(request("/api/demo/shipment-readiness-analysis", {
       reference: "SHIP-5002", invoiceText, packingText, supportingDocs: [{ name: "Bill of lading", received: false }],
     }), { ...env, AI: ai }, fetchMock);
-    const payload = await response.json() as { comparison: { key: string; status: string }[]; missing: string[]; aiReview: { status: string; observations: { label: string }[] } };
+    const payload = await response.json() as { comparison: { key: string; status: string }[]; missing: string[]; aiReview: { status: string; observations: { label: string }[]; productAttributes: { category: string }[]; customsObservations: { category: string }[] } };
     expect(response.status).toBe(200);
     expect(payload.aiReview.status).toBe("ai");
     expect(payload.comparison.find(x => x.key === "quantity")?.status).toBe("mismatch");
     expect(payload.missing).toEqual(["Bill of lading"]);
     expect(payload.aiReview.observations).toHaveLength(1);
+    expect(payload.aiReview.productAttributes[0]?.category).toBe("Material / composition");
+    expect(payload.aiReview.customsObservations[0]?.category).toBe("Country of origin missing");
     expect(ai.run).toHaveBeenCalledTimes(1);
   });
   it("uses extracted booking, invoice and purchase-order references in the follow-up draft", async () => {
