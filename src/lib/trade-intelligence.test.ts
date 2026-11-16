@@ -212,4 +212,18 @@ Total Gross Weight: 340.00 kg`;
     expect(result.validations.find((item) => item.key === "net-vs-gross-weight")?.status).toBe("mismatch");
   });
 
+  it("skips divider lines and extracts importer and exporter Name values", () => {
+    const result = analyzeTradeDocument([
+      "COMMERCIAL INVOICE",
+      "CONSIGNEE / BUYER",
+      "-------------------------------------------------",
+      "Name: Hudson Valley Outerwear Inc.",
+      "SHIPPER / EXPORTER",
+      "____________________________",
+      "Name: Northstar Apparel Export Ltd.",
+    ].join("\n"));
+    expect(result.fields.find((field) => field.key === "importer")?.value).toBe("Hudson Valley Outerwear Inc.");
+    expect(result.fields.find((field) => field.key === "exporter")?.value).toBe("Northstar Apparel Export Ltd.");
+  });
+
 });
