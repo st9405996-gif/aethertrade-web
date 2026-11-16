@@ -100,6 +100,24 @@ describe("trade document contextual review", () => {
     expect(payload.aiReview.summary).not.toContain("quota exhausted");
   });
 
+  it("retries the secondary model when the primary model fails", async () => {
+    const invoiceText = "COMMERCIAL INVOICE\\nInvoice Number: INV-RETRY-1\\nGoods Description: Steel fasteners";
+    const ai = { run: vi.fn()
+      .mockRejectedValueOnce(new Error("HTTP 429 rate limited"))
+      .mockResolvedValueOnce({ response: JSON.stringify({
+        summary: "The invoice describes steel fasteners and includes an invoice reference. Confirm any shipment details not included in the supplied text.",
+        suggestions: [{ label: "Invoice number", value: "INV-RETRY-1", evidence: "Invoice Number: INV-RETRY-1" }],
+        observations: [],
+        questions: ["Can you confirm the country of origin stated on the invoice?"],
+      }) }) };
+    const response = await handleProductIntelligenceAI(request("/api/demo/product-intelligence", { invoiceText }), { ...env, AI: ai }, quotaFetch());
+    const payload = await response.json() as { aiReview: { status: string; suggestions: { value: string }[] } };
+    expect(response.status).toBe(200);
+    expect(payload.aiReview.status).toBe("ai");
+    expect(payload.aiReview.suggestions[0]?.value).toBe("INV-RETRY-1");
+    expect(ai.run).toHaveBeenNthCalledWith(1, "@cf/meta/llama-3.3-70b-instruct-fp8-fast", expect.any(Object), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    expect(ai.run).toHaveBeenNthCalledWith(2, "@cf/meta/llama-3.1-8b-instruct", expect.any(Object), expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
   it("parses fenced JSON with leading prose from the Cloudflare AI binding", async () => {
     const invoiceText = "COMMERCIAL INVOICE\nInvoice Number: INV-FENCE-1\nGoods Description: stainless steel fasteners";
     const ai = { run: vi.fn(async () => ({ response: "Model note {not-json} before the result:\n\x60\x60\x60json\n" + JSON.stringify({
