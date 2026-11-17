@@ -245,16 +245,15 @@ function normalizeCsvInvoiceText(text: string): string {
   const amountIndex = column("line item total", "total amount", "amount");
   const hsIndex = column("hs code", "commodity code");
   if (descriptionIndex >= 0 && quantityIndex >= 0 && priceIndex >= 0 && amountIndex >= 0) {
-    output.push("ITEM DETAILS");
-    records.forEach((row, index) => {
+    output.push(["Description", "Quantity", "Unit", "Unit Price", "Total Amount"].join(" | "));
+    records.forEach((row) => {
       const description = row[descriptionIndex] ?? "";
       const quantity = row[quantityIndex] ?? "";
       const unit = unitIndex >= 0 ? row[unitIndex] ?? "" : "";
       const price = row[priceIndex] ?? "";
       const amount = row[amountIndex] ?? "";
-      const hs = hsIndex >= 0 ? (row[hsIndex] ?? "") + " " : "";
       if (description && quantity && price && amount) {
-        output.push([String(index + 1), hs + description, quantity, unit, price.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, ""), amount.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "")].filter(Boolean).join(" "));
+        output.push([description, quantity, unit || "PCS", price.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, ""), amount.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "")].join(" | "));
       } else {
         add("Goods Description", description);
         add("Quantity", [quantity, unit].filter(Boolean).join(" "));
