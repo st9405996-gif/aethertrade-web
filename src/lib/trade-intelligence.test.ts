@@ -300,4 +300,28 @@ Total Gross Weight: 340.00 kg`;
     expect(result.validations.find((item) => item.key === "line-item-subtotal")?.status).toBe("consistent");
   });
 
+
+  it("extracts Product-column CSV rows as goods descriptions and validates their line totals", () => {
+    const csv = [
+      "Invoice Number,Invoice Date,Seller,Buyer,Product,Material,Quantity,Unit Price,Line Item Total,Currency,Subtotal,Total,Packages,Gross Weight,Net Weight,HS Code",
+      "INV-1003,16 November 2026,Global Textiles Ltd.,Dubai Garments LLC,Cotton Shirts,Cotton,200,10.00,2000.00,USD,2000.00,2000.00,10 Cartons,100 KG,95 KG,"
+    ].join("\n");
+    const result = analyzeTradeDocument(csv);
+    const value = (key: string) => result.fields.find((field) => field.key === key)?.value;
+    expect(value("invoiceNumber")).toBe("INV-1003");
+    expect(value("description")).toBe("Cotton Shirts");
+    expect(value("quantity")).toBe("200 PCS");
+    expect(value("currency")).toBe("USD");
+    expect(result.lineItems).toHaveLength(1);
+    expect(result.lineItems[0]).toMatchObject({
+      description: "Cotton Shirts",
+      quantity: "200",
+      unit: "PCS",
+      unitPrice: "10.00",
+      amount: "2000.00",
+    });
+    expect(result.validations.find((item) => item.key === "line-item-subtotal")?.status).toBe("consistent");
+    expect(result.validations.find((item) => item.key === "line-item-extension-1")?.status).toBe("consistent");
+  });
+
 });

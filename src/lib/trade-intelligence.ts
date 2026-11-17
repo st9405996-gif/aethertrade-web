@@ -210,7 +210,7 @@ function normalizeCsvInvoiceText(text: string): string {
   const headers = parseCsvRecord(rows[0]).map(normalizeLabel);
   const records = rows.slice(1).map(parseCsvRecord).filter((row) => row.some((cell) => cell.trim()));
   const hasInvoiceHeader = headers.some((header) =>
-    /^(?:invoice number|invoice no|supplier|seller|exporter|buyer|importer|goods description|description|quantity|unit price|total amount)$/.test(header),
+    /^(?:invoice number|invoice no|supplier|seller|exporter|buyer|importer|goods description|description|product|quantity|unit price|line item total|total amount)$/.test(header),
   );
   if (!hasInvoiceHeader || !records.length) return text;
 
@@ -238,23 +238,22 @@ function normalizeCsvInvoiceText(text: string): string {
   add("Country of Origin", value(first, "country of origin", "origin"));
   add("Material", value(first, "material", "composition"));
   add("Weight", value(first, "weight kg", "weight"));
-  const descriptionIndex = column("description", "goods description", "product description", "item description");
+  const descriptionIndex = column("description", "goods description", "product description", "product", "product name", "item description");
   const quantityIndex = column("quantity", "qty");
   const unitIndex = column("unit", "unit of measure", "uom");
   const priceIndex = column("unit price", "price per unit");
   const amountIndex = column("line item total", "total amount", "amount");
   const hsIndex = column("hs code", "commodity code");
   if (descriptionIndex >= 0 && quantityIndex >= 0 && priceIndex >= 0 && amountIndex >= 0) {
-    output.push("ITEM DETAILS");
-    records.forEach((row, index) => {
+    output.push(["Description", "Quantity", "Unit", "Unit Price", "Total Amount"].join(" | "));
+    records.forEach((row) => {
       const description = row[descriptionIndex] ?? "";
       const quantity = row[quantityIndex] ?? "";
       const unit = unitIndex >= 0 ? row[unitIndex] ?? "" : "";
       const price = row[priceIndex] ?? "";
       const amount = row[amountIndex] ?? "";
-      const hs = hsIndex >= 0 ? (row[hsIndex] ?? "") + " " : "";
       if (description && quantity && price && amount) {
-        output.push([String(index + 1), hs + description, quantity, unit, price.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, ""), amount.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "")].filter(Boolean).join(" "));
+        output.push([description, quantity, unit || "PCS", price.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, ""), amount.replace(/\b(?:USD|EUR|GBP|AED|SAR|PKR|CNY|JPY)\b\s*/i, "")].join(" | "));
       } else {
         add("Goods Description", description);
         add("Quantity", [quantity, unit].filter(Boolean).join(" "));
@@ -264,7 +263,7 @@ function normalizeCsvInvoiceText(text: string): string {
       add("Invoice Total", first[amountIndex] ?? "");
     }
   } else {
-    add("Goods Description", value(first, "description", "goods description", "product description"));
+    add("Goods Description", value(first, "description", "goods description", "product description", "product", "product name", "item description"));
     add("Quantity", [value(first, "quantity", "qty"), value(first, "unit", "unit of measure", "uom")].filter(Boolean).join(" "));
   }
   return output.join("\n");
