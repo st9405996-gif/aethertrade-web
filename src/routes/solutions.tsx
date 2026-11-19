@@ -31,7 +31,7 @@ export const Route = createFileRoute("/solutions")({
     mergeCmsHead(
       meta(
         "Solutions",
-        "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
+        "Workflow automation for freight forwarders, importers, exporters and logistics teams.",
       ),
       loaderData?.cmsPage,
       { fallbackPath: "/solutions", title: "Trade Workflow Solutions | AETHER-TRADE", description: "Trade operations technology, custom AI agents and workflow automation for importers, exporters, freight forwarders, customs brokers and trading companies." },
