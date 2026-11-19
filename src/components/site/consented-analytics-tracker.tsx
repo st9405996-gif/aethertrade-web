@@ -1,16 +1,23 @@
 import { useEffect, useRef } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { trackAnalyticsEvent } from "@/lib/analytics.functions";
-
 import { getKlaroManager, hasAnalyticsConsent } from "@/lib/consentmanager-analytics";
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
-  const sendEvent = useServerFn(trackAnalyticsEvent);
   const lastTrackedPath = useRef<string | null>(null);
 
   useEffect(() => {
     const manager = getKlaroManager();
     if (!manager) return;
+
+    const track = (eventName: string, parameters: Record<string, string>) => {
+      if (!hasAnalyticsConsent() || typeof window.gtag !== "function") return;
+      window.gtag("event", eventName, parameters);
+    };
 
     const checkConsentAndTrack = () => {
       if (!hasAnalyticsConsent()) {
@@ -19,11 +26,11 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       }
       if (lastTrackedPath.current === pathname) return;
       lastTrackedPath.current = pathname;
-      void sendEvent({ data: { eventType: "page_view", pagePath: pathname, consent: true } }).catch(
-        () => {
-          // Analytics must never interrupt navigation or surface an error to visitors.
-        },
-      );
+      track("page_view", {
+        page_path: pathname,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
     };
 
     const trackCtaClick = (event: MouseEvent) => {
@@ -41,13 +48,11 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       if (
         destination.origin !== window.location.origin ||
         !["/request-demo", "/contact"].includes(destination.pathname)
-      )
-        return;
-      void sendEvent({ data: { eventType: "cta_click", pagePath: pathname, consent: true } }).catch(
-        () => {
-          // Analytics must never interrupt navigation or surface an error to visitors.
-        },
-      );
+      ) return;
+      track("cta_click", {
+        page_path: pathname,
+        link_url: destination.pathname,
+      });
     };
 
     const watcher = { update: () => checkConsentAndTrack() };
@@ -58,7 +63,7 @@ export function ConsentedAnalyticsTracker({ pathname }: { pathname: string }) {
       manager.unwatch(watcher);
       document.removeEventListener("click", trackCtaClick, true);
     };
-  }, [pathname, sendEvent]);
+  }, [pathname]);
 
   return null;
 }
