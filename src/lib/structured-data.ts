@@ -38,7 +38,7 @@ function safeJson(value: unknown): string {
 }
 
 export function buildPageStructuredData(pathname: string) {
-  const path = pathname === "/" ? "/" : pathname.replace(/\\/+$/, "");
+  const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
   const definition = PAGES[path];
   if (!definition) return null;
 
