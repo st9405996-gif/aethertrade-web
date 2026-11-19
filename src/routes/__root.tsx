@@ -146,7 +146,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         "data-type": "application/javascript",
         "data-name": "analytics",
         children: `gtag('js', new Date());
-gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
+gtag('config', '${GOOGLE_ANALYTICS_ID}', { send_page_view: false });`,
       },
       {
         type: "application/ld+json",
