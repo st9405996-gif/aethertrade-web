@@ -41,12 +41,12 @@ export const Route = createFileRoute("/")({
       (() => ({
         meta: [
           {
-            title: "AETHER-TRADE | Import-Export & Logistics Automation",
+            title: "AETHER-TRADE | Freight Document Automation",
           },
           {
             name: "description",
             content:
-              "AETHER-TRADE designs and builds trade-focused software, AI agents, workflow automation and system integrations for import-export, freight and logistics operations.",
+              "Document intelligence and workflow automation for freight forwarders, importers and trade operations teams.",
           },
           { property: "og:title", content: "AETHER-TRADE" },
           {
