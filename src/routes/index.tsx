@@ -59,7 +59,7 @@ export const Route = createFileRoute("/")({
         ],
       }))(),
       loaderData?.cmsPage,
-      { fallbackPath: "/", title: "AETHER-TRADE | Import-Export, Logistics & AI Automation", description: "Trade operations technology, custom AI agents, workflow automation and system integrations for importers, exporters, freight forwarders and logistics businesses." },
+      { fallbackPath: "/", title: "AETHER-TRADE | Import-Export, Logistics & AI Automation", description: "Document intelligence and workflow automation for freight forwarders, importers and trade operations teams." },
     ),
   component: HomePage,
 });

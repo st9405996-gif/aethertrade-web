@@ -15,6 +15,14 @@ const seoConfig: {
 } = JSON.parse(readFileSync(join(root, "content/seo.json"), "utf8"));
 const routesDir = join(root, "src/routes");
 
+function listRouteFiles(directory: string, prefix = ""): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = prefix ? join(prefix, entry.name) : entry.name;
+    if (entry.isDirectory()) return listRouteFiles(join(directory, entry.name), relativePath);
+    return /\.tsx$/.test(entry.name) ? [relativePath] : [];
+  });
+}
+
 const sitemapPaths = [
   ...sitemap.matchAll(/<loc>https:\/\/aethertrade\.cloud(\/[^<]*)<\/loc>/g),
 ].map((m) => m[1]!);
@@ -31,7 +39,9 @@ function routePathOf(file: string): string {
 
 /** Matches concrete URLs against static routes and file-based dynamic segments. */
 function hasRoute(path: string, routePaths: Set<string>): boolean {
+  if (path === "/") return routePaths.has("/");
   return [...routePaths].some((route) => {
+    if (route === "/") return false;
     const pattern = route.split("/").map((segment) =>
       segment.startsWith("$") ? "[^/]+" : segment
     ).join("/");
@@ -49,7 +59,7 @@ describe("SEO files", () => {
   });
 
   it("sitemap never includes a route that declares noindex", () => {
-    const noindex = readdirSync(routesDir)
+    const noindex = listRouteFiles(routesDir)
       .filter((f) => /\.tsx$/.test(f))
       .filter((f) => readFileSync(join(routesDir, f), "utf8").includes('"noindex"'))
       .map(routePathOf);
@@ -59,7 +69,7 @@ describe("SEO files", () => {
   });
 
   it("every sitemap path is an existing route file", () => {
-    const files = new Set(readdirSync(routesDir).map(routePathOf));
+    const files = new Set(listRouteFiles(routesDir).map(routePathOf));
     for (const path of sitemapPaths) {
       expect(hasRoute(path, files), `missing route for ${path}`).toBe(true);
     }
@@ -71,7 +81,7 @@ describe("SEO files", () => {
       .map((page) => page.path);
     expect(llmsPaths).toEqual(expectedPaths);
 
-    const files = new Set(readdirSync(routesDir).map(routePathOf));
+    const files = new Set(listRouteFiles(routesDir).map(routePathOf));
     for (const path of llmsPaths) {
       expect(hasRoute(path, files), `missing route for ${path}`).toBe(true);
     }

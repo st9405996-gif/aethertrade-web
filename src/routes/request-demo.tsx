@@ -22,7 +22,7 @@ export const Route = createFileRoute("/request-demo")({
           {
             name: "description",
             content:
-              "Request a workflow demo for freight document intelligence and shipment operations automation. Tell us about your current process and the outcome you want to improve.",
+              "Request a freight document or shipment workflow demo. Tell us which process your team wants to improve.",
           },
           { property: "og:title", content: "Book an Operations Audit — AETHER-TRADE" },
           {

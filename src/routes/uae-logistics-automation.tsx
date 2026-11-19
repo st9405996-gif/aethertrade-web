@@ -61,11 +61,11 @@ export const Route = createFileRoute("/uae-logistics-automation")({
   head: () => ({
     links: [{ rel: "canonical", href: "https://aethertrade.cloud/uae-logistics-automation" }],
     meta: [
-      { title: "UAE Freight Forwarding & Trade Workflow Automation | AETHER-TRADE" },
+      { title: "UAE Freight Workflow Automation | AETHER-TRADE" },
       {
         name: "description",
         content:
-          "Explore shipment document follow-ups, import-export hand-offs and logistics workflow automation for UAE-connected freight forwarders and trade teams.",
+          "UAE freight workflow automation for shipment documents, import-export hand-offs and operations teams. Scope a supervised pilot.",
       },
       { property: "og:title", content: "UAE Trade & Logistics Workflow Automation | AETHER-TRADE" },
       {

@@ -17,7 +17,10 @@ export const Route = createFileRoute("/insights/$slug")({
     if (!loaderData) return {};
 
     const article = loaderData.article;
-    const title = article.seoTitle || `${article.title} — AETHER-TRADE`;
+    const title =
+      article.slug === "freight-forwarding-document-review-workflow"
+        ? "Freight Forwarding Document Review Workflow | AETHER-TRADE"
+        : article.seoTitle || `${article.title} — AETHER-TRADE`;
     const description =
       article.seoDescription ||
       article.geoSummary ||

@@ -23,6 +23,8 @@ const MARKET_LINKS = [
   { label: "UAE", path: "/uae-logistics-automation", note: "Freight forwarding and trade operations" },
   { label: "China", path: "/china-trade-automation", note: "Supplier and export-document workflows" },
   { label: "United States", path: "/usa-freight-forwarding-automation", note: "Import, export and forwarding operations" },
+  { label: "United Kingdom", path: "/uk-freight-forwarding-automation", note: "UK freight and trade operations" },
+  { label: "Freight Forwarders", path: "/solutions/freight-forwarders", note: "Shipment documents and follow-up workflows" },
 ] as const;
 
 export function MarketPage({ content }: { content: MarketPageContent }) {
