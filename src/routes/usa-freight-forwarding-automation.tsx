@@ -61,11 +61,11 @@ export const Route = createFileRoute("/usa-freight-forwarding-automation")({
   head: () => ({
     links: [{ rel: "canonical", href: "https://aethertrade.cloud/usa-freight-forwarding-automation" }],
     meta: [
-      { title: "US Freight Forwarding & Import-Export Workflow Automation | AETHER-TRADE" },
+      { title: "US Freight Workflow Automation | AETHER-TRADE" },
       {
         name: "description",
         content:
-          "Explore shipment document coordination, inbox automation and exception workflows for US freight forwarders, importers and exporters.",
+          "US freight workflow automation for shipment documents, inbox follow-ups and import-export operations teams.",
       },
       { property: "og:title", content: "US Freight Forwarding Workflow Automation | AETHER-TRADE" },
       {
