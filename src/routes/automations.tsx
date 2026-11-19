@@ -27,7 +27,7 @@ export const Route = createFileRoute("/automations")({
     mergeCmsHead(
       meta(
         "Automation Catalogue",
-        "Catalogue of trade-operations automations — inquiry triage, shipment follow-up, document intake, reconciliation, reporting and custom AI agents — each with its availability status.",
+        "Explore shipment follow-up, document intake and invoice checks, with custom workflows clearly labelled by availability.",
       ),
       loaderData?.cmsPage,
       { fallbackPath: "/automations", title: "Freight Workflow Automation | AETHER-TRADE", description: "Explore shipment follow-up, document intake and invoice checks, with custom workflows clearly labelled by availability." },
