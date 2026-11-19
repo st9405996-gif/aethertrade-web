@@ -22,6 +22,7 @@ import { CmsPageRenderer } from "@/components/site/cms-page-renderer";
 import { ConsentedAnalyticsTracker } from "@/components/site/consented-analytics-tracker";
 import { ConsentedClarityTracker } from "@/components/site/consented-clarity-tracker";
 import { getGlobalSeoSettings } from "@/lib/global-seo.functions";
+import { serializePageStructuredData } from "@/lib/structured-data";
 
 // Enterprise typography — Inter-first system stack with bundled Geist fallback.
 import "@fontsource/geist-sans/400.css";
@@ -257,6 +258,25 @@ function RootComponent() {
     if (authType === "invite" || authType === "recovery") {
       window.location.replace("/reset-password" + window.location.search + window.location.hash);
     }
+  }, [pathname]);
+
+  // Route-aware JSON-LD is updated on navigation so every configured public
+  // route exposes its own WebPage, breadcrumb and applicable entity schema.
+  useEffect(() => {
+    const scriptId = "aethertrade-page-structured-data";
+    const existing = document.getElementById(scriptId);
+    const serialized = serializePageStructuredData(pathname);
+    if (!serialized) {
+      existing?.remove();
+      return;
+    }
+    const script = existing instanceof HTMLScriptElement
+      ? existing
+      : document.createElement("script");
+    script.id = scriptId;
+    script.type = "application/ld+json";
+    script.textContent = serialized;
+    if (!existing) document.head.appendChild(script);
   }, [pathname]);
 
   useEffect(() => {
