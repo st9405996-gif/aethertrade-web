@@ -211,6 +211,22 @@
       "indexable": true,
       "llmsLabel": "Freight forwarding document review workflow",
       "llmsNote": "A practical guide to shipment references, document versions, field comparisons, exception records and human review."
+    },
+    {
+      "path": "/solutions/freight-forwarders",
+      "title": "Freight Forwarder Workflow Automation",
+      "description": "Freight forwarding document intake, shipment follow-ups and invoice checks with human review.",
+      "indexable": true,
+      "llmsLabel": "Freight forwarder workflow automation",
+      "llmsNote": "Focused use cases for shipment document intake, missing-item follow-up, invoice and packing-list checks, and staff-reviewed operational hand-offs."
+    },
+    {
+      "path": "/uk-freight-forwarding-automation",
+      "title": "UK Freight Workflow Automation",
+      "description": "UK freight forwarding document workflows, shipment follow-ups and exception review with human oversight.",
+      "indexable": true,
+      "llmsLabel": "UK freight forwarding and trade operations",
+      "llmsNote": "Workflow automation context for UK-connected freight forwarders, importers, exporters and logistics teams; no UK office or customs integration is implied."
     }
   ]
 }
