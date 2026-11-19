@@ -152,6 +152,7 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
           {
             "@context": "https://schema.org",
             "@type": "Organization",
+            "@id": SITE_URL + "/#organization",
             name: loaderData?.organizationName || "AETHER-TRADE",
             url: loaderData?.organizationUrl || loaderData?.siteUrl || SITE_URL,
             description:
@@ -163,6 +164,7 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
           {
             "@context": "https://schema.org",
             "@type": "WebSite",
+            "@id": SITE_URL + "/#website",
             name: loaderData?.siteName || "AETHER-TRADE",
             url: loaderData?.siteUrl || SITE_URL,
           },
