@@ -96,7 +96,9 @@ const GOOGLE_ANALYTICS_ID = "G-JY6M0YJY1S";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: () => getGlobalSeoSettings(),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, matches }) => {
+    const currentPath = matches[matches.length - 1]?.pathname ?? "/";
+    const pageStructuredData = serializePageStructuredData(currentPath);
     return {
     meta: [
       { charSet: "utf-8" },
@@ -170,6 +172,9 @@ gtag('config', '${GOOGLE_ANALYTICS_ID}');`,
           },
         ]).replace(/</g, "\\u003c"),
       },
+      ...(pageStructuredData
+        ? [{ type: "application/ld+json", children: pageStructuredData }]
+        : []),
     ],
     links: [
       {
@@ -262,24 +267,6 @@ function RootComponent() {
     }
   }, [pathname]);
 
-  // Route-aware JSON-LD is updated on navigation so every configured public
-  // route exposes its own WebPage, breadcrumb and applicable entity schema.
-  useEffect(() => {
-    const scriptId = "aethertrade-page-structured-data";
-    const existing = document.getElementById(scriptId);
-    const serialized = serializePageStructuredData(pathname);
-    if (!serialized) {
-      existing?.remove();
-      return;
-    }
-    const script = existing instanceof HTMLScriptElement
-      ? existing
-      : document.createElement("script");
-    script.id = scriptId;
-    script.type = "application/ld+json";
-    script.textContent = serialized;
-    if (!existing) document.head.appendChild(script);
-  }, [pathname]);
 
   useEffect(() => {
     const canonicalPath = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
