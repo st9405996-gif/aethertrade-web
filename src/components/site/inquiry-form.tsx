@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,6 @@ import { inquirySchema } from "@/lib/workspace-model";
 import { submitInquiry, getInquiryDeliveryMode } from "@/lib/inquiry.functions";
 import { CATALOGUE_PREVIEW } from "@/lib/catalogue-preview";
 import { loadTurnstile, TURNSTILE_SITE_KEY } from "@/lib/turnstile-client";
-import { trackAnalyticsEvent } from "@/lib/analytics.functions";
 import { hasAnalyticsConsent } from "@/lib/consentmanager-analytics";
 
 export function InquiryForm({
@@ -27,7 +25,6 @@ export function InquiryForm({
   const navigate = useNavigate();
   const submit = useServerFn(submitInquiry);
   const readMode = useServerFn(getInquiryDeliveryMode);
-  const trackEvent = useServerFn(trackAnalyticsEvent);
   // Defaults to the demo notice until the server reports live delivery, so the page never
   // claims delivery that has not been confirmed.
   const { data: delivery } = useQuery({
@@ -140,14 +137,13 @@ export function InquiryForm({
       }
       // Track only a consented conversion event; never send the form fields or contact details.
       if (hasAnalyticsConsent()) {
-        void trackEvent({
-          data: {
-            eventType: kind === "demo" ? "demo_conversion" : "contact_conversion",
-            pagePath: location.pathname,
-            automationSlug: parsed.data.automation || undefined,
-            consent: true,
-          },
-        }).catch(() => null);
+        if (typeof window.gtag === "function") {
+          window.gtag("event", "generate_lead", {
+            form_type: kind,
+            automation_slug: parsed.data.automation || undefined,
+            page_path: location.pathname,
+          });
+        }
       }
       // Only navigate after the server confirms persistence and returns its reference.
       await navigate({
