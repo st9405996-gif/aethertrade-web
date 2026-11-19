@@ -61,7 +61,7 @@ export const Route = createFileRoute("/china-trade-automation")({
   head: () => ({
     links: [{ rel: "canonical", href: "https://aethertrade.cloud/china-trade-automation" }],
     meta: [
-      { title: "China Supplier Document Automation | AETHER-TRADE" },
+      { title: "China Trade Workflow Automation | AETHER-TRADE" },
       {
         name: "description",
         content:
