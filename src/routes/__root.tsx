@@ -267,22 +267,6 @@ function RootComponent() {
     }
   }, [pathname]);
 
-  useEffect(() => {
-    const scriptId = "aethertrade-page-structured-data";
-    const existing = document.getElementById(scriptId);
-    const serialized = serializePageStructuredData(pathname);
-    if (!serialized) {
-      existing?.remove();
-      return;
-    }
-    const script = existing instanceof HTMLScriptElement
-      ? existing
-      : document.createElement("script");
-    script.id = scriptId;
-    script.type = "application/ld+json";
-    script.textContent = serialized;
-    if (!existing) document.head.appendChild(script);
-  }, [pathname]);
 
   useEffect(() => {
     const canonicalPath = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
