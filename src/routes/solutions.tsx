@@ -34,7 +34,7 @@ export const Route = createFileRoute("/solutions")({
         "Solutions for importers, exporters, freight forwarders, logistics operators and trading companies.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/solutions", title: "Solutions for Importers, Exporters & Logistics Businesses | AETHER-TRADE", description: "Trade operations technology, custom AI agents and workflow automation for importers, exporters, freight forwarders, customs brokers and trading companies." },
+      { fallbackPath: "/solutions", title: "Trade Workflow Solutions | AETHER-TRADE", description: "Trade operations technology, custom AI agents and workflow automation for importers, exporters, freight forwarders, customs brokers and trading companies." },
     ),
   component: SolutionsPage,
 });
