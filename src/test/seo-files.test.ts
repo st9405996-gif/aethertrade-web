@@ -39,7 +39,9 @@ function routePathOf(file: string): string {
 
 /** Matches concrete URLs against static routes and file-based dynamic segments. */
 function hasRoute(path: string, routePaths: Set<string>): boolean {
+  if (path === "/") return routePaths.has("/");
   return [...routePaths].some((route) => {
+    if (route === "/") return false;
     const pattern = route.split("/").map((segment) =>
       segment.startsWith("$") ? "[^/]+" : segment
     ).join("/");
