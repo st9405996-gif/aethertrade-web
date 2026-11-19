@@ -54,6 +54,25 @@ function FaqsPage() {
         })}
       />
       <section className="container-page section-pad">
+        <div className="mb-8 max-w-3xl space-y-4 text-sm leading-7 text-muted-foreground">
+          <p>
+            AETHER-TRADE focuses on trade-document intake and selected workflow tasks for freight
+            forwarders, importers, exporters and logistics operations teams. The aim is to organize
+            information that staff already handle across shipment files, email and business systems.
+          </p>
+          <p>
+            Document workflows can help structure supported fields, compare agreed details across
+            documents and highlight possible gaps for a person to review. Results are not legal,
+            customs or regulatory decisions, and the system does not replace the judgment of an
+            authorized operations professional.
+          </p>
+          <p>
+            Engagements are scoped around one practical process first. Data access, integrations,
+            permissions, human approval points, test cases and success measures are agreed before
+            a pilot. Features labelled In Development, Custom Build or Planned are not represented
+            as generally available.
+          </p>
+        </div>
         {faqs.length ? (
           <FaqList items={faqs} />
         ) : (

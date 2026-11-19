@@ -138,9 +138,7 @@
       "path": "/cookie-policy",
       "title": "Cookie policy",
       "description": "Learn how AETHER-TRADE uses essential browser storage, consent preferences and website analytics.",
-      "indexable": true,
-      "llmsLabel": "Cookie policy",
-      "llmsNote": "cookie and browser storage information"
+      "indexable": false
     },
     {
       "path": "/about",
@@ -227,6 +225,14 @@
       "indexable": true,
       "llmsLabel": "UK freight forwarding and trade operations",
       "llmsNote": "Workflow automation context for UK-connected freight forwarders, importers, exporters and logistics teams; no UK office or customs integration is implied."
+    },
+    {
+      "path": "/europe-freight-forwarding-automation",
+      "title": "European Freight Workflow Automation",
+      "description": "European freight document workflows, invoice checks and shipment follow-ups with human review. Scope a practical pilot.",
+      "indexable": true,
+      "llmsLabel": "European freight forwarding and trade operations",
+      "llmsNote": "Workflow support for freight forwarders, importers, exporters and logistics teams connected to European trade lanes; no customs filing or government-system integration is claimed."
     }
   ]
 }

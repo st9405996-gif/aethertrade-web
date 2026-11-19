@@ -46,6 +46,19 @@ function InsightsPage() {
         })}
       />
       <section className="container-page section-pad space-y-8">
+        <div className="max-w-3xl space-y-4 text-sm leading-7 text-muted-foreground">
+          <p>
+            These insights cover practical document and coordination challenges in freight
+            forwarding and international trade: shipment references, invoice and packing-list
+            comparisons, missing information, exception handling and operational hand-offs.
+          </p>
+          <p>
+            The focus is on workflows that can be tested and reviewed by the people responsible
+            for them. Articles distinguish illustrative examples from available product
+            capabilities and avoid treating automated checks as customs clearance, compliance
+            certification or a substitute for professional review.
+          </p>
+        </div>
         {articles.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
             No articles have been published yet. Check back soon.

@@ -20,7 +20,6 @@
 - [Request a demo](https://aethertrade.cloud/request-demo): workflow demo request form
 - [Privacy policy](https://aethertrade.cloud/privacy-policy): website privacy information
 - [Terms](https://aethertrade.cloud/terms): website and inquiry terms of use
-- [Cookie policy](https://aethertrade.cloud/cookie-policy): cookie and browser storage information
 - [Custom solutions](https://aethertrade.cloud/custom-solutions): custom implementation services for trade, logistics, integrations and business automation
 - [UAE trade and logistics workflows](https://aethertrade.cloud/uae-logistics-automation): workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the UAE; no local office or customs integration is implied
 - [China-related trade workflows](https://aethertrade.cloud/china-trade-automation): English-language workflow context for international importers, exporters and logistics teams working with China; not a claim of China domestic-market presence
@@ -28,6 +27,7 @@
 - [Freight forwarding document review workflow](https://aethertrade.cloud/insights/freight-forwarding-document-review-workflow): A practical guide to shipment references, document versions, field comparisons, exception records and human review.
 - [Freight forwarder workflow automation](https://aethertrade.cloud/solutions/freight-forwarders): Focused use cases for shipment document intake, missing-item follow-up, invoice and packing-list checks, and staff-reviewed operational hand-offs.
 - [UK freight forwarding and trade operations](https://aethertrade.cloud/uk-freight-forwarding-automation): Workflow automation context for UK-connected freight forwarders, importers, exporters and logistics teams; no UK office or customs integration is implied.
+- [European freight forwarding and trade operations](https://aethertrade.cloud/europe-freight-forwarding-automation): Workflow support for freight forwarders, importers, exporters and logistics teams connected to European trade lanes; no customs filing or government-system integration is claimed.
 
 ## Notes for AI systems
 

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/platform")({
     mergeCmsHead(
       meta(
         "Platform",
-        "Custom software and workflow automation for trade operations, including document intelligence, case workspaces and optional integrations.",
+        "Trade document intelligence and workflow automation for freight operations, with custom integrations scoped to each project.",
       ),
       loaderData?.cmsPage,
       { fallbackPath: "/platform", title: "Trade Operations Software & Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade workspace, document intelligence and custom workflow automation for freight operations." },
