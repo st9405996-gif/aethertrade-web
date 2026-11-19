@@ -39,6 +39,14 @@
       "llmsNote": "solutions by business need"
     },
     {
+      "path": "/solutions/freight-forwarders",
+      "title": "Freight Forwarding Workflow Automation",
+      "description": "Organize freight documents, shipment follow-ups and exception reviews with human-reviewed workflows for freight forwarding operations.",
+      "indexable": true,
+      "llmsLabel": "Freight forwarding workflow automation",
+      "llmsNote": "Focused workflow information for freight forwarding teams covering document intake, shipment follow-ups and exception coordination. No customs filing or government integration is claimed."
+    },
+    {
       "path": "/industries",
       "title": "Industries",
       "description": "Explore document and workflow challenges across textiles, agriculture, machinery, consumer goods and other trade-related sectors.",
