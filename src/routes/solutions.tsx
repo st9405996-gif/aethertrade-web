@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { getPublishedCmsPage, mergeCmsHead, cmsHero, cmsCta } from "@/lib/public-cms.functions";
 import { CmsPageSections } from "@/components/site/cms-page-renderer";
 import { getPublishedContentRecords } from "@/lib/public-content-records.functions";
@@ -40,6 +40,8 @@ export const Route = createFileRoute("/solutions")({
 });
 function SolutionsPage() {
   const { items, cmsPage } = Route.useLoaderData();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname !== "/solutions" && pathname !== "/solutions/") return <Outlet />;
   const records = items.map((item) => ({
     slug: item.slug,
     title: item.title,
