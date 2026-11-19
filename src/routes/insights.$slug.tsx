@@ -19,7 +19,7 @@ export const Route = createFileRoute("/insights/$slug")({
     const article = loaderData.article;
     const title =
       article.slug === "freight-forwarding-document-review-workflow"
-        ? "Freight Forwarding Document Review Workflow | AETHER-TRADE"
+        ? "Freight Document Review Workflow | AETHER-TRADE"
         : article.seoTitle || `${article.title} — AETHER-TRADE`;
     const description =
       article.seoDescription ||
