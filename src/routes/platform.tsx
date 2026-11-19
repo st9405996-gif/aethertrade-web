@@ -27,7 +27,7 @@ export const Route = createFileRoute("/platform")({
         "Custom software and workflow automation for trade operations, including document intelligence, case workspaces and optional integrations.",
       ),
       loaderData?.cmsPage,
-      { fallbackPath: "/platform", title: "Trade Operations Software & Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade operations workspace and document intelligence concept, alongside custom workflow automation and integrations scoped to each project." },
+      { fallbackPath: "/platform", title: "Trade Operations Software & Automation | AETHER-TRADE", description: "Explore AETHER-TRADE's trade workspace, document intelligence and custom workflow automation for freight operations." },
     ),
   component: PlatformPage,
 });
