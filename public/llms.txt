@@ -26,6 +26,8 @@
 - [China-related trade workflows](https://aethertrade.cloud/china-trade-automation): English-language workflow context for international importers, exporters and logistics teams working with China; not a claim of China domestic-market presence
 - [United States trade and logistics workflows](https://aethertrade.cloud/usa-freight-forwarding-automation): workflow automation context for freight forwarders, importers, exporters and logistics teams connected to the United States
 - [Freight forwarding document review workflow](https://aethertrade.cloud/insights/freight-forwarding-document-review-workflow): A practical guide to shipment references, document versions, field comparisons, exception records and human review.
+- [Freight forwarder workflow automation](https://aethertrade.cloud/solutions/freight-forwarders): Focused use cases for shipment document intake, missing-item follow-up, invoice and packing-list checks, and staff-reviewed operational hand-offs.
+- [UK freight forwarding and trade operations](https://aethertrade.cloud/uk-freight-forwarding-automation): Workflow automation context for UK-connected freight forwarders, importers, exporters and logistics teams; no UK office or customs integration is implied.
 
 ## Notes for AI systems
 
