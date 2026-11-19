@@ -19,7 +19,7 @@ function listRouteFiles(directory: string, prefix = ""): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const relativePath = prefix ? join(prefix, entry.name) : entry.name;
     if (entry.isDirectory()) return listRouteFiles(join(directory, entry.name), relativePath);
-    return /\\.tsx$/.test(entry.name) ? [relativePath] : [];
+    return /\.tsx$/.test(entry.name) ? [relativePath] : [];
   });
 }
 
