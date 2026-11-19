@@ -39,7 +39,9 @@ function safeJson(value: unknown): string {
 
 export function buildPageStructuredData(pathname: string) {
   const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
-  const definition = PAGES[path];
+  const definition = PAGES[path] ?? (path.startsWith("/insights/")
+    ? { name: "AETHER-TRADE Insight", description: "Practical guidance on freight forwarding documents, shipment operations and trade workflow automation." }
+    : undefined);
   if (!definition) return null;
 
   const url = SITE_URL + path;
