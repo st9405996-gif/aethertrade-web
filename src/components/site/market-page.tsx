@@ -65,6 +65,21 @@ export function MarketPage({ content }: { content: MarketPageContent }) {
       <section className="border-y border-border bg-card/40">
         <div className="container-page section-pad">
           <SectionHeader
+            eyebrow="Interactive sample"
+            title="See a shipment follow-up workflow"
+            description="Explore a public sample using fictional shipment data. Review document details, identify missing information and prepare a follow-up draft for human review."
+          />
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild>
+              <Link to="/shipment-follow-up">Try the shipment follow-up sample</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-card/40">
+        <div className="container-page section-pad">
+          <SectionHeader
             eyebrow="Delivery approach"
             title="Start with one workflow, not a risky system-wide rollout."
             description="AETHER-TRADE scopes each engagement around the client's process, systems, permissions and review requirements."
