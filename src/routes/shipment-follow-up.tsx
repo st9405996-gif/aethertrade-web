@@ -9,8 +9,8 @@ import { ShipmentReadinessDemo } from "@/components/site/shipment-readiness-demo
 export const Route = createFileRoute("/shipment-follow-up")({
   head: () => ({
     ...meta(
-      "Shipment Readiness | AETHER-TRADE",
-      "Review shipment document status, compare invoice and packing-list fields, identify exceptions and prepare a human-reviewed follow-up draft in one workflow."
+      "Shipment Follow-Up Demo for Freight Forwarders | AETHER-TRADE",
+      "Try a shipment follow-up sample: review invoice and packing-list details, identify missing information and prepare a follow-up draft for human review."
     ),
     links: [{ rel: "canonical", href: "https://aethertrade.cloud/shipment-follow-up" }],
   }),
@@ -21,9 +21,9 @@ function ShipmentReadinessPage() {
   return (
     <>
       <PageHero
-        eyebrow="Product 02 · Shipment Readiness"
-        title="Know what is missing before the shipment file moves forward."
-        description="Bring invoice and packing-list text into one review flow. Compare key details, identify outstanding items and prepare a follow-up draft for a person to review."
+        eyebrow="Shipment follow-up demo for freight operations"
+        title="Review shipment documents and prepare follow-up drafts."
+        description="Try an interactive sample that compares invoice and packing-list details, highlights missing information and prepares a follow-up draft for a person to review."
       >
         <Button variant="hero" asChild>
           <Link to="/request-demo" search={{ automation: "shipment-readiness" }}>
