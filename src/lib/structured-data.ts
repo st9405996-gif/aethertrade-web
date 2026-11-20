@@ -14,6 +14,7 @@ const PAGES: Record<string, PageDefinition> = {
   "/platform": { name: "Platform", description: "Explore AETHER-TRADE's trade case workspace and document intelligence capabilities, plus custom workflow modules scoped around existing systems." },
   "/how-it-works": { name: "How It Works", description: "See how AETHER-TRADE assesses a trade workflow, agrees scope, builds and tests a pilot, and keeps human review in control." },
   "/solutions": { name: "Solutions", description: "Workflow automation and document intelligence for freight forwarders, importers, exporters, logistics operators and trading companies." },
+  "/solutions/freight-forwarders": { name: "Freight Forwarding Workflow Automation", description: "Organize freight documents, shipment follow-ups and exception reviews with human-reviewed workflows for freight forwarding operations.", service: true },
   "/industries": { name: "Industries", description: "Explore document and workflow challenges across textiles, agriculture, machinery, consumer goods and other trade-related sectors." },
   "/services": { name: "Services", description: "Operations assessments, document workflow automation, custom AI agents, systems integration and pilot support for trade operations.", service: true },
   "/automations": { name: "Automations", description: "Explore example workflows for inquiry triage, shipment follow-up, document intake and invoice-to-packing-list reconciliation, with clear availability labels." },
